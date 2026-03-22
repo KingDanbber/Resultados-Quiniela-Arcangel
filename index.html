@@ -226,6 +226,61 @@ select,input{font-family:'Barlow',sans-serif;}
 .loader-text{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:3px;font-size:13px;text-transform:uppercase;color:var(--text-d);}
 .empty{padding:52px;text-align:center;color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;}
 .error-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28);border-radius:10px;padding:14px;color:#fca5a5;margin-bottom:18px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:600;}
+
+/* ── PAYMENT STATUS BAR ── */
+#payment-status-bar{
+  background:linear-gradient(135deg,var(--card2),var(--card));
+  border:1px solid var(--border-s);border-radius:14px;
+  padding:14px 18px;margin-bottom:16px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.psb-item{display:flex;flex-direction:column;align-items:center;min-width:70px;}
+.psb-val{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;}
+.psb-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);margin-top:3px;}
+.psb-divider{width:1px;height:36px;background:var(--border-s);flex-shrink:0;}
+.psb-progress-wrap{flex:1;min-width:120px;}
+.psb-progress-label{display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;color:var(--text-m);margin-bottom:5px;}
+.psb-progress-track{height:6px;background:var(--border-s);border-radius:3px;overflow:hidden;}
+.psb-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--green),#4ade80);transition:width 1s ease;}
+
+/* ── RACHA (FORM) ── */
+.form-dots{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap;}
+.form-dot{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;flex-shrink:0;}
+.fd-w{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.4);}
+.fd-l{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.35);}
+.fd-p{background:var(--border-s);color:var(--text-d);border:1px solid var(--border-s);}
+
+/* ── SHARE BUTTON ── */
+.share-btn{
+  display:flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,#16a34a,#22c55e);
+  border:none;border-radius:8px;color:#fff;
+  padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:11px;letter-spacing:1px;cursor:pointer;
+  transition:opacity .2s;white-space:nowrap;flex-shrink:0;
+}
+.share-btn:hover{opacity:.85;}
+.share-btn:active{opacity:.7;}
+
+/* ── DIRECT LINK HIGHLIGHT ── */
+.lb-row.highlighted{
+  animation:hlPulse 2s ease 3;
+  border-left:3px solid var(--amber);
+}
+@keyframes hlPulse{0%,100%{background:transparent}50%{background:rgba(245,158,11,.12)}}
+
+/* ── SHARE CANVAS MODAL ── */
+#share-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:700;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
+#share-overlay.open{display:flex;}
+#share-box{background:var(--bg3);border:1px solid var(--border);border-radius:20px;width:100%;max-width:440px;animation:modalIn .25s ease;}
+.share-modal-head{padding:16px 20px;border-bottom:1px solid var(--border-s);display:flex;justify-content:space-between;align-items:center;}
+.share-modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text);}
+#share-canvas-wrap{padding:16px 20px;display:flex;justify-content:center;}
+#share-canvas{border-radius:12px;max-width:100%;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.share-actions{padding:0 20px 20px;display:flex;gap:10px;}
+.share-dl-btn{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;}
+.share-dl-btn.primary{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;}
+.share-dl-btn.secondary{background:var(--card2);color:var(--text);border:1px solid var(--border-s);}
 /* ── RESPONSIVE ── */
 @media(max-width:480px){
   #kpi-grid{grid-template-columns:repeat(3,1fr);}
@@ -353,7 +408,10 @@ select,input{font-family:'Barlow',sans-serif;}
       <button class="tab-btn" data-tab="historial">🏅 Historial</button>
     </div>
     <!-- PARTIDOS -->
-    <div id="tab-matches"><div id="match-grid"></div></div>
+    <div id="tab-matches">
+      <div id="payment-status-bar"></div>
+      <div id="match-grid"></div>
+    </div>
     <!-- CLASIFICACIÓN -->
     <div id="tab-leaderboard" style="display:none;">
       <div class="unpaid-notice">
@@ -436,6 +494,8 @@ let participantsMap={};
 let revealPronostics=true,expandedEntries={},searchQuery="";
 let chartHits=null,chartDist=null;
 let historialLoaded=false;
+let rachaMap={};  // participantId → last5 [{win:bool}]
+let shareParticipant=null;
 let refreshSecs=60,refreshTimer=null;
 let isDark=true;
 
@@ -525,9 +585,10 @@ function render(silent=false){
   const poolName=currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`;
   const poolMeta=[currentPool.competition,currentPool.season,currentPool.round?`Jornada ${currentPool.round}`:null].filter(Boolean).join(" · ");
   document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}`;
-  renderKPIs();renderMatches();renderLeaderboard();
+  renderKPIs();renderPaymentStatusBar();renderMatches();renderLeaderboard();
   const activeTab=document.querySelector(".tab-btn.active")?.dataset.tab;
   if(activeTab==="stats") renderCharts();
+  if(!silent) setTimeout(checkDirectLink, 300);
 }
 
 function renderKPIs(){
@@ -643,7 +704,9 @@ function buildLeaderboard(){
       return{match,pick,result,correct};
     });
     const partFb=participantsMap[entry.participant_id]||{};
-    return{...entry,displayName:entry.participant_name_snapshot||partFb.name||"Sin nombre",displayArea:entry.participant_area_snapshot||partFb.area||"",aciertos,details,goalPred:myGoalPred?.predicted_total_goals??null};
+    const pid=entry.participant_id||entry.id;
+    const racha=rachaMap[pid]||[];
+    return{...entry,displayName:entry.participant_name_snapshot||partFb.name||"Sin nombre",displayArea:entry.participant_area_snapshot||partFb.area||"",aciertos,details,goalPred:myGoalPred?.predicted_total_goals??null,racha};
   }).sort((a,b)=>b.aciertos-a.aciertos||a.displayName.localeCompare(b.displayName));
 }
 
@@ -683,7 +746,14 @@ function renderLeaderboard(){
     }
     return`<div class="lb-row${isLeader?" leader":""}${expanded?" expanded":""}" onclick="togglePicks('${p.id}')">
       <div class="lb-rank" style="color:${globalRank===0?"var(--amber)":globalRank===1?"#94a3b8":globalRank===2?"#b45309":"var(--text-d)"}">${rankIcon?`<span style="font-size:20px">${rankIcon}</span>`:globalRank+1}</div>
-      <div><div class="lb-name">${p.displayName}</div><div class="lb-area">${p.displayArea||""}${revealPronostics?` <span class="lb-hint-txt">· ver picks ▾</span>`:""}</div></div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="lb-name">${p.displayName}</div>
+          <button class="share-btn" onclick="event.stopPropagation();openShareModal('${p.id}')" title="Compartir quiniela">📤</button>
+        </div>
+        <div class="lb-area">${p.displayArea||""}${revealPronostics?` <span class="lb-hint-txt">· ver picks ▾</span>`:""}</div>
+        ${p.racha&&p.racha.length?`<div class="form-dots">${p.racha.map(r=>`<div class="form-dot ${r.win?"fd-w":"fd-l"}" title="${r.win?"✅ Buen resultado":"❌ Bajo"}">${r.win?"W":"L"}</div>`).join("")}</div>`:""}
+      </div>
       <div class="lb-hits"><div class="lb-hits-val" style="color:${hitsColor}">${completed>0?p.aciertos:"—"}</div>${completed>0?`<div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%;background:${barColor};"></div></div>`:""}</div>
       <div class="lb-paid"><span class="paid-chip ${p.paid?"paid-yes":"paid-no"}">${p.paid?"Pagado":"Pendiente"}</span></div>
     </div>${picksHTML}`;
@@ -757,6 +827,266 @@ function closeModal(e){
   if(e&&e.target!==document.getElementById("modal-overlay"))return;
   document.getElementById("modal-overlay").classList.remove("open");
   document.body.style.overflow="";
+}
+
+
+// ── PAYMENT STATUS BAR ──
+function renderPaymentStatusBar(){
+  const el=document.getElementById("payment-status-bar");
+  if(!el)return;
+  const total=entries.length;
+  const paid=entries.filter(e=>e.paid).length;
+  const pending=total-paid;
+  const gross=paid*(currentPool.price||0);
+  const comm=gross*((currentPool.commission_pct||0)/100);
+  const net=gross-comm;
+  const pct=total>0?Math.round(paid/total*100):0;
+  el.innerHTML=`
+    <div class="psb-item"><div class="psb-val" style="color:var(--green)">${paid}</div><div class="psb-lbl">Pagados</div></div>
+    <div class="psb-divider"></div>
+    <div class="psb-item"><div class="psb-val" style="color:#f87171">${pending}</div><div class="psb-lbl">Pendientes</div></div>
+    <div class="psb-divider"></div>
+    <div class="psb-item"><div class="psb-val" style="color:var(--amber)">${fmxn(net)}</div><div class="psb-lbl">Bolsa actual</div></div>
+    <div class="psb-divider"></div>
+    <div class="psb-progress-wrap">
+      <div class="psb-progress-label"><span>Boletas confirmadas</span><span>${pct}%</span></div>
+      <div class="psb-progress-track"><div class="psb-progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+
+
+// ── RACHA / FORM RECENT ──
+async function loadRacha(){
+  try{
+    const allPools=await db("pools?select=id,name,date_label,round&order=created_at.asc");
+    const allEntries=await db("entries?select=id,pool_id,participant_id&order=created_at.asc");
+    const allMatches=await db("matches?select=id,pool_id,home_goals,away_goals&order=match_no.asc");
+    const allPreds=await db("predictions_1x2?select=entry_id,match_id,pick");
+    // Build per-participant ordered results per pool
+    const partPools={};
+    allPools.forEach(pool=>{
+      const pEntries=allEntries.filter(e=>e.pool_id===pool.id);
+      const pMatches=allMatches.filter(m=>m.pool_id===pool.id);
+      const completedMatches=pMatches.filter(m=>m.home_goals!=null&&m.away_goals!=null);
+      if(!completedMatches.length)return;
+      pEntries.forEach(entry=>{
+        const pid=entry.participant_id||entry.id;
+        if(!partPools[pid])partPools[pid]=[];
+        const myPreds=allPreds.filter(p=>p.entry_id===entry.id);
+        let hits=0;
+        completedMatches.forEach(match=>{
+          const result=getResult(match.home_goals,match.away_goals);
+          const pred=myPreds.find(p=>p.match_id===match.id);
+          const pick=normalizePick(pred?.pick);
+          if(result&&pick===result)hits++;
+        });
+        const maxH=completedMatches.length;
+        // win = top 33% of possible hits
+        partPools[pid].push({hits,maxH,win:hits>=(maxH*0.55)});
+      });
+    });
+    // Last 5 jornadas
+    rachaMap={};
+    Object.entries(partPools).forEach(([pid,results])=>{
+      rachaMap[pid]=results.slice(-5);
+    });
+    renderLeaderboard();
+  }catch(e){console.warn("Racha load error:",e);}
+}
+
+
+// ── SHARE IMAGE ──
+async function openShareModal(participantId){
+  shareParticipant=participantId;
+  const lb=buildLeaderboard();
+  const p=lb.find(x=>x.id===participantId||x.participant_id===participantId);
+  if(!p)return;
+  document.getElementById("share-overlay").classList.add("open");
+  document.body.style.overflow="hidden";
+  await drawShareCanvas(p, lb);
+}
+function closeShareModal(){
+  document.getElementById("share-overlay").classList.remove("open");
+  document.body.style.overflow="";
+  shareParticipant=null;
+}
+async function drawShareCanvas(p, lb){
+  const canvas=document.getElementById("share-canvas");
+  const cols=3, rows=Math.ceil(p.details.length/cols);
+  const cardW=120, cardH=54, pad=14, headerH=110, footerH=52;
+  const W=cols*cardW+(cols+1)*pad;
+  const H=headerH+(rows*cardH+(rows+1)*pad)+footerH;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext("2d");
+
+  // Background
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,"#0a1122"); bg.addColorStop(1,"#06090f");
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // Header band
+  const hg=ctx.createLinearGradient(0,0,W,0);
+  hg.addColorStop(0,"#1d4ed8"); hg.addColorStop(1,"#2563eb");
+  ctx.fillStyle=hg; ctx.fillRect(0,0,W,54);
+
+  // Header text
+  ctx.fillStyle="#fff";
+  ctx.font="bold 13px 'Barlow Condensed', Arial";
+  ctx.fillText("QUINIELA ARCÁNGEL", pad, 20);
+  ctx.font="11px Arial";
+  ctx.fillStyle="#93c5fd";
+  ctx.fillText("Pasión x Ganar ⚽  ·  " + (currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`), pad, 36);
+
+  // Participant name
+  ctx.fillStyle="#f59e0b";
+  ctx.font="bold 18px 'Bebas Neue', Arial";
+  const rank=lb.indexOf(p)+1;
+  ctx.fillText(`#${rank}  ${p.displayName.toUpperCase()}`, pad, 58);
+  ctx.fillStyle="#64748b";
+  ctx.font="10px Arial";
+  ctx.fillText(p.displayArea||"", pad, 72);
+
+  // Hits summary
+  const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+  const hitsTxt=completed>0?`${p.aciertos} / ${matches.length} aciertos`:`${matches.length} partidos`;
+  ctx.fillStyle="#e2e8f0";
+  ctx.font="bold 13px Arial";
+  ctx.fillText(hitsTxt, pad, 92);
+  // Paid badge
+  const badgeX=W-pad-60;
+  ctx.fillStyle=p.paid?"rgba(34,197,94,.2)":"rgba(239,68,68,.15)";
+  roundRect(ctx, badgeX, 78, 60, 18, 9);
+  ctx.fill();
+  ctx.fillStyle=p.paid?"#22c55e":"#f87171";
+  ctx.font="bold 10px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(p.paid?"✓ PAGADO":"PENDIENTE", badgeX+30, 91);
+  ctx.textAlign="left";
+
+  // Pick cards
+  const PICK_COLORS={"1":["#3b82f6","#1e3a8a"],"X":["#f59e0b","#78350f"],"2":["#ef4444","#7f1d1d"],null:["#334155","#1e293b"]};
+  const RESULT_COLORS={"1":"#3b82f6","X":"#f59e0b","2":"#ef4444"};
+  p.details.forEach((d,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=pad+col*(cardW+pad), y=headerH+pad+row*(cardH+pad);
+    const pick=normalizePick(d.pick);
+    const result=d.result;
+    const correct=pick&&result&&pick===result;
+    const wrong=pick&&result&&pick!==result;
+    // Card bg
+    ctx.fillStyle=correct?"rgba(34,197,94,.12)":wrong?"rgba(239,68,68,.1)":"rgba(30,41,59,.8)";
+    ctx.strokeStyle=correct?"rgba(34,197,94,.5)":wrong?"rgba(239,68,68,.4)":"rgba(255,255,255,.07)";
+    ctx.lineWidth=1;
+    roundRect(ctx,x,y,cardW,cardH,8);
+    ctx.fill(); ctx.stroke();
+    // Match no
+    ctx.fillStyle="#475569"; ctx.font="bold 9px Arial";
+    ctx.fillText(`P${d.match.match_no||i+1}`,x+6,y+12);
+    // Teams truncated
+    const ht=(d.match.home_team||"").slice(0,7);
+    const at=(d.match.away_team||"").slice(0,7);
+    ctx.fillStyle="#94a3b8"; ctx.font="9px Arial";
+    ctx.fillText(`${ht} vs ${at}`,x+6,y+23);
+    // Pick badge
+    const pc=PICK_COLORS[pick]||PICK_COLORS[null];
+    ctx.fillStyle=pc[1];
+    roundRect(ctx,x+6,y+30,38,16,5); ctx.fill();
+    ctx.fillStyle=pc[0]; ctx.font="bold 10px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(pickLabel(pick)||"—",x+25,y+41);
+    ctx.textAlign="left";
+    // Result
+    if(result){
+      ctx.fillStyle=RESULT_COLORS[result]||"#64748b"; ctx.font="bold 9px Arial";
+      ctx.textAlign="right";
+      ctx.fillText("→"+pickLabel(result),x+cardW-6,y+41);
+      ctx.textAlign="left";
+    }
+    // Correct/wrong icon
+    if(correct||wrong){
+      ctx.font="11px Arial";
+      ctx.fillText(correct?"✅":"❌",x+cardW-20,y+14);
+    }
+  });
+
+  // Footer
+  const fy=H-footerH+14;
+  ctx.fillStyle="rgba(255,255,255,.04)";
+  ctx.fillRect(0,H-footerH,W,footerH);
+  ctx.fillStyle="#334155"; ctx.font="9px Arial";
+  ctx.textAlign="center";
+  ctx.fillText("quiniela-arcangel.html  ·  Pasión x Ganar ⚽  ·  2026",W/2,fy+6);
+  ctx.fillStyle="#1d4ed8"; ctx.font="bold 10px Arial";
+  ctx.fillText("Quiniela Arcángel ®",W/2,fy+22);
+  ctx.textAlign="left";
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function downloadShareImage(){
+  const canvas=document.getElementById("share-canvas");
+  const a=document.createElement("a");
+  const lb=buildLeaderboard();
+  const p=lb.find(x=>x.id===shareParticipant||x.participant_id===shareParticipant);
+  a.download=`quiniela-${(p?.displayName||"participante").replace(/\s+/g,"-").toLowerCase()}.png`;
+  a.href=canvas.toDataURL("image/png");
+  a.click();
+}
+function shareViaWhatsApp(){
+  const lb=buildLeaderboard();
+  const p=lb.find(x=>x.id===shareParticipant||x.participant_id===shareParticipant);
+  if(!p)return;
+  const poolName=currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`;
+  const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+  let txt=`⚽ *Quiniela Arcángel*\n*Pasión x Ganar ⚽*\n\n`;
+  txt+=`🏆 *${poolName}*\n`;
+  txt+=`👤 ${p.displayName}${p.displayArea?" — "+p.displayArea:""}\n`;
+  if(completed>0)txt+=`🎯 Aciertos: *${p.aciertos}/${matches.length}*\n`;
+  txt+=`💰 Pago: ${p.paid?"✅ Confirmado":"⏳ Pendiente"}\n\n`;
+  txt+=`*Mis pronósticos:*\n`;
+  p.details.forEach(d=>{
+    const pick=normalizePick(d.pick);
+    const correct=pick&&d.result&&pick===d.result;
+    const wrong=pick&&d.result&&pick!==d.result;
+    const icon=correct?"✅":wrong?"❌":"⏳";
+    txt+=`${icon} P${d.match.match_no}: ${d.match.home_team} vs ${d.match.away_team} → *${pickLabel(pick)||"—"}*\n`;
+  });
+  txt+="\n_Quiniela Arcángel ® 2026_";
+  window.open("https://wa.me/?text="+encodeURIComponent(txt),"_blank");
+}
+
+
+// ── DIRECT LINK ──
+function checkDirectLink(){
+  const params=new URLSearchParams(window.location.search);
+  const pName=params.get("p");
+  if(!pName)return;
+  const lb=buildLeaderboard();
+  const found=lb.find(x=>x.displayName.toLowerCase().includes(pName.toLowerCase()));
+  if(!found)return;
+  // Switch to leaderboard tab
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  const lbBtn=document.querySelector(".tab-btn[data-tab='leaderboard']");
+  if(lbBtn)lbBtn.classList.add("active");
+  ["matches","stats","historial"].forEach(t=>document.getElementById("tab-"+t).style.display="none");
+  document.getElementById("tab-leaderboard").style.display="block";
+  // Scroll + highlight
+  setTimeout(()=>{
+    const rows=document.querySelectorAll(".lb-row");
+    rows.forEach(row=>{
+      if(row.getAttribute("onclick")?.includes(found.id)){
+        row.classList.add("highlighted");
+        row.scrollIntoView({behavior:"smooth",block:"center"});
+        setTimeout(()=>row.classList.remove("highlighted"),7000);
+      }
+    });
+  },600);
 }
 
 // ── CHARTS ──
@@ -878,6 +1208,7 @@ document.getElementById("tabs").addEventListener("click",e=>{
   });
   if(tab==="stats")renderCharts();
   if(tab==="historial")loadHistorial();
+  if(tab==="leaderboard"&&!Object.keys(rachaMap).length)loadRacha();
 });
 
 // ── LOADER / ERROR ──
@@ -887,6 +1218,22 @@ function showError(msg){document.getElementById("error-area").innerHTML=msg?`<di
 // ── INIT ──
 loadPools();
 </script>
+
+
+<!-- SHARE CANVAS MODAL -->
+<div id="share-overlay" onclick="if(event.target===this)closeShareModal()">
+  <div id="share-box">
+    <div class="share-modal-head">
+      <div class="share-modal-title">📤 Compartir Quiniela</div>
+      <button class="modal-close" onclick="closeShareModal()">✕</button>
+    </div>
+    <div id="share-canvas-wrap"><canvas id="share-canvas"></canvas></div>
+    <div class="share-actions">
+      <button class="share-dl-btn primary" onclick="downloadShareImage()">⬇️ Descargar imagen</button>
+      <button class="share-dl-btn secondary" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
+    </div>
+  </div>
+</div>
 
 <!-- FOOTER -->
 <footer id="app-footer">
