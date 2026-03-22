@@ -58,6 +58,12 @@ select,input{font-family:'Barlow',sans-serif;}
 .live-badge{display:flex;align-items:center;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--green);letter-spacing:1.5px;white-space:nowrap;}
 .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border-s);background:var(--card2);color:var(--text-m);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0;}
 .icon-btn:hover{border-color:var(--border);color:var(--text);}
+
+.h-slogan{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:#f59e0b;margin-top:1px;
+}
 /* ── REFRESH BAR ── */
 #refresh-bar{
   background:var(--bg2);border-bottom:1px solid var(--border-s);
@@ -147,6 +153,26 @@ select,input{font-family:'Barlow',sans-serif;}
 .pick-ok{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.35);}
 .pick-fail{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.35);}
 .pick-real{font-size:10px;color:var(--text-m);font-family:'Barlow Condensed',sans-serif;}
+
+/* ── UNPAID NOTICE ── */
+.unpaid-notice{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(245,158,11,.07);
+  border:1px solid rgba(245,158,11,.2);
+  border-radius:12px;padding:12px 16px;margin-bottom:14px;
+}
+.unpaid-notice-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.unpaid-notice-body{flex:1;}
+.unpaid-notice-title{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  color:#f59e0b;margin-bottom:3px;
+}
+.unpaid-notice-text{
+  font-family:"Barlow",sans-serif;font-size:12px;
+  color:var(--text-m);line-height:1.5;
+}
+.unpaid-notice-text strong{color:var(--text);}
 /* ── LOCK NOTICE ── */
 .lock-notice{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:11px 16px;margin-bottom:14px;color:var(--amber);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;}
 /* ── RESULT SUMMARY ── */
@@ -293,7 +319,7 @@ select,input{font-family:'Barlow',sans-serif;}
     <div class="h-logo" style="background:transparent;box-shadow:none;padding:0;overflow:hidden;"><img src="img/logo-arcangel.png" alt="Arcángel" style="width:44px;height:44px;object-fit:contain;border-radius:10px;"></div>
     <div style="min-width:0;">
       <div class="h-title">QUINIELA ARCÁNGEL</div>
-      <div class="h-sub">Resultados en vivo</div>
+      <div class="h-sub">Resultados en vivo</div><div class="h-slogan">Pasión x Ganar ⚽</div>
     </div>
   </div>
   <div class="h-right">
@@ -330,6 +356,16 @@ select,input{font-family:'Barlow',sans-serif;}
     <div id="tab-matches"><div id="match-grid"></div></div>
     <!-- CLASIFICACIÓN -->
     <div id="tab-leaderboard" style="display:none;">
+      <div class="unpaid-notice">
+        <div class="unpaid-notice-icon">⚠️</div>
+        <div class="unpaid-notice-body">
+          <div class="unpaid-notice-title">¡Boleto no pagado, no juega!</div>
+          <div class="unpaid-notice-text">
+            Los participantes con estatus <strong>Pendiente</strong> tienen sus pronósticos registrados, pero su boleta <strong>no es válida</strong> hasta confirmar el pago.<br>
+            <strong>Límite de pago: sábado 4:00 PM.</strong> Pasada esta hora, el boleto queda inactivo automáticamente.
+          </div>
+        </div>
+      </div>
       <div id="lock-notice" style="display:none;" class="lock-notice"></div>
       <div id="search-wrap"><span class="search-icon">🔍</span><input type="text" id="search-input" placeholder="Buscar participante..."/></div>
       <div id="lb-wrap">
