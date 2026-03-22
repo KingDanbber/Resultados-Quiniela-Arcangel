@@ -261,6 +261,24 @@ select,input{font-family:'Barlow',sans-serif;}
 }
 .share-btn:hover{opacity:.85;}
 .share-btn:active{opacity:.7;}
+.link-btn{
+  width:26px;height:26px;border-radius:7px;border:1px solid var(--border-s);
+  background:var(--card2);color:var(--text-m);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;transition:all .2s;vertical-align:middle;flex-shrink:0;
+  padding:0;
+}
+.link-btn:hover{border-color:var(--border);color:var(--text);}
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:rgba(30,41,59,.97);border:1px solid var(--border);
+  border-radius:10px;padding:10px 20px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:13px;letter-spacing:.5px;color:var(--text);
+  z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;}
 
 /* ── DIRECT LINK HIGHLIGHT ── */
 .lb-row.highlighted{
@@ -750,6 +768,7 @@ function renderLeaderboard(){
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <div class="lb-name">${p.displayName}</div>
           <button class="share-btn" onclick="event.stopPropagation();openShareModal('${p.id}')" title="Compartir quiniela">📤</button>
+          <button class="link-btn" onclick="event.stopPropagation();copyDirectLink('${p.id}','${p.displayName.replace(/'/g,'')}')" title="Copiar link directo">🔗</button>
         </div>
         <div class="lb-area">${p.displayArea||""}${revealPronostics?` <span class="lb-hint-txt">· ver picks ▾</span>`:""}</div>
         ${p.racha&&p.racha.length?`<div class="form-dots">${p.racha.map(r=>`<div class="form-dot ${r.win?"fd-w":"fd-l"}" title="${r.win?"✅ Buen resultado":"❌ Bajo"}">${r.win?"W":"L"}</div>`).join("")}</div>`:""}
@@ -1063,6 +1082,33 @@ function shareViaWhatsApp(){
 
 
 // ── DIRECT LINK ──
+// ── COPY DIRECT LINK ──
+function copyDirectLink(entryId, name){
+  const lb = buildLeaderboard();
+  const p  = lb.find(x => x.id === entryId || x.participant_id === entryId);
+  const pName = (p?.displayName || name || '').trim();
+  const base  = window.location.href.split('?')[0];
+  const url   = base + '?p=' + encodeURIComponent(pName);
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>showToast('🔗 Link copiado para ' + pName));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('🔗 Link copiado para ' + pName);
+  }
+}
+function showToast(msg){
+  let t = document.getElementById('app-toast');
+  if(!t){ t=document.createElement('div'); t.id='app-toast'; t.className='toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
 function checkDirectLink(){
   const params=new URLSearchParams(window.location.search);
   const pName=params.get("p");
@@ -1230,7 +1276,6 @@ loadPools();
     <div id="share-canvas-wrap"><canvas id="share-canvas"></canvas></div>
     <div class="share-actions">
       <button class="share-dl-btn primary" onclick="downloadShareImage()">⬇️ Descargar imagen</button>
-      <button class="share-dl-btn secondary" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
     </div>
   </div>
 </div>
