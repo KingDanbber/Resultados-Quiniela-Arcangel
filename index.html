@@ -455,16 +455,24 @@ select,input{font-family:'Barlow',sans-serif;}
     </div>
     <!-- ESTADÍSTICAS -->
     <div id="tab-stats" style="display:none;">
+      <!-- Aciertos horizontal bar -->
       <div class="chart-section fu">
         <div class="chart-title">🎯 Aciertos por Participante</div>
-        <div class="chart-wrap"><canvas id="chart-hits"></canvas></div>
+        <div id="chart-hits-wrap"><canvas id="chart-hits"></canvas></div>
       </div>
+      <!-- Distribución de pronósticos -->
       <div class="chart-section fu">
         <div class="chart-title">📈 Distribución de Pronósticos</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div class="chart-wrap" style="max-height:220px;"><canvas id="chart-dist"></canvas></div>
           <div id="dist-detail" style="display:flex;flex-direction:column;justify-content:center;gap:10px;font-family:'Barlow Condensed',sans-serif;"></div>
         </div>
+      </div>
+      <!-- Goles totales -->
+      <div class="chart-section fu">
+        <div class="chart-title">⚽ Goles por Partido</div>
+        <div id="goals-summary" style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;"></div>
+        <div class="chart-wrap" style="max-height:260px;"><canvas id="chart-goals"></canvas></div>
       </div>
     </div>
     <!-- HISTORIAL -->
@@ -1136,6 +1144,8 @@ function checkDirectLink(){
 }
 
 // ── CHARTS ──
+let chartGoals=null;
+
 function renderCharts(){
   const lb=buildLeaderboard();
   const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
@@ -1144,14 +1154,33 @@ function renderCharts(){
   const gridColor=dark?"rgba(255,255,255,.06)":"rgba(0,0,0,.07)";
   Chart.defaults.color=textColor;
 
-  // ── Bar chart: aciertos ──
+  // ── HORIZONTAL bar: nombres completos, altura dinámica ──
   const sorted=[...lb].sort((a,b)=>b.aciertos-a.aciertos);
-  const labels=sorted.map(p=>p.displayName.split(" ")[0]);
+  const labels=sorted.map(p=>p.displayName);
   const data=sorted.map(p=>p.aciertos);
-  const bgColors=sorted.map((_,i)=>i===0&&completed>0?"rgba(245,158,11,.8)":"rgba(37,99,235,.7)");
+  const bgColors=sorted.map((_,i)=>i===0&&completed>0?"rgba(245,158,11,.85)":"rgba(37,99,235,.75)");
+  const barH=36, minH=160;
+  const canvasH=Math.max(minH, labels.length*barH+60);
+  const wrap=document.getElementById("chart-hits-wrap");
+  wrap.style.height=canvasH+"px";wrap.style.position="relative";
   if(chartHits)chartHits.destroy();
   const ctxH=document.getElementById("chart-hits").getContext("2d");
-  chartHits=new Chart(ctxH,{type:"bar",data:{labels,datasets:[{data,backgroundColor:bgColors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} aciertos`}}},scales:{x:{grid:{color:gridColor},ticks:{font:{family:"Barlow Condensed",size:11,weight:"700"}}},y:{grid:{color:gridColor},beginAtZero:true,max:matches.length||10,ticks:{stepSize:1}}}}});
+  chartHits=new Chart(ctxH,{
+    type:"bar",
+    data:{labels,datasets:[{data,backgroundColor:bgColors,borderRadius:6,borderSkipped:false}]},
+    options:{
+      indexAxis:"y",
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`  ${ctx.raw} aciertos`}}
+      },
+      scales:{
+        x:{grid:{color:gridColor},beginAtZero:true,max:matches.length||10,ticks:{stepSize:1,font:{family:"Barlow Condensed",size:11,weight:"700"}}},
+        y:{grid:{display:false},ticks:{font:{family:"Barlow Condensed",size:12,weight:"700"},color:textColor}}
+      }
+    }
+  });
 
   // ── Donut: distribución de picks ──
   const counts={"1":0,"X":0,"2":0};
@@ -1162,9 +1191,64 @@ function renderCharts(){
   chartDist=new Chart(ctxD,{type:"doughnut",data:{labels:["Local","Empate","Visita"],datasets:[{data:[counts["1"],counts["X"],counts["2"]],backgroundColor:["rgba(59,130,246,.8)","rgba(245,158,11,.8)","rgba(239,68,68,.8)"],borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:true,cutout:"68%",plugins:{legend:{display:false}}}});
   const pct=v=>total>0?Math.round(v/total*100):0;
   document.getElementById("dist-detail").innerHTML=`
-    ${[["Local","#3b82f6",counts["1"]],["Empate","#f59e0b",counts["X"]],["Visita","#ef4444",counts["2"]]].map(([l,c,v])=>`
-    <div><div style="display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:${c};margin-bottom:4px;">${l}<span>${pct(v)}%</span></div>
-    <div style="height:5px;border-radius:3px;background:var(--border-s);overflow:hidden;"><div style="height:100%;width:${pct(v)}%;background:${c};border-radius:3px;transition:width 1s;"></div></div></div>`).join("")}`;
+    ${[["Local","#3b82f6",counts["1"]],["Empate","#f59e0b",counts["X"]],["Visita","#ef4444",counts["2"]]].map(([lbl,col,val])=>`
+    <div><div style="display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:${col};margin-bottom:4px;">${lbl}<span>${pct(val)}%</span></div>
+    <div style="height:5px;border-radius:3px;background:var(--border-s);overflow:hidden;"><div style="height:100%;width:${pct(val)}%;background:${col};border-radius:3px;transition:width 1s;"></div></div></div>`).join("")}`;
+
+  // ── Goles por partido ──
+  renderGoalsChart(dark,gridColor,textColor);
+}
+
+function renderGoalsChart(dark,gridColor,textColor){
+  const scored=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null);
+  const summaryEl=document.getElementById("goals-summary");
+  if(!scored.length){
+    summaryEl.innerHTML=`<div style="color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;">Aún no hay partidos con resultado.</div>`;
+    if(chartGoals){chartGoals.destroy();chartGoals=null;}
+    return;
+  }
+  const totalGoles=scored.reduce((s,m)=>s+m.home_goals+m.away_goals,0);
+  const avgGoles=(totalGoles/scored.length).toFixed(1);
+  const maxGoles=Math.max(...scored.map(m=>m.home_goals+m.away_goals));
+  const masGoleador=scored.reduce((a,b)=>(a.home_goals+a.away_goals>=b.home_goals+b.away_goals?a:b));
+  const empates=scored.filter(m=>m.home_goals===m.away_goals).length;
+  summaryEl.innerHTML=[
+    ["⚽","Total goles",totalGoles,"var(--text)"],
+    ["📊","Promedio/partido",avgGoles,"#60a5fa"],
+    ["🔥","Máx. en un partido",maxGoles,"var(--amber)"],
+    ["🤝","Empates",`${empates}/${scored.length}`,"var(--green)"],
+  ].map(([ic,lb,val,color])=>`
+    <div style="background:var(--card);border:1px solid var(--border-s);border-radius:10px;padding:10px 14px;min-width:110px;flex:1;">
+      <div style="font-size:18px;margin-bottom:3px;">${ic}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${color};line-height:1;">${val}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m);margin-top:2px;">${lb}</div>
+    </div>`).join("");
+  const glabels=scored.map(m=>`P${m.match_no}`);
+  const homeData=scored.map(m=>m.home_goals);
+  const awayData=scored.map(m=>m.away_goals);
+  if(chartGoals)chartGoals.destroy();
+  const ctxG=document.getElementById("chart-goals").getContext("2d");
+  chartGoals=new Chart(ctxG,{
+    type:"bar",
+    data:{
+      labels:glabels,
+      datasets:[
+        {label:"Local",data:homeData,backgroundColor:"rgba(37,99,235,.75)",borderRadius:4,borderSkipped:false},
+        {label:"Visita",data:awayData,backgroundColor:"rgba(239,68,68,.7)",borderRadius:4,borderSkipped:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{color:textColor,font:{family:"Barlow Condensed",size:11,weight:"700"},boxWidth:12,padding:16}},
+        tooltip:{callbacks:{title:ctx=>{const m=scored[ctx[0].dataIndex];return`P${m.match_no}: ${m.home_team} vs ${m.away_team}`;},label:ctx=>`${ctx.dataset.label}: ${ctx.raw} gol(es)`}}
+      },
+      scales:{
+        x:{grid:{color:gridColor},stacked:false,ticks:{font:{family:"Barlow Condensed",size:11,weight:"700"}}},
+        y:{grid:{color:gridColor},beginAtZero:true,ticks:{stepSize:1,font:{family:"Barlow Condensed",size:11}}}
+      }
+    }
+  });
 }
 
 // ── HISTORIAL ──
