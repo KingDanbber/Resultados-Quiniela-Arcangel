@@ -402,6 +402,49 @@ select,input{font-family:'Barlow',sans-serif;}
   display:inline-block;margin:2px 3px 2px 0;
   padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700;
 }
+
+/* ── GENERAL STATS ── */
+.gstat-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px;}
+.gstat-kpi{
+  background:var(--card);border:1px solid var(--border-s);border-radius:12px;
+  padding:14px 12px;text-align:center;
+}
+.gstat-kpi-val{font-family:"Bebas Neue",sans-serif;font-size:28px;line-height:1;}
+.gstat-kpi-lbl{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text-m);margin-top:4px;}
+.gstat-section-title{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-m);margin:20px 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.gstat-section-title::after{content:"";flex:1;height:1px;background:var(--border-s);}
+/* Winner ranking */
+.winner-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border-s);
+  margin-bottom:8px;
+}
+.winner-rank{
+  font-family:"Bebas Neue",sans-serif;font-size:22px;
+  width:32px;text-align:center;flex-shrink:0;
+}
+.winner-name{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:15px;color:var(--text);}
+.winner-area{font-size:11px;color:var(--text-m);font-family:"Barlow Condensed",sans-serif;}
+.winner-crowns{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.winner-crown{
+  font-size:10px;font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  padding:2px 8px;border-radius:20px;letter-spacing:.5px;
+  background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);
+}
+.winner-stat{
+  margin-left:auto;text-align:right;flex-shrink:0;
+}
+.winner-stat-val{font-family:"Bebas Neue",sans-serif;font-size:24px;line-height:1;}
+.winner-stat-lbl{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:9px;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m);}
+.bolsa-chart-wrap{position:relative;height:220px;margin-top:10px;}
 /* ── FOOTER ── */
 #app-footer{
   margin-top:48px;
@@ -590,6 +633,15 @@ select,input{font-family:'Barlow',sans-serif;}
         <div class="chart-title">📋 Análisis por Partido</div>
         <div id="match-analysis-grid" style="display:grid;gap:10px;"></div>
       </div>
+      <!-- General -->
+      <div class="chart-section fu" id="general-stats-section">
+        <div class="chart-title">🌐 Estadísticas Generales</div>
+        <div id="general-stats-content">
+          <div style="color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;padding:8px 0;">
+            Cargando estadísticas generales...
+          </div>
+        </div>
+      </div>
     </div>
     <!-- HISTORIAL -->
     <div id="tab-historial" style="display:none;">
@@ -638,6 +690,8 @@ let chartHits=null,chartDist=null;
 let historialLoaded=false;
 let rachaMap={};  // participantId → last5 [{win:bool}]
 let statsMap={};  // participantId → {eficiencia, rachaActiva, pickFav}
+let generalStatsLoaded=false;
+let chartBolsas=null;
 let shareParticipant=null;
 let refreshSecs=60,refreshTimer=null;
 let isDark=true;
@@ -1340,6 +1394,8 @@ function renderCharts(){
   renderParticipantStats();
   // ── Análisis por partido ──
   renderMatchAnalysis();
+  // ── Generales ──
+  if(!generalStatsLoaded) loadGeneralStats();
 }
 
 function renderParticipantStats(){
@@ -1554,6 +1610,203 @@ function renderGoalsChart(dark,gridColor,textColor){
       }
     }
   });
+}
+
+
+// ── GENERAL STATS ──
+async function loadGeneralStats(){
+  if(generalStatsLoaded) return;
+  const el=document.getElementById("general-stats-content");
+  if(!el) return;
+  el.innerHTML=`<div style="color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;padding:8px 0;"><div style="font-size:28px;animation:spin 1.5s linear infinite;display:inline-block;">⚽</div> Cargando...</div>`;
+  try{
+    const [allPools, allEntries, allMatches, allPreds, allPoolResults] = await Promise.all([
+      db("pools?select=id,name,date_label,round,price,commission_pct,net_pot&order=created_at.asc"),
+      db("entries?select=id,pool_id,participant_id,paid,participant_name_snapshot,participant_area_snapshot"),
+      db("matches?select=id,pool_id,home_goals,away_goals"),
+      db("predictions_1x2?select=entry_id,match_id,pick"),
+      db("pool_results?select=pool_id,net_pot,winner_count,max_points&order=pool_id.asc").catch(()=>[]),
+    ]);
+
+    const allPartIds=[...new Set(allEntries.map(x=>x.participant_id).filter(Boolean))];
+    let allParticipants={};
+    if(allPartIds.length){
+      const parts=await db(`participants?id=in.(${allPartIds.join(",")})&select=id,name,area`);
+      allParticipants=Object.fromEntries(parts.map(p=>[p.id,p]));
+    }
+
+    // ── Per-pool winner detection ──
+    // winnerMap: pid → {name, area, wins:[{poolName, bolsa}], totalWins, totalEarned}
+    const winnerMap={};
+    const bolsaHistory=[]; // [{label, net, paid}]
+
+    allPools.forEach(pool=>{
+      const pMatches=allMatches.filter(m=>m.pool_id===pool.id);
+      const pEntries=allEntries.filter(e=>e.pool_id===pool.id);
+      const completedM=pMatches.filter(m=>m.home_goals!=null&&m.away_goals!=null);
+      const paidCount=pEntries.filter(e=>e.paid).length;
+      const poolLabel=pool.name||pool.date_label||`J${pool.round}`;
+
+      // Bolsa
+      const pr=allPoolResults.find(r=>r.pool_id===pool.id);
+      const gross=paidCount*(pool.price||0);
+      const comm=gross*((pool.commission_pct||0)/100);
+      const net=pr?.net_pot??(gross-comm);
+      if(paidCount>0) bolsaHistory.push({label:poolLabel, net, paid:paidCount});
+
+      if(!completedM.length) return;
+
+      // Compute aciertos per entry
+      const entryHits=pEntries.map(entry=>{
+        const myPreds=allPreds.filter(p=>p.entry_id===entry.id);
+        let hits=0;
+        completedM.forEach(match=>{
+          const result=getResult(match.home_goals,match.away_goals);
+          const pred=myPreds.find(p=>p.match_id===match.id);
+          const pick=normalizePick(pred?.pick);
+          if(result&&pick===result) hits++;
+        });
+        const partFb=allParticipants[entry.participant_id]||{};
+        return {
+          pid: entry.participant_id||entry.id,
+          name: entry.participant_name_snapshot||partFb.name||"Sin nombre",
+          area: entry.participant_area_snapshot||partFb.area||"",
+          hits, paid: entry.paid,
+        };
+      });
+
+      // Only paid entries compete
+      const paidEntries=entryHits.filter(e=>e.paid);
+      if(!paidEntries.length) return;
+      const maxHits=Math.max(...paidEntries.map(e=>e.hits));
+      if(maxHits===0) return;
+      const winners=paidEntries.filter(e=>e.hits===maxHits);
+      const prize=winners.length>0?net/winners.length:0;
+
+      winners.forEach(w=>{
+        if(!winnerMap[w.pid]) winnerMap[w.pid]={name:w.name,area:w.area,wins:[],totalWins:0,totalEarned:0};
+        winnerMap[w.pid].wins.push({poolLabel,hits:maxHits,prize});
+        winnerMap[w.pid].totalWins++;
+        winnerMap[w.pid].totalEarned+=prize;
+      });
+    });
+
+    const winnerRanking=Object.values(winnerMap).sort((a,b)=>b.totalWins-a.totalWins||b.totalEarned-a.totalEarned);
+
+    // ── Global KPIs ──
+    const totalJornadas=allPools.length;
+    const totalBolsa=bolsaHistory.reduce((s,b)=>s+b.net,0);
+    const avgBolsa=bolsaHistory.length?totalBolsa/bolsaHistory.length:0;
+    const maxBolsa=bolsaHistory.length?Math.max(...bolsaHistory.map(b=>b.net)):0;
+    const totalPagos=allEntries.filter(e=>e.paid).length;
+    const uniqueParticipants=new Set(allEntries.map(e=>e.participant_id||e.id)).size;
+    const topWinner=winnerRanking[0];
+
+    // ── HTML BUILD ──
+    const kpisHTML=`<div class="gstat-kpis">
+      ${[
+        [totalJornadas,"Jornadas","var(--text)"],
+        [fmxn(totalBolsa),"Total acumulado","var(--amber)"],
+        [fmxn(avgBolsa),"Bolsa promedio","#60a5fa"],
+        [fmxn(maxBolsa),"Mayor bolsa","var(--green)"],
+        [totalPagos,"Boletas pagadas","var(--text)"],
+        [uniqueParticipants,"Jugadores únicos","var(--text)"],
+      ].map(([v,l,col])=>`<div class="gstat-kpi">
+        <div class="gstat-kpi-val" style="color:${col};">${v}</div>
+        <div class="gstat-kpi-lbl">${l}</div>
+      </div>`).join("")}
+    </div>`;
+
+    // Bolsas chart
+    const bolsaChartHTML=bolsaHistory.length?`
+      <div class="gstat-section-title">💰 Histórico de Bolsas por Jornada</div>
+      <div class="bolsa-chart-wrap"><canvas id="chart-bolsas"></canvas></div>`:"";
+
+    // Winners ranking
+    const winnersHTML=winnerRanking.length?`
+      <div class="gstat-section-title">👑 Más Veces Ganador</div>
+      ${winnerRanking.map((w,i)=>{
+        const rankIcon=["🥇","🥈","🥉"][i]||null;
+        const rankColor=i===0?"var(--amber)":i===1?"#94a3b8":i===2?"#b45309":"var(--text-d)";
+        const crownsHTML=w.wins.map(win=>`<span class="winner-crown">🏆 ${win.poolLabel} (${win.hits} ⚽)</span>`).join("");
+        return`<div class="winner-row">
+          <div class="winner-rank" style="color:${rankColor};">${rankIcon?`<span style="font-size:20px">${rankIcon}</span>`:i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="winner-name">${w.name}</div>
+            <div class="winner-area">${w.area}</div>
+            <div class="winner-crowns">${crownsHTML}</div>
+          </div>
+          <div class="winner-stat">
+            <div class="winner-stat-val" style="color:${rankColor};">${w.totalWins}</div>
+            <div class="winner-stat-lbl">victorias</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--green);margin-top:2px;">${fmxn(w.totalEarned)}</div>
+          </div>
+        </div>`;
+      }).join("")}`:`<div class="gstat-section-title">👑 Más Veces Ganador</div>
+      <div style="color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;padding:8px 0;">Aún no hay jornadas finalizadas con ganador.</div>`;
+
+    el.innerHTML=kpisHTML+bolsaChartHTML+winnersHTML;
+    generalStatsLoaded=true;
+
+    // Render bolsas chart
+    if(bolsaHistory.length){
+      setTimeout(()=>{
+        const dark=isDark;
+        const gridColor=dark?"rgba(255,255,255,.06)":"rgba(0,0,0,.07)";
+        const textColor=dark?"#94a3b8":"#64748b";
+        if(chartBolsas) chartBolsas.destroy();
+        const ctxB=document.getElementById("chart-bolsas")?.getContext("2d");
+        if(!ctxB) return;
+        const grad=ctxB.createLinearGradient(0,0,0,200);
+        grad.addColorStop(0,"rgba(245,158,11,.6)");
+        grad.addColorStop(1,"rgba(245,158,11,.05)");
+        chartBolsas=new Chart(ctxB,{
+          type:"line",
+          data:{
+            labels:bolsaHistory.map(b=>b.label),
+            datasets:[{
+              label:"Bolsa neta",
+              data:bolsaHistory.map(b=>b.net),
+              borderColor:"#f59e0b",
+              backgroundColor:grad,
+              borderWidth:2.5,
+              pointBackgroundColor:"#f59e0b",
+              pointRadius:5,pointHoverRadius:7,
+              fill:true,tension:0.35,
+            },{
+              label:"Boletas pagadas",
+              data:bolsaHistory.map(b=>b.paid),
+              borderColor:"rgba(37,99,235,.7)",
+              backgroundColor:"transparent",
+              borderWidth:2,
+              pointBackgroundColor:"#3b82f6",
+              pointRadius:4,pointHoverRadius:6,
+              fill:false,tension:0.35,
+              yAxisID:"y2",
+            }]
+          },
+          options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{
+              legend:{display:true,labels:{color:textColor,font:{family:"Barlow Condensed",size:11,weight:"700"},boxWidth:12,padding:16}},
+              tooltip:{callbacks:{
+                label:ctx=>ctx.datasetIndex===0?`Bolsa: ${fmxn(ctx.raw)}`:`Pagados: ${ctx.raw}`,
+              }},
+            },
+            scales:{
+              x:{grid:{color:gridColor},ticks:{font:{family:"Barlow Condensed",size:11,weight:"700"},color:textColor}},
+              y:{grid:{color:gridColor},beginAtZero:true,ticks:{callback:v=>fmxn(v),font:{size:10},color:textColor},title:{display:true,text:"Bolsa",color:textColor,font:{family:"Barlow Condensed",size:10}}},
+              y2:{position:"right",grid:{display:false},beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:"#3b82f6"},title:{display:true,text:"Pagados",color:"#3b82f6",font:{family:"Barlow Condensed",size:10}}},
+            }
+          }
+        });
+      },120);
+    }
+  }catch(e){
+    console.error("General stats error:",e);
+    const el2=document.getElementById("general-stats-content");
+    if(el2) el2.innerHTML=`<div class="error-box">⚠️ ${e.message}</div>`;
+  }
 }
 
 // ── HISTORIAL ──
