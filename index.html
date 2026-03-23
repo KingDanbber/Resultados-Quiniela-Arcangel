@@ -175,6 +175,33 @@ select,input{font-family:'Barlow',sans-serif;}
 .unpaid-notice-text strong{color:var(--text);}
 /* ── LOCK NOTICE ── */
 .lock-notice{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:11px 16px;margin-bottom:14px;color:var(--amber);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;}
+
+/* ── PRIZE NOTICE ── */
+.prize-notice{
+  display:flex;align-items:flex-start;gap:10px;
+  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(251,191,36,.04));
+  border:1px solid rgba(245,158,11,.3);
+  border-radius:12px;padding:14px 16px;margin-top:14px;
+  position:relative;overflow:hidden;
+}
+.prize-notice::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--amber),#fbbf24,var(--amber));
+  background-size:200% 100%;animation:shimmerGold 2.5s linear infinite;
+}
+@keyframes shimmerGold{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.prize-notice-left{display:flex;gap:12px;align-items:flex-start;width:100%;}
+.prize-notice-icon{font-size:26px;flex-shrink:0;margin-top:2px;}
+.prize-notice-title{
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;
+  font-size:13px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--amber);margin-bottom:4px;
+}
+.prize-notice-text{
+  font-family:'Barlow',sans-serif;font-size:12px;
+  color:var(--text-m);line-height:1.55;
+}
+.prize-notice-text strong{color:var(--text);}
 /* ── RESULT SUMMARY ── */
 #result-summary{margin-top:20px;background:linear-gradient(135deg,rgba(245,158,11,.07),var(--card));border:1px solid rgba(245,158,11,.22);border-radius:16px;padding:20px;}
 .rs-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--amber);letter-spacing:2px;margin-bottom:16px;}
@@ -309,6 +336,26 @@ select,input{font-family:'Barlow',sans-serif;}
   #modal-box{max-height:96vh;}
 }
 
+
+/* ── PARTICIPANT STATS CARD ── */
+.pstat-card{
+  background:var(--card);border:1px solid var(--border-s);
+  border-radius:12px;padding:14px 16px;
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;
+}
+.pstat-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--text);margin-bottom:8px;}
+.pstat-area{font-size:11px;color:var(--text-m);margin-top:-6px;margin-bottom:8px;font-family:'Barlow Condensed',sans-serif;}
+.pstat-metrics{display:flex;gap:6px;flex-wrap:wrap;}
+.pstat-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+  padding:3px 9px;border-radius:20px;letter-spacing:.5px;
+}
+.pstat-efic{background:rgba(37,99,235,.12);color:#60a5fa;border:1px solid rgba(37,99,235,.25);}
+.pstat-racha{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);}
+.pstat-fav{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+.pstat-pie{display:flex;gap:4px;align-items:center;}
+.pstat-pie-seg{height:8px;border-radius:4px;min-width:6px;transition:width .6s;}
 /* ── FOOTER ── */
 #app-footer{
   margin-top:48px;
@@ -451,6 +498,19 @@ select,input{font-family:'Barlow',sans-serif;}
         </div>
         <div id="lb-rows"></div>
       </div>
+      <!-- PRIZE NOTICE -->
+      <div class="prize-notice">
+        <div class="prize-notice-left">
+          <div class="prize-notice-icon">🏅</div>
+          <div>
+            <div class="prize-notice-title">¿Cómo se gana?</div>
+            <div class="prize-notice-text">
+              El <strong>1er lugar</strong> con el <strong>mayor número de aciertos</strong> se lleva la bolsa neta de la jornada.<br>
+              En caso de empate, el desempate es por el pronóstico de <strong>total de goles</strong> más cercano al real.
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="result-summary" style="display:none;"></div>
     </div>
     <!-- ESTADÍSTICAS -->
@@ -473,6 +533,11 @@ select,input{font-family:'Barlow',sans-serif;}
         <div class="chart-title">⚽ Goles por Partido</div>
         <div id="goals-summary" style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;"></div>
         <div class="chart-wrap" style="max-height:260px;"><canvas id="chart-goals"></canvas></div>
+      </div>
+      <!-- Stats por participante -->
+      <div class="chart-section fu">
+        <div class="chart-title">👤 Perfil por Participante</div>
+        <div id="participant-stats-grid" style="display:grid;gap:10px;"></div>
       </div>
     </div>
     <!-- HISTORIAL -->
@@ -521,6 +586,7 @@ let revealPronostics=true,expandedEntries={},searchQuery="";
 let chartHits=null,chartDist=null;
 let historialLoaded=false;
 let rachaMap={};  // participantId → last5 [{win:bool}]
+let statsMap={};  // participantId → {eficiencia, rachaActiva, pickFav}
 let shareParticipant=null;
 let refreshSecs=60,refreshTimer=null;
 let isDark=true;
@@ -912,10 +978,32 @@ async function loadRacha(){
         partPools[pid].push({hits,maxH,win:hits>=(maxH*0.55)});
       });
     });
-    // Last 5 jornadas
+    // Last 5 jornadas + stats per participant
     rachaMap={};
+    statsMap={};
     Object.entries(partPools).forEach(([pid,results])=>{
       rachaMap[pid]=results.slice(-5);
+      // Eficiencia histórica = total hits / total possible
+      const totalHits=results.reduce((s,r)=>s+r.hits,0);
+      const totalPossible=results.reduce((s,r)=>s+r.maxH,0);
+      const eficiencia=totalPossible>0?Math.round(totalHits/totalPossible*100):null;
+      // Racha activa = consecutive wins from most recent
+      let rachaActiva=0;
+      for(let i=results.length-1;i>=0;i--){
+        if(results[i].win) rachaActiva++;
+        else break;
+      }
+      // Pick favorito: count picks across all preds for this participant
+      const myAllEntries=allEntries.filter(e=>(e.participant_id||e.id)===pid);
+      const pickCount={"1":0,"X":0,"2":0};
+      myAllEntries.forEach(entry=>{
+        allPreds.filter(p=>p.entry_id===entry.id).forEach(p=>{
+          const n=normalizePick(p.pick);
+          if(pickCount[n]!==undefined) pickCount[n]++;
+        });
+      });
+      const pickFav=Object.entries(pickCount).sort((a,b)=>b[1]-a[1])[0];
+      statsMap[pid]={eficiencia,rachaActiva,pickFav:pickFav?pickFav[0]:null,pickCounts:pickCount};
     });
     renderLeaderboard();
   }catch(e){console.warn("Racha load error:",e);}
@@ -1197,6 +1285,63 @@ function renderCharts(){
 
   // ── Goles por partido ──
   renderGoalsChart(dark,gridColor,textColor);
+  // ── Perfil por participante ──
+  renderParticipantStats();
+}
+
+function renderParticipantStats(){
+  const el=document.getElementById("participant-stats-grid");
+  if(!el)return;
+  const lb=buildLeaderboard();
+  if(!Object.keys(statsMap).length){
+    el.innerHTML=`<div style="color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;padding:10px 0;">Cargando estadísticas históricas... (ve a Clasificación primero)</div>`;
+    return;
+  }
+  const PICK_LABEL_ES={"1":"Local","X":"Empate","2":"Visita"};
+  const PICK_COLOR={"1":"#3b82f6","X":"#f59e0b","2":"#ef4444"};
+  const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+  el.innerHTML=lb.map(p=>{
+    const pid=p.participant_id||p.id;
+    const st=statsMap[pid];
+    const racha=rachaMap[pid]||[];
+    const efStr=st?.eficiencia!=null?`${st.eficiencia}%`:"—";
+    const rachaActStr=st?.rachaActiva>0?`🔥 ${st.rachaActiva} seguidas`:"—";
+    const favStr=st?.pickFav?`${PICK_LABEL_ES[st.pickFav]||st.pickFav}`:"—";
+    const favColor=PICK_COLOR[st?.pickFav]||"var(--text-m)";
+    // Mini pick distribution bar
+    let pieHTML="";
+    if(st?.pickCounts){
+      const tot=st.pickCounts["1"]+st.pickCounts["X"]+st.pickCounts["2"];
+      if(tot>0){
+        const w1=Math.round(st.pickCounts["1"]/tot*80);
+        const wX=Math.round(st.pickCounts["X"]/tot*80);
+        const w2=80-w1-wX;
+        pieHTML=`<div class="pstat-pie">
+          <div class="pstat-pie-seg" style="width:${w1}px;background:#3b82f6;" title="Local ${st.pickCounts['1']}"></div>
+          <div class="pstat-pie-seg" style="width:${wX}px;background:#f59e0b;" title="Empate ${st.pickCounts['X']}"></div>
+          <div class="pstat-pie-seg" style="width:${w2}px;background:#ef4444;" title="Visita ${st.pickCounts['2']}"></div>
+        </div>`;
+      }
+    }
+    // Form dots
+    const formHTML=racha.length?`<div class="form-dots" style="margin-top:6px;">${racha.map(r=>`<div class="form-dot ${r.win?"fd-w":"fd-l"}">${r.win?"W":"L"}</div>`).join("")}</div>`:"";
+    // Current hits
+    const hitsHTML=completed>0?`<div style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:${p.aciertos===lb[0].aciertos&&completed>0?"var(--amber)":"var(--text)"};">${p.aciertos}<span style="font-size:13px;color:var(--text-m);">/${matches.length}</span></div><div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m);">Jornada actual</div>`:"";
+    return`<div class="pstat-card">
+      <div>
+        <div class="pstat-name">${p.displayName}</div>
+        ${p.displayArea?`<div class="pstat-area">${p.displayArea}</div>`:""}
+        <div class="pstat-metrics">
+          <span class="pstat-badge pstat-efic">📊 Eficiencia hist.: ${efStr}</span>
+          ${st?.rachaActiva>0?`<span class="pstat-badge pstat-racha">${rachaActStr}</span>`:""}
+          <span class="pstat-badge pstat-fav" style="color:${favColor};border-color:${favColor}44;">⭐ Fav: ${favStr}</span>
+        </div>
+        ${pieHTML}
+        ${formHTML}
+      </div>
+      <div style="text-align:center;">${hitsHTML}</div>
+    </div>`;
+  }).join("");
 }
 
 function renderGoalsChart(dark,gridColor,textColor){
