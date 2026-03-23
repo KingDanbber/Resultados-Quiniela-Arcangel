@@ -356,6 +356,52 @@ select,input{font-family:'Barlow',sans-serif;}
 .pstat-fav{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
 .pstat-pie{display:flex;gap:4px;align-items:center;}
 .pstat-pie-seg{height:8px;border-radius:4px;min-width:6px;transition:width .6s;}
+
+/* ── MATCH ANALYSIS CARD ── */
+.mcard{
+  background:var(--card);border:1px solid var(--border-s);
+  border-radius:12px;padding:14px 16px;
+}
+.mcard-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;flex-wrap:wrap;gap:6px;
+}
+.mcard-matchno{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);
+}
+.mcard-teams{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:14px;color:var(--text);
+}
+.mcard-score{
+  font-family:"Bebas Neue",sans-serif;font-size:20px;letter-spacing:1px;
+  color:var(--text);white-space:nowrap;
+}
+.mcard-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.mcard-badge{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:11px;letter-spacing:.5px;padding:3px 10px;border-radius:20px;
+}
+.mcard-easy{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);}
+.mcard-hard{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+.mcard-neutral{background:rgba(100,116,139,.1);color:#94a3b8;border:1px solid rgba(100,116,139,.2);}
+.mcard-pending{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+.mcard-consensus{
+  margin-bottom:8px;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:11px;color:var(--text-m);letter-spacing:.5px;
+}
+.mcard-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:1px;margin-top:4px;}
+.mcard-bar-seg{height:100%;transition:width .7s ease;}
+.mcard-pickers{
+  margin-top:8px;font-family:"Barlow Condensed",sans-serif;
+  font-size:11px;color:var(--text-m);
+}
+.mcard-picker-chip{
+  display:inline-block;margin:2px 3px 2px 0;
+  padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700;
+}
 /* ── FOOTER ── */
 #app-footer{
   margin-top:48px;
@@ -505,8 +551,8 @@ select,input{font-family:'Barlow',sans-serif;}
           <div>
             <div class="prize-notice-title">¿Cómo se gana?</div>
             <div class="prize-notice-text">
-              El <strong>1er lugar</strong> con el <strong>mayor número de aciertos</strong> se lleva la bolsa neta de la jornada.<br>
-              En caso de empate, el desempate es por el pronóstico de <strong>total de goles</strong> más cercano al real.
+              El participante con el <strong>mayor número de aciertos</strong> se lleva la bolsa neta íntegra.<br>
+              Si <strong>dos o más participantes empatan</strong> en aciertos, la bolsa se <strong>reparte en partes iguales</strong> entre ellos. 🤝
             </div>
           </div>
         </div>
@@ -538,6 +584,11 @@ select,input{font-family:'Barlow',sans-serif;}
       <div class="chart-section fu">
         <div class="chart-title">👤 Perfil por Participante</div>
         <div id="participant-stats-grid" style="display:grid;gap:10px;"></div>
+      </div>
+      <!-- Por Jornada -->
+      <div class="chart-section fu">
+        <div class="chart-title">📋 Análisis por Partido</div>
+        <div id="match-analysis-grid" style="display:grid;gap:10px;"></div>
       </div>
     </div>
     <!-- HISTORIAL -->
@@ -1287,6 +1338,8 @@ function renderCharts(){
   renderGoalsChart(dark,gridColor,textColor);
   // ── Perfil por participante ──
   renderParticipantStats();
+  // ── Análisis por partido ──
+  renderMatchAnalysis();
 }
 
 function renderParticipantStats(){
@@ -1340,6 +1393,113 @@ function renderParticipantStats(){
         ${formHTML}
       </div>
       <div style="text-align:center;">${hitsHTML}</div>
+    </div>`;
+  }).join("");
+}
+
+
+function renderMatchAnalysis(){
+  const el=document.getElementById("match-analysis-grid");
+  if(!el) return;
+  const lb=buildLeaderboard();
+  if(!matches.length){
+    el.innerHTML=`<div style="color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;padding:8px 0;">No hay partidos cargados.</div>`;
+    return;
+  }
+  const PICK_COLOR={"1":"#3b82f6","X":"#f59e0b","2":"#ef4444"};
+  const PICK_LABEL={"1":"Local","X":"Empate","2":"Visita"};
+
+  el.innerHTML=matches.map(match=>{
+    const result=getResult(match.home_goals,match.away_goals);
+    const hasScore=result!==null;
+    const totalParts=lb.length;
+
+    // Count picks for this match
+    const cnt={"1":0,"X":0,"2":0,null:0};
+    const pickersByResult={"1":[],"X":[],"2":[]};
+    lb.forEach(p=>{
+      const d=p.details.find(x=>x.match.id===match.id);
+      const pick=d?normalizePick(d.pick):null;
+      if(cnt[pick]!==undefined) cnt[pick]++;
+      else cnt[null]++;
+      if(pick&&pickersByResult[pick]) pickersByResult[pick].push(p.displayName.split(" ")[0]);
+    });
+    const voted=cnt["1"]+cnt["X"]+cnt["2"];
+
+    // Acuerdo del grupo — max consensus %
+    const maxCnt=Math.max(cnt["1"],cnt["X"],cnt["2"]);
+    const consensusPct=voted>0?Math.round(maxCnt/voted*100):0;
+    const consensusResult=Object.entries(cnt).filter(([k])=>k!=="null").sort((a,b)=>b[1]-a[1])[0];
+
+    // Aciertos %
+    let aciertoPct=null, aciertoCount=0;
+    if(hasScore){
+      aciertoCount=lb.filter(p=>p.details.find(d=>d.match.id===match.id&&d.correct)).length;
+      aciertoPct=voted>0?Math.round(aciertoCount/Math.max(voted,1)*100):0;
+    }
+
+    // Easy / hard / pending badge
+    let diffBadge="";
+    if(!hasScore){
+      diffBadge=`<span class="mcard-badge mcard-pending">⏳ Sin resultado</span>`;
+    } else if(aciertoPct>=70){
+      diffBadge=`<span class="mcard-badge mcard-easy">✅ Fácil — ${aciertoPct}% acertaron</span>`;
+    } else if(aciertoPct<=30){
+      diffBadge=`<span class="mcard-badge mcard-hard">🔥 Difícil — ${aciertoPct}% acertaron</span>`;
+    } else {
+      diffBadge=`<span class="mcard-badge mcard-neutral">⚖️ Regular — ${aciertoPct}% acertaron</span>`;
+    }
+
+    // Consensus badge
+    const consBadge=voted>0?`<span class="mcard-badge" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.25);">
+      🤝 Grupo eligió ${PICK_LABEL[consensusResult[0]]} (${consensusPct}%)</span>`:"";
+
+    // Bar segments
+    const barHTML=voted>0?`<div class="mcard-bar">
+      ${["1","X","2"].map(k=>`<div class="mcard-bar-seg" style="width:${Math.round(cnt[k]/voted*100)}%;background:${PICK_COLOR[k]};"></div>`).join("")}
+    </div>`:"";
+
+    // Picks breakdown with names
+    let breakdownHTML="";
+    if(revealPronostics){
+      breakdownHTML=["1","X","2"].map(k=>{
+        if(!pickersByResult[k].length) return "";
+        return `<div style="margin-bottom:3px;">
+          <span style="font-weight:800;color:${PICK_COLOR[k]};">${PICK_LABEL[k]}: </span>
+          ${pickersByResult[k].map(name=>{
+            const p=lb.find(x=>x.displayName.startsWith(name));
+            const d=p?.details.find(x=>x.match.id===match.id);
+            const correct=hasScore&&d?.correct;
+            const wrong=hasScore&&d&&!d.correct;
+            const bg=correct?"rgba(34,197,94,.12)":wrong?"rgba(239,68,68,.1)":"rgba(100,116,139,.1)";
+            const col=correct?"var(--green)":wrong?"#ef4444":"#94a3b8";
+            return `<span class="mcard-picker-chip" style="background:${bg};color:${col};">${name}${correct?" ✅":wrong?" ❌":""}</span>`;
+          }).join("")}
+        </div>`;
+      }).filter(Boolean).join("");
+    }
+
+    const scoreStr=hasScore?`${match.home_goals} - ${match.away_goals}`:"vs";
+
+    return`<div class="mcard">
+      <div class="mcard-head">
+        <div>
+          <div class="mcard-matchno">Partido ${match.match_no||"—"} · ${match.kickoff_at?new Date(match.kickoff_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short"}):""}</div>
+          <div class="mcard-teams">${match.home_team} <span style="color:var(--text-d);">vs</span> ${match.away_team}</div>
+        </div>
+        <div class="mcard-score">${scoreStr}</div>
+      </div>
+      <div class="mcard-badges">${diffBadge}${consBadge}</div>
+      <div class="mcard-consensus">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+          <span>Local <strong>${cnt["1"]}</strong></span>
+          <span>Empate <strong>${cnt["X"]}</strong></span>
+          <span>Visita <strong>${cnt["2"]}</strong></span>
+          <span style="color:var(--text-d);">${voted} pronósticos</span>
+        </div>
+        ${barHTML}
+      </div>
+      ${revealPronostics&&breakdownHTML?`<div class="mcard-pickers">${breakdownHTML}</div>`:""}
     </div>`;
   }).join("");
 }
@@ -1560,7 +1720,7 @@ loadPools();
       <p>Los datos personales (nombre, área, número de contacto) son utilizados exclusivamente para la gestión interna de la quiniela. No serán compartidos con terceros ni utilizados con fines comerciales.</p>
 
       <h3>6. Premios y distribución</h3>
-      <p>La bolsa de premios se calcula a partir de las boletas pagadas, descontando el porcentaje de comisión establecido por el organizador. El criterio de reparto (mayor número de aciertos, desempate por total de goles, etc.) es determinado por el organizador antes del inicio de cada jornada y es inapelable.</p>
+      <p>La bolsa de premios se calcula a partir de las boletas pagadas, descontando el porcentaje de comisión establecido por el organizador. El criterio de reparto es: mayor número de aciertos gana la bolsa íntegra. En caso de empate entre dos o más participantes, la bolsa neta se divide en partes iguales entre los empatados.</p>
 
       <h3>7. Modificaciones</h3>
       <p>El organizador se reserva el derecho de modificar, suspender o cancelar cualquier jornada en caso de fuerza mayor, sin generar obligación de reembolso total o parcial, salvo criterio discrecional del organizador.</p>
