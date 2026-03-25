@@ -64,6 +64,22 @@ select,input{font-family:'Barlow',sans-serif;}
   font-size:10px;letter-spacing:2px;text-transform:uppercase;
   color:#f59e0b;margin-top:1px;
 }
+
+/* ── POOL DATES ── */
+.pool-dates{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:12px;color:var(--text-m);margin-top:6px;letter-spacing:.5px;
+}
+.date-badge{
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  padding:2px 9px;border-radius:20px;
+  font-family:"Barlow Condensed",sans-serif;
+}
+.date-open{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+.date-closed{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.date-live{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);}
+.date-done{background:rgba(100,116,139,.1);color:#94a3b8;border:1px solid rgba(100,116,139,.25);}
 /* ── REFRESH BAR ── */
 #refresh-bar{
   background:var(--bg2);border-bottom:1px solid var(--border-s);
@@ -80,6 +96,18 @@ select,input{font-family:'Barlow',sans-serif;}
 #main{max-width:1100px;margin:0 auto;padding:18px 16px;}
 .pool-name{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--text);line-height:1;}
 .pool-meta{color:var(--text-m);font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+
+/* ── COMMISSION NOTE ── */
+.comm-note{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.18);
+  border-radius:10px;padding:10px 14px;margin-bottom:14px;
+}
+.comm-note-text{
+  font-family:"Barlow",sans-serif;font-size:11px;
+  color:var(--text-m);line-height:1.5;
+}
+.comm-note-text strong{color:var(--text);}
 /* ── KPI ── */
 #kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;margin-bottom:20px;}
 .kpi-card{background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--border-s);border-radius:14px;padding:15px 12px;text-align:center;}
@@ -805,19 +833,52 @@ function startRefreshCountdown(){
 }
 
 // ── LOAD POOLS ──
+function detectActivePool(poolList){
+  const now=new Date();
+  // 1. Pool with lock_at in the future (still open)
+  const openPools=poolList.filter(p=>p.lock_at&&new Date(p.lock_at)>now);
+  if(openPools.length){
+    // Closest lock_at to now = most urgent/active
+    return openPools.sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
+  }
+  // 2. Pool with lock_at most recently passed (just closed)
+  const closedPools=poolList.filter(p=>p.lock_at&&new Date(p.lock_at)<=now);
+  if(closedPools.length){
+    return closedPools.sort((a,b)=>new Date(b.lock_at)-new Date(a.lock_at))[0];
+  }
+  // 3. Fallback: most recently created
+  return poolList[0];
+}
+
+function poolDisplayName(p){
+  const name=p.name||p.date_label||`Jornada ${p.round}`;
+  // Date range from matches (set later), for now use date_label or lock_at
+  let dateStr="";
+  if(p.lock_at){
+    const d=new Date(p.lock_at);
+    dateStr=" · "+d.toLocaleDateString("es-MX",{day:"2-digit",month:"short"});
+  }
+  const comp=p.competition?` — ${p.competition}`:"";
+  return name+comp+dateStr;
+}
+
 async function loadPools(){
   try{
     pools=await db("pools?select=*&order=created_at.desc");
     const sel=document.getElementById("pool-select");
     sel.innerHTML="";
     if(!pools.length){sel.innerHTML=`<option>Sin jornadas</option>`;showLoader(false);document.getElementById("content").style.display="block";return;}
+    // Detect active pool BEFORE building options
+    const active=detectActivePool(pools);
     pools.forEach(p=>{
-      const name=p.name||p.date_label||`Jornada ${p.round}`;
-      const comp=p.competition?` — ${p.competition}`:"";
-      const opt=document.createElement("option");opt.value=p.id;opt.textContent=name+comp;sel.appendChild(opt);
+      const opt=document.createElement("option");
+      opt.value=p.id;
+      opt.textContent=poolDisplayName(p);
+      if(p.id===active.id) opt.selected=true;
+      sel.appendChild(opt);
     });
-    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;loadPoolData();});
-    currentPool=pools[0];
+    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;loadPoolData();});
+    currentPool=active;
     loadPoolData();
   }catch(e){showError(e.message);showLoader(false);}
 }
@@ -857,7 +918,29 @@ function render(silent=false){
   document.getElementById("content").style.display="block";
   const poolName=currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`;
   const poolMeta=[currentPool.competition,currentPool.season,currentPool.round?`Jornada ${currentPool.round}`:null].filter(Boolean).join(" · ");
-  document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}`;
+  // Match date range
+  const datedMatches=matches.filter(m=>m.kickoff_at).sort((a,b)=>new Date(a.kickoff_at)-new Date(b.kickoff_at));
+  let dateRangeHTML="";
+  if(datedMatches.length){
+    const fmt=d=>new Date(d).toLocaleDateString("es-MX",{weekday:"short",day:"2-digit",month:"short"});
+    const first=datedMatches[0].kickoff_at;
+    const last=datedMatches[datedMatches.length-1].kickoff_at;
+    const sameDay=new Date(first).toDateString()===new Date(last).toDateString();
+    const rangeStr=sameDay?fmt(first):`${fmt(first)} — ${fmt(last)}`;
+    // Status badge
+    const now=new Date();
+    const allDone=matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+    const anyLive=matches.some(m=>m.kickoff_at&&new Date(m.kickoff_at)<=now&&m.home_goals==null);
+    const statusBadge=allDone
+      ?`<span class="date-badge date-done">✅ Finalizada</span>`
+      :anyLive
+      ?`<span class="date-badge date-live">🔴 En curso</span>`
+      :currentPool.lock_at&&new Date(currentPool.lock_at)>now
+      ?`<span class="date-badge date-open">🟢 Abierta</span>`
+      :`<span class="date-badge date-closed">🔒 Cerrada</span>`;
+    dateRangeHTML=`<div class="pool-dates">📅 ${rangeStr} ${statusBadge}</div>`;
+  }
+  document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}${dateRangeHTML}`;
   renderKPIs();renderPaymentStatusBar();renderMatches();renderLeaderboard();
   const activeTab=document.querySelector(".tab-btn.active")?.dataset.tab;
   if(activeTab==="stats") renderCharts();
@@ -881,6 +964,18 @@ function renderKPIs(){
     {val:maxH??"—",lbl:"Máx. Aciertos",color:"var(--green)"},
   ];
   document.getElementById("kpi-grid").innerHTML=kpis.map(k=>`<div class="kpi-card fu"><div class="kpi-val" style="color:${k.color}">${k.val}</div><div class="kpi-lbl">${k.lbl}</div></div>`).join("");
+  // Commission note
+  let commNoteEl=document.getElementById("comm-note-wrap");
+  if(!commNoteEl){commNoteEl=document.createElement("div");commNoteEl.id="comm-note-wrap";document.getElementById("kpi-grid").after(commNoteEl);}
+  if(currentPool.commission_pct>0){
+    commNoteEl.innerHTML=`<div class="comm-note">
+      <span style="font-size:16px;flex-shrink:0;">ℹ️</span>
+      <div class="comm-note-text">Se aplica una comisión del <strong>${currentPool.commission_pct}%</strong> sobre la bolsa total,
+      destinada a la <strong>administración de la quiniela</strong> y al <strong>mantenimiento de esta plataforma de resultados</strong>.</div>
+    </div>`;
+  } else {
+    commNoteEl.innerHTML="";
+  }
 }
 
 
@@ -2048,8 +2143,13 @@ loadPools();
       <h3>5. Privacidad de los participantes</h3>
       <p>Los datos personales (nombre, área, número de contacto) son utilizados exclusivamente para la gestión interna de la quiniela. No serán compartidos con terceros ni utilizados con fines comerciales.</p>
 
-      <h3>6. Premios y distribución</h3>
-      <p>La bolsa de premios se calcula a partir de las boletas pagadas, descontando el porcentaje de comisión establecido por el organizador. El criterio de reparto es: mayor número de aciertos gana la bolsa íntegra. En caso de empate entre dos o más participantes, la bolsa neta se divide en partes iguales entre los empatados.</p>
+      <h3>6. Premios, distribución y comisión</h3>
+      <p>La bolsa bruta se calcula a partir del total de boletas pagadas. Sobre dicho monto se descuenta un porcentaje de <strong>comisión de administración</strong>, el cual cubre:</p>
+      <ul>
+        <li><strong>Administración y organización</strong> de la quiniela (registro de participantes, captura de pronósticos y resultados, resolución de dudas).</li>
+        <li><strong>Mantenimiento de la plataforma de resultados</strong> en línea para consulta de todos los participantes.</li>
+      </ul>
+      <p>El monto restante constituye la <strong>bolsa neta</strong>, que se distribuye íntegramente al o los ganadores. El criterio de reparto es: mayor número de aciertos gana la bolsa íntegra. En caso de empate entre dos o más participantes, la bolsa neta se divide en partes iguales entre los empatados.</p>
 
       <h3>7. Modificaciones</h3>
       <p>El organizador se reserva el derecho de modificar, suspender o cancelar cualquier jornada en caso de fuerza mayor, sin generar obligación de reembolso total o parcial, salvo criterio discrecional del organizador.</p>
