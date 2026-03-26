@@ -834,32 +834,39 @@ function startRefreshCountdown(){
 
 // ── LOAD POOLS ──
 function detectActivePool(poolList){
+  // 1. PRIORITY: pool explicitly marked as active in the DB (status field)
+  //    The admin app sets status = 'active' | 'draft' | 'closed' etc.
+  const STATUS_ACTIVE = ['active','activa','open','abierta','published'];
+  const statusActive = poolList.filter(p =>
+    p.status && STATUS_ACTIVE.includes(String(p.status).toLowerCase())
+  );
+  if(statusActive.length){
+    // If multiple active, pick most recently created
+    return statusActive.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+  }
+  // 2. Fallback: pool with lock_at in the future (still open)
   const now=new Date();
-  // 1. Pool with lock_at in the future (still open)
   const openPools=poolList.filter(p=>p.lock_at&&new Date(p.lock_at)>now);
   if(openPools.length){
-    // Closest lock_at to now = most urgent/active
     return openPools.sort((a,b)=>new Date(a.lock_at)-new Date(b.lock_at))[0];
   }
-  // 2. Pool with lock_at most recently passed (just closed)
+  // 3. Fallback: pool with lock_at most recently passed
   const closedPools=poolList.filter(p=>p.lock_at&&new Date(p.lock_at)<=now);
   if(closedPools.length){
     return closedPools.sort((a,b)=>new Date(b.lock_at)-new Date(a.lock_at))[0];
   }
-  // 3. Fallback: most recently created
+  // 4. Last resort: most recently created
   return poolList[0];
 }
 
 function poolDisplayName(p){
+  // Clean name for the selector — no extra dates to avoid clutter
   const name=p.name||p.date_label||`Jornada ${p.round}`;
-  // Date range from matches (set later), for now use date_label or lock_at
-  let dateStr="";
-  if(p.lock_at){
-    const d=new Date(p.lock_at);
-    dateStr=" · "+d.toLocaleDateString("es-MX",{day:"2-digit",month:"short"});
-  }
   const comp=p.competition?` — ${p.competition}`:"";
-  return name+comp+dateStr;
+  // Show status indicator in selector
+  const STATUS_ACTIVE=['active','activa','open','abierta','published'];
+  const isActive=p.status&&STATUS_ACTIVE.includes(String(p.status).toLowerCase());
+  return (isActive?"🟢 ":"")+name+comp;
 }
 
 async function loadPools(){
@@ -918,27 +925,48 @@ function render(silent=false){
   document.getElementById("content").style.display="block";
   const poolName=currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`;
   const poolMeta=[currentPool.competition,currentPool.season,currentPool.round?`Jornada ${currentPool.round}`:null].filter(Boolean).join(" · ");
-  // Match date range
+  // Match date range — try kickoff_at from matches first, then fallbacks
+  const now=new Date();
   const datedMatches=matches.filter(m=>m.kickoff_at).sort((a,b)=>new Date(a.kickoff_at)-new Date(b.kickoff_at));
   let dateRangeHTML="";
+  let rangeStr="";
+
   if(datedMatches.length){
     const fmt=d=>new Date(d).toLocaleDateString("es-MX",{weekday:"short",day:"2-digit",month:"short"});
     const first=datedMatches[0].kickoff_at;
     const last=datedMatches[datedMatches.length-1].kickoff_at;
     const sameDay=new Date(first).toDateString()===new Date(last).toDateString();
-    const rangeStr=sameDay?fmt(first):`${fmt(first)} — ${fmt(last)}`;
-    // Status badge
-    const now=new Date();
-    const allDone=matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
-    const anyLive=matches.some(m=>m.kickoff_at&&new Date(m.kickoff_at)<=now&&m.home_goals==null);
-    const statusBadge=allDone
-      ?`<span class="date-badge date-done">✅ Finalizada</span>`
-      :anyLive
-      ?`<span class="date-badge date-live">🔴 En curso</span>`
-      :currentPool.lock_at&&new Date(currentPool.lock_at)>now
-      ?`<span class="date-badge date-open">🟢 Abierta</span>`
-      :`<span class="date-badge date-closed">🔒 Cerrada</span>`;
-    dateRangeHTML=`<div class="pool-dates">📅 ${rangeStr} ${statusBadge}</div>`;
+    rangeStr=sameDay?fmt(first):`${fmt(first)} — ${fmt(last)}`;
+  } else if(currentPool.date_label && currentPool.date_label !== (currentPool.name||"")){
+    // date_label might contain date info separate from the name
+    rangeStr=currentPool.date_label;
+  } else if(currentPool.lock_at){
+    // Fallback: show lock date
+    rangeStr="Cierre: "+new Date(currentPool.lock_at).toLocaleDateString("es-MX",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+  }
+
+  if(rangeStr || matches.length){
+    // Status badge — use status field + logic
+    const STATUS_ACTIVE=['active','activa','open','abierta','published'];
+    const STATUS_DRAFT=['draft','borrador'];
+    const STATUS_CLOSED=['closed','cerrada','finished','finalizada'];
+    const poolStatus=String(currentPool.status||"").toLowerCase();
+    const allDone=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+    const anyLive=datedMatches.some(m=>new Date(m.kickoff_at)<=now&&m.home_goals==null);
+    let statusBadge="";
+    if(allDone){
+      statusBadge=`<span class="date-badge date-done">✅ Finalizada</span>`;
+    } else if(anyLive){
+      statusBadge=`<span class="date-badge date-live">🔴 En curso</span>`;
+    } else if(STATUS_ACTIVE.includes(poolStatus)){
+      statusBadge=`<span class="date-badge date-open">🟢 Activa</span>`;
+    } else if(STATUS_DRAFT.includes(poolStatus)){
+      statusBadge=`<span class="date-badge date-closed">📝 Borrador</span>`;
+    } else if(STATUS_CLOSED.includes(poolStatus)||currentPool.lock_at&&new Date(currentPool.lock_at)<now){
+      statusBadge=`<span class="date-badge date-closed">🔒 Cerrada</span>`;
+    }
+    const dateText=rangeStr?`📅 ${rangeStr} `:"";
+    dateRangeHTML=`<div class="pool-dates">${dateText}${statusBadge}</div>`;
   }
   document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}${dateRangeHTML}`;
   renderKPIs();renderPaymentStatusBar();renderMatches();renderLeaderboard();
