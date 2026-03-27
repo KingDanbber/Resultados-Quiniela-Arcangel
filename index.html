@@ -12,6 +12,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.2/confetti.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 /* ── THEME VARIABLES ── */
 :root{
@@ -88,6 +90,29 @@ select,input{font-family:'Barlow',sans-serif;}
 .refresh-track{flex:1;height:2px;background:var(--border-s);border-radius:2px;overflow:hidden;}
 .refresh-fill{height:100%;background:linear-gradient(90deg,var(--acc),#60a5fa);border-radius:2px;transition:width .5s linear;}
 .refresh-text{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-d);white-space:nowrap;}
+
+/* ── COMPETITION TABS ── */
+#comp-tabs-bar{
+  background:var(--bg2);border-bottom:1px solid var(--border-s);
+  padding:0 14px;overflow-x:auto;scrollbar-width:none;
+}
+#comp-tabs-bar::-webkit-scrollbar{display:none;}
+#comp-tabs{display:flex;gap:2px;min-width:max-content;}
+.comp-tab{
+  padding:10px 16px;border:none;background:transparent;cursor:pointer;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text-d);border-bottom:2px solid transparent;
+  transition:all .2s;white-space:nowrap;
+}
+.comp-tab:hover{color:var(--text);}
+.comp-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.comp-tab .comp-count{
+  display:inline-block;margin-left:5px;
+  background:var(--card2);border-radius:10px;
+  padding:1px 6px;font-size:10px;color:var(--text-m);
+}
+.comp-tab.active .comp-count{background:rgba(37,99,235,.15);color:var(--acc);}
 /* ── POOL SELECTOR ── */
 #pool-bar{background:var(--bg2);padding:10px 18px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:10px;overflow:hidden;}
 .pool-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);white-space:nowrap;}
@@ -549,6 +574,28 @@ select,input{font-family:'Barlow',sans-serif;}
 .winner-stat-lbl{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:9px;
   letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m);}
 .bolsa-chart-wrap{position:relative;height:220px;margin-top:10px;}
+
+/* ── NOTIFICATION TOAST ── */
+#notif-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:12px;padding:12px 18px;z-index:9999;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:13px;color:var(--text);letter-spacing:.5px;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+  white-space:nowrap;box-shadow:0 8px 32px var(--shadow);
+  display:flex;align-items:center;gap:8px;
+}
+#notif-toast.show{opacity:1;}
+/* ── PDF BUTTON ── */
+#pdf-progress{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);flex-direction:column;gap:14px;
+}
+#pdf-progress.show{display:flex;}
+.pdf-spinner{font-size:44px;animation:spin 1s linear infinite;}
+.pdf-msg{font-family:"Bebas Neue",sans-serif;font-size:20px;letter-spacing:3px;color:#fff;}
 /* ── FOOTER ── */
 #app-footer{
   margin-top:48px;
@@ -637,6 +684,8 @@ select,input{font-family:'Barlow',sans-serif;}
   </div>
   <div class="h-right">
     <div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
+    <button class="icon-btn" id="notif-btn" title="Activar notificaciones">🔔</button>
+    <button class="icon-btn" id="pdf-btn" title="Exportar PDF">📄</button>
     <button class="icon-btn" id="theme-btn" title="Cambiar tema">🌙</button>
   </div>
 </header>
@@ -647,7 +696,10 @@ select,input{font-family:'Barlow',sans-serif;}
   <span class="refresh-text" id="refresh-text">Auto-refresh: 60s</span>
 </div>
 
-<!-- POOL SELECTOR -->
+<!-- COMPETITION TABS + POOL SELECTOR -->
+<div id="comp-tabs-bar" style="display:none;">
+  <div id="comp-tabs"></div>
+</div>
 <div id="pool-bar">
   <span class="pool-label">Jornada</span>
   <select id="pool-select"><option>Cargando...</option></select>
@@ -799,6 +851,8 @@ let chartBolsas=null;
 let shareParticipant=null;
 let refreshSecs=60,refreshTimer=null;
 let isDark=true;
+let notifEnabled=false;
+let lastScoreSnapshot={};  // matchId → "hg-ag" to detect changes
 
 // ── PWA Manifest ──
 (function(){
@@ -875,12 +929,16 @@ async function loadPools(){
     const sel=document.getElementById("pool-select");
     sel.innerHTML="";
     if(!pools.length){sel.innerHTML=`<option>Sin jornadas</option>`;showLoader(false);document.getElementById("content").style.display="block";return;}
+    // Build competition tabs (multi-quiniela)
+    buildCompetitionTabs(pools);
     // Detect active pool BEFORE building options
     const active=detectActivePool(pools);
     pools.forEach(p=>{
+      const STATUS_ACTIVE=["active","activa","open","abierta","published"];
+      const isAct=p.status&&STATUS_ACTIVE.includes(String(p.status).toLowerCase());
       const opt=document.createElement("option");
       opt.value=p.id;
-      opt.textContent=poolDisplayName(p);
+      opt.textContent=(isAct?"🟢 ":"")+poolDisplayName(p);
       if(p.id===active.id) opt.selected=true;
       sel.appendChild(opt);
     });
@@ -901,7 +959,10 @@ async function loadPoolData(silent=false){
       db(`entries?pool_id=eq.${currentPool.id}&select=*&order=created_at.asc`),
       db(`pool_results?pool_id=eq.${currentPool.id}&select=*&limit=1`)
     ]);
+    // Capture snapshot before updating (for score change notifications)
+    if(silent) checkScoreChanges(m);
     matches=m;entries=e;poolResult=pr[0]||null;
+    lastScoreSnapshot=snapshotScores();
     const allPartIds=[...new Set(e.map(x=>x.participant_id).filter(Boolean))];
     if(allPartIds.length){
       try{const parts=await db(`participants?id=in.(${allPartIds.join(",")})&select=id,name,area`);participantsMap=Object.fromEntries(parts.map(p=>[p.id,p]));}
@@ -2102,6 +2163,282 @@ document.getElementById("tabs").addEventListener("click",e=>{
 function showLoader(on){document.getElementById("loader").style.display=on?"block":"none";document.getElementById("content").style.display=on?"none":"block";}
 function showError(msg){document.getElementById("error-area").innerHTML=msg?`<div class="error-box">⚠️ ${msg}</div>`:""}
 
+
+// ════════════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════════════
+function showToastMsg(msg,icon="ℹ️"){
+  const t=document.getElementById("notif-toast");
+  t.innerHTML=`${icon} ${msg}`;t.classList.add("show");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),3000);
+}
+
+async function toggleNotifications(){
+  if(!("Notification" in window)){showToastMsg("Tu navegador no soporta notificaciones","❌");return;}
+  if(notifEnabled){
+    notifEnabled=false;
+    document.getElementById("notif-btn").textContent="🔔";
+    showToastMsg("Notificaciones desactivadas","🔕");
+    return;
+  }
+  const perm=await Notification.requestPermission();
+  if(perm==="granted"){
+    notifEnabled=true;
+    document.getElementById("notif-btn").textContent="🔔";
+    document.getElementById("notif-btn").style.color="var(--green)";
+    showToastMsg("¡Notificaciones activadas! Te avisaré cuando haya goles.","✅");
+    // Test notification
+    new Notification("Quiniela Arcángel 🔔",{
+      body:"Las notificaciones están activadas. ¡Pasión x Ganar ⚽!",
+      icon:"img/logo-arcangel.png"
+    });
+  } else {
+    showToastMsg("Permiso denegado. Actívalas en ajustes del navegador.","⚠️");
+  }
+}
+
+function snapshotScores(){
+  const snap={};
+  matches.forEach(m=>{if(m.home_goals!=null&&m.away_goals!=null) snap[m.id]=`${m.home_goals}-${m.away_goals}`;});
+  return snap;
+}
+
+function checkScoreChanges(newMatches){
+  if(!notifEnabled) return;
+  newMatches.forEach(m=>{
+    const newScore=m.home_goals!=null&&m.away_goals!=null?`${m.home_goals}-${m.away_goals}`:null;
+    const oldScore=lastScoreSnapshot[m.id]||null;
+    if(newScore && newScore!==oldScore){
+      const result=getResult(m.home_goals,m.away_goals);
+      const resLabel={"1":"¡Gana Local!","X":"¡Empate!","2":"¡Gana Visita!"}[result]||"";
+      new Notification(`P${m.match_no}: ${m.home_team} vs ${m.away_team}`,{
+        body:`Resultado: ${m.home_goals} - ${m.away_goals}  ${resLabel}`,
+        icon:"img/logo-arcangel.png",
+        badge:"img/logo-arcangel.png"
+      });
+    }
+  });
+}
+
+document.getElementById("notif-btn").addEventListener("click", toggleNotifications);
+
+// ════════════════════════════════════════
+// COMPETITION TABS (MULTI-QUINIELA)
+// ════════════════════════════════════════
+let allCompetitions=[];
+let activeCompetition=null;
+
+function buildCompetitionTabs(poolList){
+  // Group by competition field
+  const compMap={};
+  poolList.forEach(p=>{
+    const comp=p.competition||"General";
+    if(!compMap[comp]) compMap[comp]={label:comp,pools:[],hasActive:false};
+    compMap[comp].pools.push(p);
+    const STATUS_ACTIVE=["active","activa","open","abierta","published"];
+    if(p.status&&STATUS_ACTIVE.includes(String(p.status).toLowerCase()))
+      compMap[comp].hasActive=true;
+  });
+  allCompetitions=Object.values(compMap);
+
+  const bar=document.getElementById("comp-tabs-bar");
+  const tabsEl=document.getElementById("comp-tabs");
+
+  if(allCompetitions.length<=1){
+    bar.style.display="none"; // Only one competition, no tabs needed
+    return;
+  }
+
+  bar.style.display="block";
+  tabsEl.innerHTML=allCompetitions.map((comp,i)=>`
+    <button class="comp-tab${i===0?" active":""}" data-comp="${comp.label}">
+      ${comp.label}
+      <span class="comp-count">${comp.pools.length}</span>
+      ${comp.hasActive?"<span style='color:var(--green);font-size:10px;'> ●</span>":""}
+    </button>`).join("");
+
+  tabsEl.querySelectorAll(".comp-tab").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      tabsEl.querySelectorAll(".comp-tab").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      activeCompetition=btn.dataset.comp;
+      filterPoolsByCompetition(activeCompetition);
+    });
+  });
+  // Default: first competition
+  activeCompetition=allCompetitions[0].label;
+}
+
+function filterPoolsByCompetition(comp){
+  const filtered=pools.filter(p=>(p.competition||"General")===comp);
+  const sel=document.getElementById("pool-select");
+  sel.innerHTML="";
+  const STATUS_ACTIVE=["active","activa","open","abierta","published"];
+  const active=filtered.find(p=>p.status&&STATUS_ACTIVE.includes(String(p.status).toLowerCase()))
+    ||filtered[0];
+  filtered.forEach(p=>{
+    const isAct=p.status&&STATUS_ACTIVE.includes(String(p.status).toLowerCase());
+    const opt=document.createElement("option");
+    opt.value=p.id;
+    opt.textContent=(isAct?"🟢 ":"")+poolDisplayName(p);
+    if(active&&p.id===active.id) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  if(active){
+    currentPool=active;
+    expandedEntries={};historialLoaded=false;generalStatsLoaded=false;
+    loadPoolData();
+  }
+}
+
+// ════════════════════════════════════════
+// EXPORT TO PDF
+// ════════════════════════════════════════
+async function exportPDF(){
+  if(typeof window.jspdf==="undefined"){
+    showToastMsg("Cargando librerías PDF...","⏳");
+    await new Promise(r=>setTimeout(r,1500));
+    if(typeof window.jspdf==="undefined"){showToastMsg("Error al cargar jsPDF","❌");return;}
+  }
+  const prog=document.getElementById("pdf-progress");
+  prog.classList.add("show");
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    const W=210;
+    const poolName=currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`;
+    const meta=[currentPool.competition,currentPool.season].filter(Boolean).join(" · ");
+    const now=new Date().toLocaleDateString("es-MX",{day:"2-digit",month:"long",year:"numeric"});
+    const lb=buildLeaderboard();
+    const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+    const paid=entries.filter(e=>e.paid).length;
+    const gross=paid*(currentPool.price||0);
+    const comm=gross*((currentPool.commission_pct||0)/100);
+    const net=poolResult?.net_pot??(gross-comm);
+
+    // ── HEADER ──
+    doc.setFillColor(13,21,48);
+    doc.rect(0,0,W,38,"F");
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica","bold");
+    doc.text("QUINIELA ARCÁNGEL",14,14);
+    doc.setFontSize(10);doc.setFont("helvetica","normal");
+    doc.setTextColor(147,197,253);
+    doc.text("Pasión x Ganar ⚽  ·  Resultados en vivo",14,21);
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(13);doc.setFont("helvetica","bold");
+    doc.text(poolName,14,30);
+    doc.setFontSize(9);doc.setFont("helvetica","normal");
+    doc.setTextColor(147,197,253);
+    if(meta) doc.text(meta,14,35);
+    doc.setTextColor(148,163,184);
+    doc.text(`Generado: ${now}`,W-14,35,{align:"right"});
+
+    let y=46;
+
+    // ── KPIs row ──
+    const kpis=[
+      ["Precio Boleta",fmxn(currentPool.price)],
+      ["Bolsa Neta",fmxn(net)],
+      ["Participantes",entries.length],
+      ["Pagados",paid],
+      ["Partidos",`${completed}/${matches.length}`],
+    ];
+    const kW=(W-28)/kpis.length;
+    doc.setFillColor(20,30,54);
+    doc.roundedRect(14,y,W-28,16,3,3,"F");
+    kpis.forEach(([l,v],i)=>{
+      const x=14+i*kW+kW/2;
+      doc.setFontSize(11);doc.setFont("helvetica","bold");
+      doc.setTextColor(255,255,255);
+      doc.text(String(v),x,y+7,{align:"center"});
+      doc.setFontSize(6.5);doc.setFont("helvetica","normal");
+      doc.setTextColor(100,116,139);
+      doc.text(l.toUpperCase(),x,y+12,{align:"center"});
+    });
+    y+=22;
+
+    // ── CLASIFICACIÓN table ──
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.setTextColor(255,255,255);
+    doc.text("🏆  CLASIFICACIÓN",14,y);
+    y+=4;
+    const lbRows=lb.map((p,i)=>[
+      ["🥇","🥈","🥉"][i]||(i+1),
+      p.displayName,
+      p.displayArea||"—",
+      completed>0?p.aciertos:"—",
+      p.paid?"✓ Pagado":"Pendiente",
+    ]);
+    doc.autoTable({
+      startY:y,
+      head:[["#","Participante","Área","Aciertos","Pago"]],
+      body:lbRows,
+      theme:"grid",
+      styles:{font:"helvetica",fontSize:9,cellPadding:3,textColor:[226,232,240],fillColor:[13,19,36]},
+      headStyles:{fillColor:[29,78,216],textColor:[255,255,255],fontStyle:"bold",fontSize:8},
+      alternateRowStyles:{fillColor:[20,30,54]},
+      columnStyles:{0:{halign:"center",cellWidth:10},3:{halign:"center"},4:{halign:"center"}},
+      margin:{left:14,right:14},
+    });
+    y=doc.lastAutoTable.finalY+8;
+
+    // ── PARTIDOS table ──
+    if(y>250){doc.addPage();y=20;}
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.setTextColor(255,255,255);
+    doc.text("⚽  RESULTADOS",14,y);
+    y+=4;
+    const mRows=matches.map(m=>{
+      const r=getResult(m.home_goals,m.away_goals);
+      const rLabel={"1":"Local","X":"Empate","2":"Visita"}[r]||"—";
+      return[
+        `P${m.match_no}`,
+        m.home_team||"—",
+        m.home_goals!=null?m.home_goals:"—",
+        m.away_goals!=null?m.away_goals:"—",
+        m.away_team||"—",
+        r?rLabel:"Sin resultado",
+      ];
+    });
+    doc.autoTable({
+      startY:y,
+      head:[["#","Local","GL","GV","Visita","Resultado"]],
+      body:mRows,
+      theme:"grid",
+      styles:{font:"helvetica",fontSize:9,cellPadding:3,textColor:[226,232,240],fillColor:[13,19,36]},
+      headStyles:{fillColor:[29,78,216],textColor:[255,255,255],fontStyle:"bold",fontSize:8},
+      alternateRowStyles:{fillColor:[20,30,54]},
+      columnStyles:{0:{halign:"center",cellWidth:10},2:{halign:"center"},3:{halign:"center"},5:{halign:"center"}},
+      margin:{left:14,right:14},
+    });
+
+    // ── FOOTER ──
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){
+      doc.setPage(i);
+      doc.setFillColor(10,17,34);
+      doc.rect(0,285,W,12,"F");
+      doc.setFontSize(7);doc.setFont("helvetica","normal");
+      doc.setTextColor(71,85,105);
+      doc.text("Quiniela Arcángel ® · Pasión x Ganar ⚽ · 2026",14,292);
+      doc.text(`Página ${i} de ${pages}`,W-14,292,{align:"right"});
+    }
+
+    const filename=`quiniela-arcangel-${(poolName).replace(/[^a-z0-9]/gi,"-").toLowerCase()}.pdf`;
+    doc.save(filename);
+    showToastMsg("¡PDF descargado!","✅");
+  }catch(e){
+    console.error("PDF error:",e);
+    showToastMsg("Error generando PDF: "+e.message,"❌");
+  }finally{
+    prog.classList.remove("show");
+  }
+}
+
+document.getElementById("pdf-btn").addEventListener("click", exportPDF);
+
 // ── INIT ──
 loadPools();
 </script>
@@ -2121,6 +2458,15 @@ loadPools();
   </div>
 </div>
 
+
+<!-- NOTIFICATION TOAST -->
+<div id="notif-toast"></div>
+
+<!-- PDF PROGRESS -->
+<div id="pdf-progress">
+  <div class="pdf-spinner">📄</div>
+  <div class="pdf-msg">Generando PDF...</div>
+</div>
 <!-- FOOTER -->
 <footer id="app-footer">
   <div class="footer-brand">QUINIELA ARCÁNGEL ®</div>
