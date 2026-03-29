@@ -280,6 +280,9 @@ select,input{font-family:'Barlow',sans-serif;}
 .hist-area{font-size:11px;color:var(--text-m);}
 .hist-bar-cell{width:140px;}
 .hist-mini-bar{height:4px;border-radius:2px;background:var(--acc);min-width:4px;}
+/* hist-table responsive */
+.hist-table th,.hist-table td{white-space:nowrap;}
+.hist-table td:nth-child(2){white-space:normal;min-width:110px;}
 /* ── MODAL ── */
 #modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
 #modal-overlay.open{display:flex;}
@@ -2112,36 +2115,115 @@ async function loadHistorial(){
     });
     const ranking=Object.values(cumul).sort((a,b)=>b.total-a.total);
     const maxTotal=ranking.length?ranking[0].total:1;
-    // Chart for historial
-    const chartWrapHTML=`<div class="chart-section" style="margin-bottom:16px;"><div class="chart-title">📈 Aciertos Acumulados — Top 10</div><div class="chart-wrap" style="max-height:320px;"><canvas id="chart-hist"></canvas></div></div>`;
+    // ── Short pool labels for table headers ──
+    // Prefer: round number → date_label short → first 6 chars of name
+    function poolShortLabel(p){
+      if(p.round) return `J${p.round}`;
+      if(p.date_label){
+        // Try to extract a number or short date from date_label
+        const m=p.date_label.match(/\d+/);
+        if(m) return `J${m[0]}`;
+        return p.date_label.slice(0,5);
+      }
+      return (p.name||"?").replace(/jornada\s*/i,"J").slice(0,5);
+    }
+    // ── Compute eficiencia per participant (hits / possible) ──
+    const partEfic={};
+    ranking.forEach(p=>{
+      let totalHits=0,totalPoss=0;
+      allPools.forEach(pool=>{
+        const pMatches=allMatches.filter(m=>m.pool_id===pool.id&&m.home_goals!=null&&m.away_goals!=null);
+        if(p.pools[pool.id]!==undefined && pMatches.length){
+          totalHits+=p.pools[pool.id];
+          totalPoss+=pMatches.length;
+        }
+      });
+      partEfic[p.name]=totalPoss>0?Math.round(totalHits/totalPoss*100):0;
+    });
+    // ── CHART: horizontal bars, full names, dynamic height ──
+    const top10=ranking.slice(0,10);
+    const chartH=Math.max(200, top10.length*38+60);
+    const chartWrapHTML=`<div class="chart-section" style="margin-bottom:16px;">
+      <div class="chart-title">📈 Aciertos Acumulados — Top 10</div>
+      <div style="position:relative;height:${chartH}px;"><canvas id="chart-hist"></canvas></div>
+    </div>`;
+    // ── TABLE: full jornada labels ──
     const tableHTML=`<div style="background:var(--card2);border:1px solid var(--border-s);border-radius:16px;overflow:hidden;overflow-x:auto;">
       <table class="hist-table">
         <thead><tr>
-          <th class="num">#</th><th>Participante</th>
-          ${allPools.map(p=>`<th class="num" style="font-size:8px;max-width:50px;">${(p.name||p.date_label||`J${p.round}`).slice(0,8)}</th>`).join("")}
-          <th class="num">Total</th><th>Rendimiento</th>
+          <th class="num" style="min-width:36px;">#</th>
+          <th style="min-width:120px;">Participante</th>
+          ${allPools.map(p=>`<th class="num" style="min-width:38px;font-size:9px;letter-spacing:1px;">${poolShortLabel(p)}</th>`).join("")}
+          <th class="num" style="min-width:48px;">Total</th>
+          <th style="min-width:110px;">Rendimiento</th>
         </tr></thead>
         <tbody>${ranking.map((p,i)=>{
           const rankIcon=["🥇","🥈","🥉"][i]||null;
           const barW=maxTotal>0?Math.round(p.total/maxTotal*100):0;
+          const efic=partEfic[p.name]??0;
+          const barColor=i===0?"var(--amber)":"var(--acc)";
           return`<tr>
             <td class="num"><span class="hist-rank" style="color:${i===0?"var(--amber)":i===1?"#94a3b8":i===2?"#b45309":"var(--text-d)"}">${rankIcon||i+1}</span></td>
-            <td><div class="hist-name">${p.name}</div><div class="hist-area">${p.area}</div></td>
-            ${allPools.map(pool=>`<td class="num" style="color:${(p.pools[pool.id]||0)>0?"var(--green)":"var(--text-d)"};">${p.pools[pool.id]??0}</td>`).join("")}
+            <td>
+              <div class="hist-name">${p.name}</div>
+              ${p.area?`<div class="hist-area">${p.area}</div>`:""}
+            </td>
+            ${allPools.map(pool=>{
+              const v=p.pools[pool.id]??"-";
+              const hasVal=p.pools[pool.id]>0;
+              return`<td class="num" style="color:${hasVal?"var(--green)":"var(--text-d)"};">${v}</td>`;
+            }).join("")}
             <td class="num" style="color:${i===0?"var(--amber)":"var(--text)"};font-size:22px;">${p.total}</td>
-            <td class="hist-bar-cell"><div style="height:4px;border-radius:2px;background:var(--border-s);overflow:hidden;"><div class="hist-mini-bar" style="width:${barW}%;background:${i===0?"var(--amber)":"var(--acc)"}"></div></div></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="flex:1;height:5px;border-radius:3px;background:var(--border-s);overflow:hidden;min-width:40px;">
+                  <div style="height:100%;width:${barW}%;background:${barColor};border-radius:3px;transition:width 1s;"></div>
+                </div>
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:${barColor};min-width:30px;text-align:right;">${efic}%</span>
+              </div>
+            </td>
           </tr>`;
         }).join("")}</tbody>
-      </table></div>`;
+      </table>
+    </div>`;
     el.innerHTML=chartWrapHTML+tableHTML;
-    // Render historial chart
+    // ── Render HORIZONTAL bar chart with full names ──
     setTimeout(()=>{
-      const top10=ranking.slice(0,10);
       const dark=isDark;
       const gridColor=dark?"rgba(255,255,255,.06)":"rgba(0,0,0,.07)";
+      const textColor=dark?"#94a3b8":"#64748b";
       const ctxHist=document.getElementById("chart-hist")?.getContext("2d");
-      if(ctxHist)new Chart(ctxHist,{type:"bar",data:{labels:top10.map(p=>p.name.split(" ")[0]),datasets:[{data:top10.map(p=>p.total),backgroundColor:top10.map((_,i)=>i===0?"rgba(245,158,11,.8)":"rgba(37,99,235,.7)"),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{font:{family:"Barlow Condensed",size:11,weight:"700"}}},y:{grid:{color:gridColor},beginAtZero:true,ticks:{stepSize:1}}}}});
-    },100);
+      if(!ctxHist) return;
+      new Chart(ctxHist,{
+        type:"bar",
+        data:{
+          labels:top10.map(p=>p.name),
+          datasets:[{
+            data:top10.map(p=>p.total),
+            backgroundColor:top10.map((_,i)=>i===0?"rgba(245,158,11,.85)":"rgba(37,99,235,.75)"),
+            borderRadius:5,borderSkipped:false,
+          }]
+        },
+        options:{
+          indexAxis:"y",
+          responsive:true,maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:ctx=>`  ${ctx.raw} aciertos acumulados`}},
+          },
+          scales:{
+            x:{
+              grid:{color:gridColor},beginAtZero:true,
+              ticks:{stepSize:1,font:{family:"Barlow Condensed",size:11,weight:"700"},color:textColor},
+            },
+            y:{
+              grid:{display:false},
+              ticks:{font:{family:"Barlow Condensed",size:12,weight:"700"},color:textColor},
+            },
+          },
+        }
+      });
+    },120);
     historialLoaded=true;
   }catch(e){el.innerHTML=`<div class="error-box">⚠️ ${e.message}</div>`;}
 }
