@@ -1167,13 +1167,18 @@ function buildLeaderboard(){
     const pid=entry.participant_id||entry.id;
     const racha=rachaMap[pid]||[];
     return{...entry,displayName:entry.participant_name_snapshot||partFb.name||"Sin nombre",displayArea:entry.participant_area_snapshot||partFb.area||"",aciertos,details,goalPred:myGoalPred?.predicted_total_goals??null,racha};
-  }).sort((a,b)=>b.aciertos-a.aciertos||a.displayName.localeCompare(b.displayName));
+  }).sort((a,b)=>{
+    const jDone=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+    if(jDone&&a.paid!==b.paid) return a.paid?-1:1;
+    return b.aciertos-a.aciertos||a.displayName.localeCompare(b.displayName);
+  });
 }
 
 // ── RENDER LEADERBOARD ──
 function renderLeaderboard(){
   const leaderboard=buildLeaderboard();
   const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+  const jornadaFinalizada=matches.length>0&&completed===matches.length;
   const maxH=leaderboard.length&&completed>0?leaderboard[0].aciertos:0;
   const lockEl=document.getElementById("lock-notice");
   if(!revealPronostics&&currentPool.reveal_pronostics_at){lockEl.style.display="block";lockEl.innerHTML=`🔒 Pronósticos visibles desde: ${new Date(currentPool.reveal_pronostics_at).toLocaleString("es-MX")}`;}
@@ -1216,16 +1221,11 @@ function renderLeaderboard(){
         ${p.racha&&p.racha.length?`<div class="form-dots">${p.racha.map(r=>`<div class="form-dot ${r.win?"fd-w":"fd-l"}" title="${r.win?"✅ Buen resultado":"❌ Bajo"}">${r.win?"W":"L"}</div>`).join("")}</div>`:""}
       </div>
       <div class="lb-hits"><div class="lb-hits-val" style="color:${hitsColor}">${completed>0?p.aciertos:"—"}</div>${completed>0?`<div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%;background:${barColor};"></div></div>`:""}</div>
-      <div class="lb-paid"><span class="paid-chip ${p.paid?"paid-yes":"paid-no"}">${p.paid?"Pagado":"Pendiente"}</span></div>
+      <div class="lb-paid"><span class="paid-chip ${p.paid?"paid-yes":"paid-no"}">${p.paid?"Pagado":jornadaFinalizada?"No Pagado":"Pendiente"}</span></div>
     </div>${picksHTML}`;
   }).join("");
   renderResultSummary();
-  // 🎉 Confetti for leader
-  if(maxH>0&&completed>0&&!searchQuery&&typeof confetti!=="undefined"){
-    setTimeout(()=>{
-      confetti({particleCount:90,spread:60,origin:{y:.6},colors:["#2563eb","#f59e0b","#22c55e","#fff"]});
-    },400);
-  }
+  // confetti triggered on tab switch only
 }
 
 function renderResultSummary(){
@@ -2145,6 +2145,7 @@ async function loadHistorial(){
     const chartH=Math.max(200, top10.length*38+60);
     const chartWrapHTML=`<div class="chart-section" style="margin-bottom:16px;">
       <div class="chart-title">📈 Aciertos Acumulados — Top 10</div>
+      <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#94a3b8;line-height:1.5;">⚠️ <strong style="color:#f59e0b;">Nota:</strong> Los participantes con <strong style="color:#e2e8f0;">más de una boleta</strong> en la misma jornada acumulan aciertos por cada boleto registrado.</div>
       <div style="position:relative;height:${chartH}px;"><canvas id="chart-hist"></canvas></div>
     </div>`;
     // ── TABLE: full jornada labels ──
@@ -2238,7 +2239,19 @@ document.getElementById("tabs").addEventListener("click",e=>{
   });
   if(tab==="stats")renderCharts();
   if(tab==="historial")loadHistorial();
-  if(tab==="leaderboard"&&!Object.keys(rachaMap).length)loadRacha();
+  if(tab==="leaderboard"){
+    if(!Object.keys(rachaMap).length)loadRacha();
+    const jDone2=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+    const lb2=buildLeaderboard();const paid2=lb2.filter(p=>p.paid);
+    const maxH2=paid2.length?paid2[0].aciertos:lb2.length?lb2[0].aciertos:0;
+    if(jDone2&&maxH2>0&&typeof confetti!=="undefined"){
+      setTimeout(()=>{
+        confetti({particleCount:130,spread:75,origin:{y:.5},colors:["#f59e0b","#fff","#22c55e","#2563eb"]});
+        setTimeout(()=>confetti({particleCount:80,spread:55,origin:{x:.15,y:.6},colors:["#f59e0b","#fff"]}),300);
+        setTimeout(()=>confetti({particleCount:80,spread:55,origin:{x:.85,y:.6},colors:["#2563eb","#22c55e"]}),500);
+      },250);
+    }
+  }
 });
 
 // ── LOADER / ERROR ──
@@ -2398,22 +2411,27 @@ async function exportPDF(){
     const comm=gross*((currentPool.commission_pct||0)/100);
     const net=poolResult?.net_pot??(gross-comm);
 
+    // Strip accents/emojis for PDF helvetica compatibility
+    const accentMap={"á":"a","é":"e","í":"i","ó":"o","ú":"u","Á":"A","É":"E","Í":"I","Ó":"O","Ú":"U","ñ":"n","Ñ":"N","ü":"u","Ü":"U","¡":"!","¿":"?"};
+    const pdfSafe=s=>{let r=String(s||"");const aMap={"\u00e1":"a","\u00e9":"e","\u00ed":"i","\u00f3":"o","\u00fa":"u","\u00c1":"A","\u00c9":"E","\u00cd":"I","\u00d3":"O","\u00da":"U","\u00f1":"n","\u00d1":"N","\u00fc":"u","\u00dc":"U","\u00a1":"!","\u00bf":"?"};r=r.split("").map(ch=>{const code=ch.codePointAt(0);if(code<128)return ch;if(aMap[ch])return aMap[ch];if(code>=160&&code<=255)return ch;return"";}).join("");return r.trim();};
+    const pdfSafePool=pdfSafe(poolName);
+    const pdfSafeMeta=pdfSafe(meta);
     // ── HEADER ──
     doc.setFillColor(13,21,48);
     doc.rect(0,0,W,38,"F");
     doc.setTextColor(255,255,255);
     doc.setFontSize(22);
     doc.setFont("helvetica","bold");
-    doc.text("QUINIELA ARCÁNGEL",14,14);
+    doc.text("QUINIELA ARCANGEL",14,14);
     doc.setFontSize(10);doc.setFont("helvetica","normal");
     doc.setTextColor(147,197,253);
-    doc.text("Pasión x Ganar ⚽  ·  Resultados en vivo",14,21);
+    doc.text("Pasion x Ganar  |  Resultados en vivo",14,21);
     doc.setTextColor(255,255,255);
     doc.setFontSize(13);doc.setFont("helvetica","bold");
-    doc.text(poolName,14,30);
+    doc.text(pdfSafePool,14,30);
     doc.setFontSize(9);doc.setFont("helvetica","normal");
     doc.setTextColor(147,197,253);
-    if(meta) doc.text(meta,14,35);
+    if(pdfSafeMeta) doc.text(pdfSafeMeta,14,35);
     doc.setTextColor(148,163,184);
     doc.text(`Generado: ${now}`,W-14,35,{align:"right"});
 
@@ -2444,14 +2462,15 @@ async function exportPDF(){
     // ── CLASIFICACIÓN table ──
     doc.setFontSize(11);doc.setFont("helvetica","bold");
     doc.setTextColor(255,255,255);
-    doc.text("🏆  CLASIFICACIÓN",14,y);
+    doc.text("CLASIFICACION",14,y);
     y+=4;
+    const jDonePDF=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
     const lbRows=lb.map((p,i)=>[
-      ["🥇","🥈","🥉"][i]||(i+1),
-      p.displayName,
-      p.displayArea||"—",
-      completed>0?p.aciertos:"—",
-      p.paid?"✓ Pagado":"Pendiente",
+      i===0?"1o":i===1?"2o":i===2?"3o":(i+1),
+      pdfSafe(p.displayName),
+      pdfSafe(p.displayArea||"-"),
+      completed>0?p.aciertos:"-",
+      p.paid?"Pagado":jDonePDF?"No Pagado":"Pendiente",
     ]);
     doc.autoTable({
       startY:y,
@@ -2470,17 +2489,17 @@ async function exportPDF(){
     if(y>250){doc.addPage();y=20;}
     doc.setFontSize(11);doc.setFont("helvetica","bold");
     doc.setTextColor(255,255,255);
-    doc.text("⚽  RESULTADOS",14,y);
+    doc.text("RESULTADOS DE PARTIDOS",14,y);
     y+=4;
     const mRows=matches.map(m=>{
       const r=getResult(m.home_goals,m.away_goals);
       const rLabel={"1":"Local","X":"Empate","2":"Visita"}[r]||"—";
       return[
         `P${m.match_no}`,
-        m.home_team||"—",
-        m.home_goals!=null?m.home_goals:"—",
-        m.away_goals!=null?m.away_goals:"—",
-        m.away_team||"—",
+        pdfSafe(m.home_team||"-"),
+        m.home_goals!=null?m.home_goals:"-",
+        m.away_goals!=null?m.away_goals:"-",
+        pdfSafe(m.away_team||"-"),
         r?rLabel:"Sin resultado",
       ];
     });
@@ -2504,7 +2523,7 @@ async function exportPDF(){
       doc.rect(0,285,W,12,"F");
       doc.setFontSize(7);doc.setFont("helvetica","normal");
       doc.setTextColor(71,85,105);
-      doc.text("Quiniela Arcángel ® · Pasión x Ganar ⚽ · 2026",14,292);
+      doc.text("Quiniela Arcangel  |  Pasion x Ganar  |  2026",14,292);
       doc.text(`Página ${i} de ${pages}`,W-14,292,{align:"right"});
     }
 
