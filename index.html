@@ -599,6 +599,99 @@ select,input{font-family:'Barlow',sans-serif;}
 #pdf-progress.show{display:flex;}
 .pdf-spinner{font-size:44px;animation:spin 1s linear infinite;}
 .pdf-msg{font-family:"Bebas Neue",sans-serif;font-size:20px;letter-spacing:3px;color:#fff;}
+
+/* ── HALL OF FAME ── */
+.hof-pool{margin-bottom:24px;}
+.hof-pool-title{
+  font-family:"Bebas Neue",sans-serif;font-size:16px;letter-spacing:2px;
+  color:var(--text-m);margin-bottom:10px;padding-bottom:6px;
+  border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:8px;
+}
+.hof-card{
+  background:linear-gradient(135deg,var(--card2),var(--card));
+  border:1px solid rgba(245,158,11,.25);border-radius:16px;padding:18px;
+  display:flex;align-items:center;gap:16px;margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.hof-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#f59e0b,#fbbf24,#f59e0b);
+  background-size:200%;animation:shimmerGold 2.5s linear infinite;
+}
+.hof-card.split{border-color:rgba(99,102,241,.3);}
+.hof-card.split::before{background:linear-gradient(90deg,#818cf8,#a5b4fc,#818cf8);background-size:200%;}
+.hof-trophy{font-size:36px;flex-shrink:0;}
+.hof-name{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:18px;color:var(--text);}
+.hof-area{font-size:11px;color:var(--text-m);font-family:"Barlow Condensed",sans-serif;margin-top:2px;}
+.hof-stat{text-align:right;margin-left:auto;flex-shrink:0;}
+.hof-stat-val{font-family:"Bebas Neue",sans-serif;font-size:28px;color:var(--amber);line-height:1;}
+.hof-stat-lbl{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m);}
+.hof-prize{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:13px;color:var(--green);margin-top:2px;}
+.hof-split-names{font-size:11px;color:#a5b4fc;font-family:"Barlow Condensed",sans-serif;margin-top:3px;}
+
+/* ── TENDENCIA ── */
+.tend-card{background:var(--card2);border:1px solid var(--border-s);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.tend-name{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:15px;color:var(--text);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.tend-chart-wrap{position:relative;height:60px;}
+.tend-dots{display:flex;gap:8px;align-items:flex-end;margin-top:6px;flex-wrap:wrap;}
+.tend-dot{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:"Barlow Condensed",sans-serif;font-size:9px;color:var(--text-d);
+}
+.tend-dot-circle{
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:"Bebas Neue",sans-serif;font-size:11px;
+  transition:transform .2s;
+}
+
+/* ── REACCIONES ── */
+.react-section{background:var(--card2);border:1px solid var(--border-s);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.react-match{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:13px;color:var(--text);margin-bottom:10px;}
+.react-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.react-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--card);border:1px solid var(--border-s);
+  border-radius:20px;padding:7px 14px;cursor:pointer;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:13px;
+  color:var(--text);transition:all .2s;
+}
+.react-btn:hover,.react-btn.my{background:rgba(37,99,235,.12);border-color:var(--border);}
+.react-btn.my{color:var(--acc);}
+.react-count{font-size:12px;color:var(--text-m);}
+.react-comment-form{display:flex;gap:8px;margin-top:8px;}
+.react-input{
+  flex:1;background:var(--card);border:1px solid var(--border-s);
+  border-radius:9px;color:var(--text);padding:8px 12px;
+  font-size:13px;font-family:"Barlow",sans-serif;outline:none;
+}
+.react-input:focus{border-color:var(--border);}
+.react-send{
+  background:var(--acc);border:none;border-radius:9px;color:#fff;
+  padding:8px 14px;cursor:pointer;font-family:"Barlow Condensed",sans-serif;
+  font-weight:700;font-size:13px;flex-shrink:0;
+}
+.react-comments{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.react-comment{
+  background:var(--card);border-radius:8px;padding:8px 12px;
+  font-size:12px;color:var(--text-m);font-family:"Barlow",sans-serif;
+}
+.react-comment-name{font-weight:700;color:var(--text);margin-right:6px;font-family:"Barlow Condensed",sans-serif;font-size:13px;}
+
+/* ── NIGHT MODE toggle ── */
+#night-btn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border-s);
+  background:var(--card2);color:var(--text-m);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  transition:all .2s;flex-shrink:0;
+}
+[data-theme="night"]{
+  --bg:#000005;--bg2:#020208;--bg3:#04040f;
+  --card:rgba(2,2,12,.98);--card2:rgba(4,4,18,.9);
+  --border:rgba(99,0,255,.35);--border-s:rgba(99,0,255,.1);
+  --text:#e0d4ff;--text-m:#6b5b9e;--text-d:#2a1f52;
+  --acc:#7c3aed;--acc2:#5b21b6;
+  --green:#a78bfa;--amber:#c084fc;
+}
 /* ── FOOTER ── */
 #app-footer{
   margin-top:48px;
@@ -633,6 +726,13 @@ select,input{font-family:'Barlow',sans-serif;}
   transition:color .2s;padding:0;
 }
 .footer-tc:hover{color:#60a5fa;}
+.footer-portfolio{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:12px;letter-spacing:1px;color:#818cf8;
+  text-decoration:none;transition:color .2s;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.footer-portfolio:hover{color:#a5b4fc;}
 /* ── TC MODAL ── */
 #tc-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.75);
@@ -689,6 +789,7 @@ select,input{font-family:'Barlow',sans-serif;}
     <div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
     <button class="icon-btn" id="notif-btn" title="Activar notificaciones">🔔</button>
     <button class="icon-btn" id="pdf-btn" title="Exportar PDF">📄</button>
+    <button class="icon-btn" id="night-btn" title="Modo Noche">🌃</button>
     <button class="icon-btn" id="theme-btn" title="Cambiar tema">🌙</button>
   </div>
 </header>
@@ -719,6 +820,9 @@ select,input{font-family:'Barlow',sans-serif;}
       <button class="tab-btn" data-tab="leaderboard">🏆 Clasificación</button>
       <button class="tab-btn" data-tab="stats">📊 Estadísticas</button>
       <button class="tab-btn" data-tab="historial">🏅 Historial</button>
+      <button class="tab-btn" data-tab="ganadores">👑 Ganadores</button>
+      <button class="tab-btn" data-tab="tendencia">📈 Tendencia</button>
+      <button class="tab-btn" data-tab="reacciones">💬 Reacciones</button>
     </div>
     <!-- PARTIDOS -->
     <div id="tab-matches">
@@ -806,6 +910,18 @@ select,input{font-family:'Barlow',sans-serif;}
     <div id="tab-historial" style="display:none;">
       <div id="historial-content"><div class="hist-loading">🏅 Haz clic en esta pestaña para cargar el historial acumulado...</div></div>
     </div>
+    <!-- GANADORES HISTÓRICOS -->
+    <div id="tab-ganadores" style="display:none;">
+      <div id="ganadores-content"><div class="hist-loading">👑 Cargando Hall of Fame...</div></div>
+    </div>
+    <!-- TENDENCIA DE FORMA -->
+    <div id="tab-tendencia" style="display:none;">
+      <div id="tendencia-content"><div class="hist-loading">📈 Cargando tendencias...</div></div>
+    </div>
+    <!-- REACCIONES -->
+    <div id="tab-reacciones" style="display:none;">
+      <div id="reacciones-content"></div>
+    </div>
   </div>
   <div id="error-area"></div>
 </div>
@@ -857,12 +973,66 @@ let isDark=true;
 let notifEnabled=false;
 let lastScoreSnapshot={};  // matchId → "hg-ag" to detect changes
 
-// ── PWA Manifest ──
+// ── PWA: Manifest + Service Worker ──
 (function(){
-  const manifest={name:"Quiniela Herseg MX",short_name:"HersegMX",start_url:"./",display:"standalone",background_color:"#06090f",theme_color:"#1d4ed8",icons:[{src:"https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/26bd.png",sizes:"72x72",type:"image/png"}]};
+  // Dynamic manifest (works without a separate file)
+  const manifest={
+    name:"Quiniela Arcángel",
+    short_name:"Arcángel",
+    description:"Resultados en vivo de la Quiniela Arcángel. Pasión x Ganar ⚽",
+    start_url:"./",
+    display:"standalone",
+    orientation:"portrait",
+    background_color:"#06090f",
+    theme_color:"#1d4ed8",
+    categories:["sports","entertainment"],
+    lang:"es",
+    icons:[
+      {src:"img/logo-arcangel.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},
+      {src:"img/logo-arcangel.png",sizes:"512x512",type:"image/png",purpose:"any maskable"},
+      {src:"https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/26bd.png",sizes:"72x72",type:"image/png"}
+    ],
+    screenshots:[],
+    shortcuts:[
+      {name:"Clasificación",short_name:"Ranking",description:"Ver ranking de la jornada activa",url:"./?tab=leaderboard",icons:[{src:"img/logo-arcangel.png",sizes:"96x96"}]},
+      {name:"Partidos",short_name:"Partidos",description:"Ver resultados de partidos",url:"./?tab=matches",icons:[{src:"img/logo-arcangel.png",sizes:"96x96"}]}
+    ]
+  };
   const blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const link=document.createElement("link");link.rel="manifest";link.href=url;document.head.appendChild(link);
+  const mUrl=URL.createObjectURL(blob);
+  const mLink=document.createElement("link");mLink.rel="manifest";mLink.href=mUrl;document.head.appendChild(mLink);
+
+  // Service Worker: requires a separate sw.js file on the server
+  // To enable offline: create sw.js in same folder as the HTML
+  if("serviceWorker" in navigator && window.location.protocol==="https:"){
+    navigator.serviceWorker.register("./sw.js")
+      .then(reg=>console.log("SW registered:",reg.scope))
+      .catch(()=>{}); // silent fail if sw.js not present
+  }
+
+  // PWA Install prompt
+  let deferredPrompt=null;
+  window.addEventListener("beforeinstallprompt",e=>{
+    e.preventDefault();deferredPrompt=e;
+    // Show install hint after 3 seconds
+    setTimeout(()=>{
+      if(deferredPrompt) showToastMsg("¡Instala la app para acceso rápido! Usa el menú del navegador.","📲");
+    },3000);
+  });
+  window.addEventListener("appinstalled",()=>{
+    showToastMsg("¡App instalada correctamente! 🎉","✅");
+    deferredPrompt=null;
+  });
+
+  // Handle shortcut deep links on launch
+  const urlParams=new URLSearchParams(window.location.search);
+  const initialTab=urlParams.get("tab");
+  if(initialTab){
+    document.addEventListener("DOMContentLoaded",()=>{
+      const btn=document.querySelector(`.tab-btn[data-tab="${initialTab}"]`);
+      if(btn) setTimeout(()=>btn.click(),800);
+    });
+  }
 })();
 
 // ── THEME ──
@@ -2234,22 +2404,21 @@ document.getElementById("tabs").addEventListener("click",e=>{
   const btn=e.target.closest(".tab-btn");if(!btn)return;
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
   const tab=btn.dataset.tab;
-  ["matches","leaderboard","stats","historial"].forEach(t=>{
+  ["matches","leaderboard","stats","historial","ganadores","tendencia","reacciones"].forEach(t=>{
     document.getElementById(`tab-${t}`).style.display=t===tab?"block":"none";
   });
   if(tab==="stats")renderCharts();
   if(tab==="historial")loadHistorial();
+  if(tab==="ganadores")loadGanadores();
+  if(tab==="tendencia")loadTendencia();
+  if(tab==="reacciones")loadReacciones();
   if(tab==="leaderboard"){
     if(!Object.keys(rachaMap).length)loadRacha();
     const jDone2=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
     const lb2=buildLeaderboard();const paid2=lb2.filter(p=>p.paid);
     const maxH2=paid2.length?paid2[0].aciertos:lb2.length?lb2[0].aciertos:0;
     if(jDone2&&maxH2>0&&typeof confetti!=="undefined"){
-      setTimeout(()=>{
-        confetti({particleCount:130,spread:75,origin:{y:.5},colors:["#f59e0b","#fff","#22c55e","#2563eb"]});
-        setTimeout(()=>confetti({particleCount:80,spread:55,origin:{x:.15,y:.6},colors:["#f59e0b","#fff"]}),300);
-        setTimeout(()=>confetti({particleCount:80,spread:55,origin:{x:.85,y:.6},colors:["#2563eb","#22c55e"]}),500);
-      },250);
+      setTimeout(()=>launchFireworks(),300);
     }
   }
 });
@@ -2540,6 +2709,317 @@ async function exportPDF(){
 
 document.getElementById("pdf-btn").addEventListener("click", exportPDF);
 
+
+// ════════════════════════════════════════
+// FIREWORKS / CELEBRACIÓN
+// ════════════════════════════════════════
+function launchFireworks(){
+  if(typeof confetti==="undefined") return;
+  const GOLD=["#f59e0b","#fbbf24","#fde68a","#fff"];
+  const BLUE=["#2563eb","#60a5fa","#93c5fd","#fff"];
+  const GREEN=["#22c55e","#4ade80","#bbf7d0","#fff"];
+  const ALL=[...GOLD,...BLUE,...GREEN];
+
+  // Burst 1 — center top
+  confetti({particleCount:120,angle:90,spread:80,origin:{x:.5,y:.3},colors:ALL,startVelocity:55,gravity:.9,ticks:200});
+
+  // Burst 2 — left cannon
+  setTimeout(()=>{
+    confetti({particleCount:90,angle:60,spread:55,origin:{x:.1,y:.7},colors:GOLD,startVelocity:60,gravity:.8,ticks:180});
+  },200);
+
+  // Burst 3 — right cannon
+  setTimeout(()=>{
+    confetti({particleCount:90,angle:120,spread:55,origin:{x:.9,y:.7},colors:BLUE,startVelocity:60,gravity:.8,ticks:180});
+  },350);
+
+  // Burst 4 — rising stars
+  setTimeout(()=>{
+    confetti({particleCount:60,angle:90,spread:30,origin:{x:.3,y:.9},colors:GREEN,startVelocity:70,gravity:.6,shapes:["star"],ticks:220});
+    confetti({particleCount:60,angle:90,spread:30,origin:{x:.7,y:.9},colors:GOLD,startVelocity:70,gravity:.6,shapes:["star"],ticks:220});
+  },600);
+
+  // Burst 5 — finale shower
+  setTimeout(()=>{
+    confetti({particleCount:200,angle:90,spread:120,origin:{x:.5,y:.0},colors:ALL,startVelocity:30,gravity:1,ticks:150,scalar:.8});
+  },1000);
+}
+
+
+// ════════════════════════════════════════════════════════════
+// NIGHT MODE
+// ════════════════════════════════════════════════════════════
+let isNight=false;
+document.getElementById("night-btn").addEventListener("click",()=>{
+  isNight=!isNight;
+  if(isNight){
+    document.documentElement.setAttribute("data-theme","night");
+    document.getElementById("night-btn").textContent="🌆";
+    document.getElementById("theme-btn").textContent="🌙";
+    isDark=true;
+  } else {
+    document.documentElement.setAttribute("data-theme",isDark?"dark":"light");
+    document.getElementById("night-btn").textContent="🌃";
+  }
+  if(chartHits||chartDist) setTimeout(renderCharts,100);
+});
+
+// ════════════════════════════════════════════════════════════
+// HALL OF FAME — Ganadores históricos por jornada
+// ════════════════════════════════════════════════════════════
+let ganadoresLoaded=false;
+async function loadGanadores(){
+  if(ganadoresLoaded)return;
+  const el=document.getElementById("ganadores-content");
+  el.innerHTML=`<div class="hist-loading"><div style="font-size:32px;animation:spin 1.5s linear infinite;display:inline-block">⚽</div><br>Cargando Hall of Fame...</div>`;
+  try{
+    const [allPools,allEntries,allMatches,allPreds,allResults]=await Promise.all([
+      db("pools?select=*&order=created_at.asc"),
+      db("entries?select=*"),
+      db("matches?select=*"),
+      db("predictions_1x2?select=*"),
+      db("pool_results?select=*").catch(()=>[]),
+    ]);
+    const allPartIds=[...new Set(allEntries.map(x=>x.participant_id).filter(Boolean))];
+    let partsInfo={};
+    if(allPartIds.length){
+      const parts=await db(`participants?id=in.(${allPartIds.join(",")})&select=id,name,area`);
+      partsInfo=Object.fromEntries(parts.map(p=>[p.id,p]));
+    }
+    // Build per-pool winner cards
+    const poolCards=[];
+    allPools.forEach(pool=>{
+      const pM=allMatches.filter(m=>m.pool_id===pool.id);
+      const compM=pM.filter(m=>m.home_goals!=null&&m.away_goals!=null);
+      if(!compM.length) return; // skip incomplete
+      const pE=allEntries.filter(e=>e.pool_id===pool.id);
+      const paidE=pE.filter(e=>e.paid);
+      if(!paidE.length) return;
+      const pr=allResults.find(r=>r.pool_id===pool.id);
+      const gross=paidE.length*(pool.price||0);
+      const comm=gross*((pool.commission_pct||0)/100);
+      const net=pr?.net_pot??(gross-comm);
+      // Compute hits
+      const entryHits=paidE.map(entry=>{
+        const myP=allPreds.filter(p=>p.entry_id===entry.id);
+        let h=0;
+        compM.forEach(match=>{
+          const res=getResult(match.home_goals,match.away_goals);
+          const pred=myP.find(p=>p.match_id===match.id);
+          if(res&&normalizePick(pred?.pick)===res) h++;
+        });
+        const fb=partsInfo[entry.participant_id]||{};
+        return{name:entry.participant_name_snapshot||fb.name||"?",area:entry.participant_area_snapshot||fb.area||"",hits:h};
+      });
+      const maxH=Math.max(...entryHits.map(e=>e.hits));
+      if(!maxH) return;
+      const winners=entryHits.filter(e=>e.hits===maxH);
+      const prize=winners.length>0?net/winners.length:0;
+      const isSplit=winners.length>1;
+      const poolLabel=pool.name||pool.date_label||`Jornada ${pool.round}`;
+      const comp=pool.competition?` · ${pool.competition}`:"";
+      poolCards.push({pool,poolLabel,comp,net,winners,prize,maxH,isSplit,totalParts:paidE.length});
+    });
+    if(!poolCards.length){
+      el.innerHTML=`<div class="empty">Aún no hay jornadas finalizadas con ganadores.</div>`;return;
+    }
+    // Render — most recent first
+    el.innerHTML=poolCards.reverse().map(({poolLabel,comp,net,winners,prize,maxH,isSplit,totalParts,pool})=>{
+      const trophyEmoji=isSplit?"🤝":"🏆";
+      const winHTML=winners.map(w=>`
+        <div class="hof-card${isSplit?" split":""}">
+          <div class="hof-trophy">${trophyEmoji}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="hof-name">${w.name}</div>
+            <div class="hof-area">${w.area||""}</div>
+            ${isSplit?`<div class="hof-split-names">Premio compartido · ${winners.length} ganadores</div>`:""}
+          </div>
+          <div class="hof-stat">
+            <div class="hof-stat-val">${w.hits}</div>
+            <div class="hof-stat-lbl">aciertos</div>
+            <div class="hof-prize">${fmxn(prize)}</div>
+          </div>
+        </div>`).join("");
+      return`<div class="hof-pool">
+        <div class="hof-pool-title">
+          ${trophyEmoji} ${poolLabel}${comp}
+          <span style="margin-left:auto;font-size:10px;font-family:'Barlow Condensed',sans-serif;color:var(--text-d);">Bolsa: ${fmxn(net)} · ${totalParts} pagados</span>
+        </div>
+        ${winHTML}
+      </div>`;
+    }).join("");
+    ganadoresLoaded=true;
+  }catch(e){
+    const el2=document.getElementById("ganadores-content");
+    if(el2)el2.innerHTML=`<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// TENDENCIA DE FORMA — línea de aciertos por jornada
+// ════════════════════════════════════════════════════════════
+let tendenciaLoaded=false;
+let chartsTendencia=[];
+async function loadTendencia(){
+  if(tendenciaLoaded)return;
+  const el=document.getElementById("tendencia-content");
+  el.innerHTML=`<div class="hist-loading"><div style="font-size:32px;animation:spin 1.5s linear infinite;display:inline-block">⚽</div><br>Cargando tendencias...</div>`;
+  try{
+    const [allPools,allEntries,allMatches,allPreds]=await Promise.all([
+      db("pools?select=id,name,date_label,round,created_at&order=created_at.asc"),
+      db("entries?select=id,pool_id,participant_id,participant_name_snapshot,participant_area_snapshot,paid"),
+      db("matches?select=id,pool_id,home_goals,away_goals"),
+      db("predictions_1x2?select=entry_id,match_id,pick"),
+    ]);
+    const allPartIds=[...new Set(allEntries.map(x=>x.participant_id).filter(Boolean))];
+    let partsInfo={};
+    if(allPartIds.length){
+      const pts=await db(`participants?id=in.(${allPartIds.join(",")})&select=id,name,area`);
+      partsInfo=Object.fromEntries(pts.map(p=>[p.id,p]));
+    }
+    // Build per-participant series
+    const partSeries={};
+    allPools.forEach(pool=>{
+      const pM=allMatches.filter(m=>m.pool_id===pool.id);
+      const compM=pM.filter(m=>m.home_goals!=null&&m.away_goals!=null);
+      if(!compM.length)return;
+      const pE=allEntries.filter(e=>e.pool_id===pool.id);
+      const poolLabel=pool.name?pool.name.replace(/Jornada\s*/i,"J").slice(0,8):pool.date_label?pool.date_label.slice(0,8):`J${pool.round||"?"}`;
+      pE.forEach(entry=>{
+        const pid=entry.participant_id||entry.id;
+        const fb=partsInfo[pid]||{};
+        const name=entry.participant_name_snapshot||fb.name||"?";
+        const area=entry.participant_area_snapshot||fb.area||"";
+        if(!partSeries[pid])partSeries[pid]={name,area,points:[]};
+        const myP=allPreds.filter(p=>p.entry_id===entry.id);
+        let h=0;
+        compM.forEach(match=>{
+          const res=getResult(match.home_goals,match.away_goals);
+          const pred=myP.find(p=>p.match_id===match.id);
+          if(res&&normalizePick(pred?.pick)===res)h++;
+        });
+        partSeries[pid].points.push({label:poolLabel,hits:h,max:compM.length,paid:entry.paid});
+      });
+    });
+    const sorted=Object.values(partSeries)
+      .filter(p=>p.points.length>0)
+      .sort((a,b)=>{
+        const aLast=a.points[a.points.length-1];const bLast=b.points[b.points.length-1];
+        return (bLast?.hits||0)-(aLast?.hits||0);
+      });
+    if(!sorted.length){el.innerHTML=`<div class="empty">Sin datos de tendencia aún.</div>`;return;}
+    el.innerHTML="";
+    chartsTendencia.forEach(ch=>ch.destroy());chartsTendencia=[];
+    const dark=isDark;
+    const gridColor=dark?"rgba(255,255,255,.06)":"rgba(0,0,0,.07)";
+    const textColor=dark?"#94a3b8":"#64748b";
+    sorted.forEach((part,pi)=>{
+      const lastPts=part.points[part.points.length-1];
+      const trend=part.points.length>1?part.points[part.points.length-1].hits-part.points[part.points.length-2].hits:0;
+      const trendStr=trend>0?`▲${trend}`:trend<0?`▼${Math.abs(trend)}`:"━";
+      const trendColor=trend>0?"var(--green)":trend<0?"#ef4444":"var(--text-d)";
+      const canvasId=`tend-canvas-${pi}`;
+      const card=document.createElement("div");
+      card.className="tend-card";
+      card.innerHTML=`<div class="tend-name">${part.name}<span style="font-size:11px;color:${trendColor};font-family:'Barlow Condensed',sans-serif;font-weight:700;">${trendStr} ${lastPts?lastPts.hits+"/"+lastPts.max+" (últ.)":""}</span></div><div style="color:var(--text-m);font-family:'Barlow Condensed',sans-serif;font-size:11px;margin-bottom:10px;">${part.area||""}</div><div class="tend-chart-wrap"><canvas id="${canvasId}"></canvas></div>`;
+      el.appendChild(card);
+      setTimeout(()=>{
+        const ctx=document.getElementById(canvasId)?.getContext("2d");
+        if(!ctx)return;
+        const labels=part.points.map(p=>p.label);
+        const data=part.points.map(p=>p.hits);
+        const grad=ctx.createLinearGradient(0,0,0,60);
+        grad.addColorStop(0,"rgba(37,99,235,.3)");grad.addColorStop(1,"rgba(37,99,235,.0)");
+        const ch=new Chart(ctx,{type:"line",data:{labels,datasets:[{data,borderColor:"#3b82f6",backgroundColor:grad,borderWidth:2.5,pointRadius:4,pointBackgroundColor:data.map((_,i)=>i===data.length-1?"#f59e0b":"#3b82f6"),pointHoverRadius:6,fill:true,tension:.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx2=>`${ctx2.raw} aciertos`}}},scales:{x:{grid:{display:false},ticks:{font:{family:"Barlow Condensed",size:10,weight:"700"},color:textColor}},y:{grid:{color:gridColor},beginAtZero:true,ticks:{stepSize:1,font:{size:9},color:textColor}}}}});
+        chartsTendencia.push(ch);
+      },80*pi);
+    });
+    tendenciaLoaded=true;
+  }catch(e){
+    const el2=document.getElementById("tendencia-content");
+    if(el2)el2.innerHTML=`<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// REACCIONES — emojis + comentarios por partido (localStorage)
+// ════════════════════════════════════════════════════════════
+const EMOJIS=["🔥","👏","😱","😬","⚽","😤","🎉","💪"];
+const REACT_KEY=()=>`reactions_${currentPool?.id||""}`;
+function getReactions(){try{return JSON.parse(localStorage.getItem(REACT_KEY())||"{}")}catch{return{}}}
+function saveReactions(data){try{localStorage.setItem(REACT_KEY(),JSON.stringify(data))}catch{}}
+let myReactions={}; // matchId → Set of emojis I clicked
+function loadReacciones(){
+  const el=document.getElementById("reacciones-content");
+  if(!matches.length){el.innerHTML=`<div class="empty">No hay partidos en esta jornada.</div>`;return;}
+  const stored=getReactions();
+  try{myReactions=JSON.parse(localStorage.getItem(REACT_KEY()+"_my")||"{}")}catch{myReactions={}}
+  renderReacciones(stored);
+}
+function renderReacciones(stored){
+  const el=document.getElementById("reacciones-content");
+  const result=getResult;
+  el.innerHTML=matches.map(m=>{
+    const res=result(m.home_goals,m.away_goals);
+    const scoreStr=res?`${m.home_goals}-${m.away_goals}`:"vs";
+    const key=m.id;
+    const rd=stored[key]||{emojis:{},comments:[]};
+    const myE=myReactions[key]||[];
+    const emojiBtns=EMOJIS.map(e=>{
+      const cnt=rd.emojis?.[e]||0;
+      const isMine=myE.includes(e);
+      return`<button class="react-btn${isMine?" my":""}" onclick="toggleReaction('${key}','${e}')" title="${e}">
+        ${e} <span class="react-count">${cnt>0?cnt:""}</span>
+      </button>`;
+    }).join("");
+    const commHTML=(rd.comments||[]).slice(-8).map(cm=>`
+      <div class="react-comment"><span class="react-comment-name">${cm.name}</span>${cm.text}</div>`).join("");
+    return`<div class="react-section">
+      <div class="react-match">
+        <span style="color:var(--text-m);font-size:10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">PARTIDO ${m.match_no}</span><br>
+        <strong>${m.home_team}</strong> <span style="color:var(--acc);font-family:'Bebas Neue',sans-serif;font-size:16px;"> ${scoreStr} </span> <strong>${m.away_team}</strong>
+      </div>
+      <div class="react-btns">${emojiBtns}</div>
+      <div class="react-comment-form">
+        <input class="react-input" id="rc-${key}" placeholder="Escribe un comentario..." maxlength="120"/>
+        <button class="react-send" onclick="sendComment('${key}')">Enviar</button>
+      </div>
+      <div class="react-comments">${commHTML}</div>
+    </div>`;
+  }).join("");
+}
+function toggleReaction(matchId,emoji){
+  const stored=getReactions();
+  if(!stored[matchId])stored[matchId]={emojis:{},comments:[]};
+  if(!myReactions[matchId])myReactions[matchId]=[];
+  const myList=myReactions[matchId];
+  const idx=myList.indexOf(emoji);
+  if(idx>-1){
+    myList.splice(idx,1);
+    stored[matchId].emojis[emoji]=Math.max(0,(stored[matchId].emojis[emoji]||1)-1);
+  } else {
+    myList.push(emoji);
+    stored[matchId].emojis[emoji]=(stored[matchId].emojis[emoji]||0)+1;
+  }
+  saveReactions(stored);
+  try{localStorage.setItem(REACT_KEY()+"_my",JSON.stringify(myReactions))}catch{}
+  renderReacciones(stored);
+}
+function sendComment(matchId){
+  const input=document.getElementById(`rc-${matchId}`);
+  const text=(input?.value||"").trim();
+  if(!text)return;
+  const stored=getReactions();
+  if(!stored[matchId])stored[matchId]={emojis:{},comments:[]};
+  const lb=buildLeaderboard();
+  const name=lb.length?lb[0].displayName.split(" ")[0]:"Anónimo";
+  stored[matchId].comments.push({name,text,ts:Date.now()});
+  if(stored[matchId].comments.length>20)stored[matchId].comments.shift();
+  saveReactions(stored);
+  if(input)input.value="";
+  renderReacciones(stored);
+}
+
 // ── INIT ──
 loadPools();
 </script>
@@ -2574,6 +3054,10 @@ loadPools();
   <div class="footer-dev">Desarrollado por <span>Luis Arturo</span> con ayuda de <span>Claude IA</span></div>
   <div class="footer-links">
     <span class="footer-year">© 2026</span>
+    <span class="footer-divider">·</span>
+    <a href="https://portafolio-luis-tau.vercel.app/" target="_blank" rel="noopener" class="footer-portfolio">
+      🌐 Portafolio
+    </a>
     <span class="footer-divider">·</span>
     <button class="footer-tc" onclick="document.getElementById('tc-overlay').classList.add('open');document.body.style.overflow='hidden';">
       Términos y Condiciones
