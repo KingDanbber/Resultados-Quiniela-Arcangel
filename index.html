@@ -50,16 +50,29 @@ select,input{font-family:'Barlow',sans-serif;}
 #app-header{
   background:linear-gradient(135deg,var(--bg2),var(--bg3));
   border-bottom:1px solid var(--border);
-  padding:12px 18px;display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);gap:10px;
+  padding:10px 16px 8px;
+  display:flex;flex-direction:column;gap:8px;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);
 }
-.h-logo{width:44px;height:44px;background:linear-gradient(135deg,var(--acc2),var(--acc));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px rgba(37,99,235,.5);flex-shrink:0;}
-.h-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:3px;line-height:1;background:linear-gradient(90deg,var(--text) 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+/* Row 1: logo + title */
+.h-row1{display:flex;align-items:center;gap:12px;}
+/* Row 2: live badge + action buttons */
+.h-row2{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-top:2px;border-top:1px solid rgba(255,255,255,.04);
+}
+.h-row2-left{display:flex;align-items:center;gap:6px;}
+.h-row2-right{display:flex;align-items:center;gap:6px;}
+.h-logo{width:46px;height:46px;background:linear-gradient(135deg,var(--acc2),var(--acc));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px rgba(37,99,235,.5);flex-shrink:0;}
+.h-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;line-height:1;background:linear-gradient(90deg,var(--text) 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .h-sub{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-m);margin-top:2px;}
 .h-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.live-badge{display:flex;align-items:center;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--green);letter-spacing:1.5px;white-space:nowrap;}
-.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border-s);background:var(--card2);color:var(--text-m);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0;}
+.live-badge{display:flex;align-items:center;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:5px 13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--green);letter-spacing:1.5px;white-space:nowrap;}
+.icon-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border-s);background:var(--card2);color:var(--text-m);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;flex-shrink:0;}
 .icon-btn:hover{border-color:var(--border);color:var(--text);}
+/* Icon labels shown under icon on row2 */
+.icon-btn-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;}
+.icon-btn-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-d);white-space:nowrap;}
 
 .h-slogan{
   font-family:"Barlow Condensed",sans-serif;font-weight:800;
@@ -386,13 +399,14 @@ select,input{font-family:'Barlow',sans-serif;}
 /* ── RESPONSIVE: large phones / small tablets ── */
 @media(max-width:600px){
   /* Header */
-  #app-header{padding:10px 14px;gap:8px;}
-  .h-logo{width:38px;height:38px;font-size:20px;}
-  .h-title{font-size:15px;letter-spacing:2px;}
+  #app-header{padding:9px 13px 7px;gap:6px;}
+  .h-logo{width:40px;height:40px;}
+  .h-title{font-size:19px;letter-spacing:2px;}
   .h-sub{font-size:8px;letter-spacing:2px;}
   .h-slogan{font-size:9px;}
-  .live-badge{padding:4px 9px;font-size:10px;}
-  .icon-btn{width:32px;height:32px;font-size:14px;}
+  .live-badge{padding:4px 10px;font-size:10px;}
+  .icon-btn{width:30px;height:30px;font-size:13px;}
+  .icon-btn-lbl{font-size:7px;}
   /* Refresh bar */
   #refresh-bar{padding:5px 14px;}
   .refresh-text{font-size:9px;}
@@ -459,7 +473,8 @@ select,input{font-family:'Barlow',sans-serif;}
 
 /* ── RESPONSIVE: small phones (≤380px) ── */
 @media(max-width:380px){
-  .h-title{font-size:13px;letter-spacing:1.5px;}
+  .h-title{font-size:16px;letter-spacing:1.5px;}
+  .icon-btn{width:28px;height:28px;font-size:12px;}
   #pool-select{font-size:11px;}
   #kpi-grid{grid-template-columns:repeat(3,1fr);}
   .kpi-val{font-size:17px;}
@@ -778,19 +793,40 @@ select,input{font-family:'Barlow',sans-serif;}
 
 <!-- HEADER -->
 <header id="app-header">
-  <div style="display:flex;align-items:center;gap:11px;min-width:0;">
-    <div class="h-logo" style="background:transparent;box-shadow:none;padding:0;overflow:hidden;"><img src="img/logo-arcangel.png" alt="Arcángel" style="width:44px;height:44px;object-fit:contain;border-radius:10px;"></div>
-    <div style="min-width:0;">
+  <!-- ROW 1: Logo + Nombre completo -->
+  <div class="h-row1">
+    <div class="h-logo" style="background:transparent;box-shadow:none;padding:0;overflow:hidden;">
+      <img src="img/logo-arcangel.png" alt="Arcángel" style="width:46px;height:46px;object-fit:contain;border-radius:10px;">
+    </div>
+    <div style="min-width:0;flex:1;">
       <div class="h-title">QUINIELA ARCÁNGEL</div>
-      <div class="h-sub">Resultados en vivo</div><div class="h-slogan">Pasión x Ganar ⚽</div>
+      <div class="h-sub">Resultados en vivo</div>
+      <div class="h-slogan">Pasión x Ganar ⚽</div>
     </div>
   </div>
-  <div class="h-right">
-    <div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
-    <button class="icon-btn" id="notif-btn" title="Activar notificaciones">🔔</button>
-    <button class="icon-btn" id="pdf-btn" title="Exportar PDF">📄</button>
-    <button class="icon-btn" id="night-btn" title="Modo Noche">🌃</button>
-    <button class="icon-btn" id="theme-btn" title="Cambiar tema">🌙</button>
+  <!-- ROW 2: EN VIVO + Botones de acción -->
+  <div class="h-row2">
+    <div class="h-row2-left">
+      <div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
+    </div>
+    <div class="h-row2-right">
+      <div class="icon-btn-wrap">
+        <button class="icon-btn" id="notif-btn" title="Notificaciones">🔔</button>
+        <span class="icon-btn-lbl">Alertas</span>
+      </div>
+      <div class="icon-btn-wrap">
+        <button class="icon-btn" id="pdf-btn" title="Exportar PDF">📄</button>
+        <span class="icon-btn-lbl">PDF</span>
+      </div>
+      <div class="icon-btn-wrap">
+        <button class="icon-btn" id="night-btn" title="Modo Noche">🌃</button>
+        <span class="icon-btn-lbl">Noche</span>
+      </div>
+      <div class="icon-btn-wrap">
+        <button class="icon-btn" id="theme-btn" title="Cambiar tema">🌙</button>
+        <span class="icon-btn-lbl">Tema</span>
+      </div>
+    </div>
   </div>
 </header>
 
