@@ -693,19 +693,96 @@ select,input{font-family:'Barlow',sans-serif;}
 .react-comment-name{font-weight:700;color:var(--text);margin-right:6px;font-family:"Barlow Condensed",sans-serif;font-size:13px;}
 
 /* ── NIGHT MODE toggle ── */
-#night-btn{
-  width:36px;height:36px;border-radius:10px;border:1px solid var(--border-s);
-  background:var(--card2);color:var(--text-m);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:16px;
-  transition:all .2s;flex-shrink:0;
+/* ── ESTADIO THEME ── */
+[data-theme="estadio"]{
+  /* Grass green palette */
+  --bg:#0d2818;--bg2:#0f3020;--bg3:#112a1c;
+  --card:rgba(10,40,20,.97);--card2:rgba(13,48,25,.9);
+  --border:rgba(74,222,128,.3);--border-s:rgba(74,222,128,.1);
+  --text:#f0fdf4;--text-m:#86efac;--text-d:#166534;
+  --acc:#16a34a;--acc2:#15803d;
+  --green:#4ade80;--amber:#fde047;--red:#f87171;
+  --shadow:rgba(0,0,0,.6);
 }
-[data-theme="night"]{
-  --bg:#000005;--bg2:#020208;--bg3:#04040f;
-  --card:rgba(2,2,12,.98);--card2:rgba(4,4,18,.9);
-  --border:rgba(99,0,255,.35);--border-s:rgba(99,0,255,.1);
-  --text:#e0d4ff;--text-m:#6b5b9e;--text-d:#2a1f52;
-  --acc:#7c3aed;--acc2:#5b21b6;
-  --green:#a78bfa;--amber:#c084fc;
+/* Grass stripes background */
+[data-theme="estadio"] body{
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,.03) 0px,
+      rgba(255,255,255,.03) 40px,
+      transparent 40px,
+      transparent 80px
+    ),
+    linear-gradient(180deg,#0d2818 0%,#0a2214 100%);
+}
+/* Field line borders on cards */
+[data-theme="estadio"] .match-card,
+[data-theme="estadio"] #lb-wrap,
+[data-theme="estadio"] .chart-section,
+[data-theme="estadio"] .kpi-card,
+[data-theme="estadio"] .picks-panel,
+[data-theme="estadio"] .hof-card,
+[data-theme="estadio"] .tend-card,
+[data-theme="estadio"] .react-section{
+  border-color:rgba(74,222,128,.25);
+}
+/* Header grass gradient */
+[data-theme="estadio"] #app-header{
+  background:linear-gradient(135deg,#0a2010,#0f3020);
+  border-bottom-color:rgba(74,222,128,.4);
+}
+[data-theme="estadio"] .h-title{
+  background:linear-gradient(90deg,#f0fdf4 0%,#4ade80 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+[data-theme="estadio"] .h-slogan{color:#fde047;}
+[data-theme="estadio"] .live-badge{
+  background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.4);
+}
+[data-theme="estadio"] .live-dot{background:#4ade80;box-shadow:0 0 8px #4ade80;}
+[data-theme="estadio"] #refresh-bar,
+[data-theme="estadio"] #pool-bar,
+[data-theme="estadio"] #comp-tabs-bar{
+  background:#0a2010;border-bottom-color:rgba(74,222,128,.15);
+}
+[data-theme="estadio"] .refresh-fill{
+  background:linear-gradient(90deg,#16a34a,#4ade80);
+}
+[data-theme="estadio"] #pool-select{
+  background:rgba(13,48,25,.8);border-color:rgba(74,222,128,.35);
+}
+[data-theme="estadio"] .tab-btn.active{
+  background:linear-gradient(135deg,#15803d,#16a34a);
+  box-shadow:0 0 16px rgba(22,163,74,.5);
+}
+[data-theme="estadio"] .lb-row.leader{background:rgba(253,224,71,.06);}
+[data-theme="estadio"] .paid-yes{
+  background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.3);
+}
+[data-theme="estadio"] .result-chip.r1{background:rgba(74,222,128,.15);color:#4ade80;border-color:rgba(74,222,128,.35);}
+[data-theme="estadio"] .result-chip.rX{background:rgba(253,224,71,.15);color:#fde047;border-color:rgba(253,224,71,.35);}
+[data-theme="estadio"] .result-chip.r2{background:rgba(248,113,113,.15);color:#f87171;border-color:rgba(248,113,113,.3);}
+/* Field center circle decoration on main content */
+[data-theme="estadio"] #main::before{
+  content:"";position:fixed;top:50%;left:50%;
+  width:240px;height:240px;border-radius:50%;
+  border:1px solid rgba(74,222,128,.06);
+  transform:translate(-50%,-50%);pointer-events:none;z-index:0;
+}
+[data-theme="estadio"] #main::after{
+  content:"";position:fixed;top:50%;left:50%;
+  width:1px;height:100vh;
+  background:rgba(74,222,128,.04);
+  transform:translate(-50%,-50%);pointer-events:none;z-index:0;
+}
+[data-theme="estadio"] .icon-btn{
+  background:rgba(13,48,25,.8);border-color:rgba(74,222,128,.2);
+}
+[data-theme="estadio"] .icon-btn:hover{border-color:rgba(74,222,128,.5);}
+[data-theme="estadio"] #app-footer{
+  background:linear-gradient(135deg,#0a2010,#0f3020);
+  border-top-color:rgba(74,222,128,.3);
 }
 /* ── FOOTER ── */
 #app-footer{
@@ -819,8 +896,8 @@ select,input{font-family:'Barlow',sans-serif;}
         <span class="icon-btn-lbl">PDF</span>
       </div>
       <div class="icon-btn-wrap">
-        <button class="icon-btn" id="night-btn" title="Modo Noche">🌃</button>
-        <span class="icon-btn-lbl">Noche</span>
+        <button class="icon-btn" id="estadio-btn" title="Tema Estadio">🏟️</button>
+        <span class="icon-btn-lbl">Estadio</span>
       </div>
       <div class="icon-btn-wrap">
         <button class="icon-btn" id="theme-btn" title="Cambiar tema">🌙</button>
@@ -2690,6 +2767,77 @@ async function exportPDF(){
     });
     y=doc.lastAutoTable.finalY+8;
 
+    // ── PRONÓSTICOS POR PARTICIPANTE (Picks matrix) ──
+    if(revealPronostics && lb.length && matches.length){
+      if(y>220){doc.addPage();y=20;}
+      doc.setFontSize(11);doc.setFont("helvetica","bold");
+      doc.setTextColor(255,255,255);
+      doc.text("PRONOSTICOS POR PARTICIPANTE",14,y);
+      y+=4;
+      // Build column headers: Lugar | Participante | P1 | P2 | ... | Aciertos
+      const pickHead=["#","Participante",...matches.map(m=>`P${m.match_no}`),"Total"];
+      // Color cells based on correct/wrong
+      const pickBody=lb.map((p,i)=>{
+        const rank=i===0?"1o":i===1?"2o":i===2?"3o":(i+1);
+        const cells=[rank, pdfSafe(p.displayName)];
+        matches.forEach(match=>{
+          const res=getResult(match.home_goals,match.away_goals);
+          const d=p.details.find(x=>x.match.id===match.id);
+          const pick=normalizePick(d?.pick);
+          const correct=res&&pick===res;
+          const wrong=res&&pick&&pick!==res;
+          const label=pick?pickLabel(pick):"-";
+          cells.push(correct?label+" v":wrong?label+" x":label);
+        });
+        cells.push(completed>0?p.aciertos:"-");
+        return cells;
+      });
+      // Dynamic column widths: rank=8, name=32, each match=(W-28-8-32-12)/(matches.length), total=12
+      const availW=W-28-8-32-12;
+      const mColW=matches.length>0?Math.max(8,Math.floor(availW/matches.length)):10;
+      const pickColStyles={0:{halign:"center",cellWidth:8},1:{cellWidth:32},[pickHead.length-1]:{halign:"center",cellWidth:12}};
+      matches.forEach((_,i)=>{pickColStyles[i+2]={halign:"center",cellWidth:mColW,fontSize:7};});
+      doc.autoTable({
+        startY:y,
+        head:[pickHead],
+        body:pickBody,
+        theme:"grid",
+        styles:{font:"helvetica",fontSize:7.5,cellPadding:2,textColor:[226,232,240],fillColor:[13,19,36],overflow:"ellipsize"},
+        headStyles:{fillColor:[21,128,61],textColor:[255,255,255],fontStyle:"bold",fontSize:7},
+        alternateRowStyles:{fillColor:[20,30,54]},
+        columnStyles:pickColStyles,
+        margin:{left:14,right:14},
+        didParseCell:(data)=>{
+          // Color correct picks green, wrong picks red
+          if(data.section==="body"&&data.column.index>=2&&data.column.index<pickHead.length-1){
+            const val=String(data.cell.raw||"");
+            if(val.endsWith(" v")){
+              data.cell.styles.textColor=[74,222,128];
+              data.cell.styles.fontStyle="bold";
+              data.cell.raw=val.slice(0,-2);
+              data.cell.text=[val.slice(0,-2)];
+            } else if(val.endsWith(" x")){
+              data.cell.styles.textColor=[248,113,113];
+              data.cell.raw=val.slice(0,-2);
+              data.cell.text=[val.slice(0,-2)];
+            }
+          }
+          // Gold color for top 3 rank
+          if(data.section==="body"&&data.column.index===0){
+            const idx=data.row.index;
+            if(idx===0) data.cell.styles.textColor=[253,224,71];
+            else if(idx===1) data.cell.styles.textColor=[148,163,184];
+            else if(idx===2) data.cell.styles.textColor=[180,83,9];
+          }
+          // Bold total column
+          if(data.section==="body"&&data.column.index===pickHead.length-1){
+            data.cell.styles.fontStyle="bold";data.cell.styles.textColor=[74,222,128];
+          }
+        }
+      });
+      y=doc.lastAutoTable.finalY+8;
+    }
+
     // ── PARTIDOS table ──
     if(y>250){doc.addPage();y=20;}
     doc.setFontSize(11);doc.setFont("helvetica","bold");
@@ -2783,19 +2931,21 @@ function launchFireworks(){
 
 
 // ════════════════════════════════════════════════════════════
-// NIGHT MODE
+// ESTADIO MODE
 // ════════════════════════════════════════════════════════════
-let isNight=false;
-document.getElementById("night-btn").addEventListener("click",()=>{
-  isNight=!isNight;
-  if(isNight){
-    document.documentElement.setAttribute("data-theme","night");
-    document.getElementById("night-btn").textContent="🌆";
-    document.getElementById("theme-btn").textContent="🌙";
+let isEstadio=false;
+document.getElementById("estadio-btn").addEventListener("click",()=>{
+  isEstadio=!isEstadio;
+  if(isEstadio){
+    document.documentElement.setAttribute("data-theme","estadio");
+    document.getElementById("estadio-btn").textContent="🌿";
+    document.getElementById("estadio-btn").title="Salir del Estadio";
     isDark=true;
+    showToastMsg("¡Bienvenido al Estadio! ⚽","🏟️");
   } else {
     document.documentElement.setAttribute("data-theme",isDark?"dark":"light");
-    document.getElementById("night-btn").textContent="🌃";
+    document.getElementById("estadio-btn").textContent="🏟️";
+    document.getElementById("estadio-btn").title="Tema Estadio";
   }
   if(chartHits||chartDist) setTimeout(renderCharts,100);
 });
