@@ -95,6 +95,25 @@ select,input{font-family:'Barlow',sans-serif;}
 .date-closed{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
 .date-live{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);}
 .date-done{background:rgba(100,116,139,.1);color:#94a3b8;border:1px solid rgba(100,116,139,.25);}
+
+/* ── LOGO GOLDEN GLOW ── */
+.h-logo-wrap{position:relative;flex-shrink:0;width:46px;height:46px;}
+.h-logo-glow{
+  position:absolute;inset:-8px;border-radius:18px;z-index:0;
+  background:radial-gradient(ellipse at center,rgba(245,158,11,.55) 0%,rgba(251,191,36,.3) 40%,transparent 75%);
+  animation:logoGlow 2.8s ease-in-out infinite;
+  filter:blur(4px);
+}
+@keyframes logoGlow{
+  0%,100%{opacity:.7;transform:scale(1);}
+  50%{opacity:1;transform:scale(1.12);}
+}
+[data-theme="estadio"] .h-logo-glow{
+  background:radial-gradient(ellipse at center,rgba(74,222,128,.5) 0%,rgba(34,197,94,.25) 40%,transparent 75%);
+}
+[data-theme="light"] .h-logo-glow{
+  background:radial-gradient(ellipse at center,rgba(245,158,11,.4) 0%,rgba(251,191,36,.2) 40%,transparent 75%);
+}
 /* ── REFRESH BAR ── */
 #refresh-bar{
   background:var(--bg2);border-bottom:1px solid var(--border-s);
@@ -126,6 +145,22 @@ select,input{font-family:'Barlow',sans-serif;}
   padding:1px 6px;font-size:10px;color:var(--text-m);
 }
 .comp-tab.active .comp-count{background:rgba(37,99,235,.15);color:var(--acc);}
+
+/* ── WATERMARK ── */
+#main::before{
+  content:"";
+  position:fixed;top:50%;left:50%;
+  width:280px;height:280px;
+  background:url("img/logo-arcangel.png") center/contain no-repeat;
+  opacity:.04;
+  transform:translate(-50%,-50%);
+  pointer-events:none;z-index:0;
+  filter:grayscale(1);
+}
+[data-theme="light"] #main::before{opacity:.035;}
+[data-theme="estadio"] #main::before{opacity:.06;filter:grayscale(0);}
+/* ensure content is above watermark */
+#main>*{position:relative;z-index:1;}
 /* ── POOL SELECTOR ── */
 #pool-bar{background:var(--bg2);padding:10px 18px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:10px;overflow:hidden;}
 .pool-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);white-space:nowrap;}
@@ -239,6 +274,45 @@ select,input{font-family:'Barlow',sans-serif;}
   color:var(--text-m);line-height:1.5;
 }
 .unpaid-notice-text strong{color:var(--text);}
+
+/* ── PODIUM FRAMES ── */
+.lb-row.rank-1{
+  border-left:3px solid #f59e0b;
+  background:linear-gradient(90deg,rgba(245,158,11,.08) 0%,transparent 60%);
+}
+.lb-row.rank-2{
+  border-left:3px solid #94a3b8;
+  background:linear-gradient(90deg,rgba(148,163,184,.06) 0%,transparent 60%);
+}
+.lb-row.rank-3{
+  border-left:3px solid #b45309;
+  background:linear-gradient(90deg,rgba(180,83,9,.06) 0%,transparent 60%);
+}
+.lb-row.rank-1:hover{background:linear-gradient(90deg,rgba(245,158,11,.12) 0%,rgba(37,99,235,.05) 60%);}
+.lb-row.rank-2:hover{background:linear-gradient(90deg,rgba(148,163,184,.1) 0%,rgba(37,99,235,.05) 60%);}
+.lb-row.rank-3:hover{background:linear-gradient(90deg,rgba(180,83,9,.09) 0%,rgba(37,99,235,.05) 60%);}
+
+/* ── CROWN WINNER ── */
+.crown-wrap{position:relative;display:inline-block;}
+.winner-crown-icon{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-size:14px;line-height:1;
+  animation:crownFloat 1.8s ease-in-out infinite;
+  filter:drop-shadow(0 0 4px rgba(245,158,11,.8));
+  z-index:2;pointer-events:none;
+}
+@keyframes crownFloat{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-5deg);}
+  25%{transform:translateX(-50%) translateY(-3px) rotate(5deg);}
+  50%{transform:translateX(-50%) translateY(-5px) rotate(-3deg);}
+  75%{transform:translateX(-50%) translateY(-2px) rotate(4deg);}
+}
+/* Glow pulse on rank-1 row */
+@keyframes goldPulse{
+  0%,100%{box-shadow:inset 0 0 0 0 rgba(245,158,11,0);}
+  50%{box-shadow:inset 0 0 12px 0 rgba(245,158,11,.08);}
+}
+.lb-row.rank-1{animation:goldPulse 3s ease-in-out infinite;}
 /* ── LOCK NOTICE ── */
 .lock-notice{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:11px 16px;margin-bottom:14px;color:var(--amber);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;}
 
@@ -615,6 +689,57 @@ select,input{font-family:'Barlow',sans-serif;}
 .pdf-spinner{font-size:44px;animation:spin 1s linear infinite;}
 .pdf-msg{font-family:"Bebas Neue",sans-serif;font-size:20px;letter-spacing:3px;color:#fff;}
 
+
+/* ── CALENDARIO ── */
+.cal-month{margin-bottom:24px;}
+.cal-month-title{
+  font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;
+  color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;}
+.cal-day-label{
+  text-align:center;font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-d);padding:4px 0;
+}
+.cal-day{
+  aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:13px;
+  color:var(--text-d);background:transparent;
+  position:relative;cursor:default;padding:2px;
+}
+.cal-day.has-event{
+  background:var(--card2);border:1px solid var(--border-s);
+  color:var(--text);cursor:pointer;
+}
+.cal-day.has-event:hover{border-color:var(--border);}
+.cal-day.status-active{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.35);color:var(--green);}
+.cal-day.status-done{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#60a5fa;}
+.cal-day.status-closed{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:var(--amber);}
+.cal-day.today{box-shadow:0 0 0 2px var(--acc);}
+.cal-day-num{font-size:13px;line-height:1;}
+.cal-day-dot{width:5px;height:5px;border-radius:50%;margin-top:2px;}
+.cal-jornada-chip{
+  display:inline-block;font-size:8px;line-height:1.2;text-align:center;
+  max-width:90%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+.cal-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:11px;}
+.cal-legend-item{display:flex;align-items:center;gap:5px;color:var(--text-m);}
+.cal-legend-dot{width:8px;height:8px;border-radius:50%;}
+.cal-pool-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.cal-pool-item{
+  background:var(--card2);border:1px solid var(--border-s);border-radius:12px;
+  padding:12px 16px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:12px;
+}
+.cal-pool-item:hover{border-color:var(--border);}
+.cal-pool-item.cpi-active{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.05);}
+.cal-pool-item.cpi-done{border-color:rgba(37,99,235,.25);}
+.cal-pool-item.cpi-closed{border-color:rgba(245,158,11,.25);}
+.cpi-icon{font-size:20px;flex-shrink:0;}
+.cpi-name{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:15px;color:var(--text);}
+.cpi-meta{font-size:11px;color:var(--text-m);font-family:"Barlow Condensed",sans-serif;margin-top:2px;}
+.cpi-badge{margin-left:auto;flex-shrink:0;}
 /* ── HALL OF FAME ── */
 .hof-pool{margin-bottom:24px;}
 .hof-pool-title{
@@ -872,8 +997,11 @@ select,input{font-family:'Barlow',sans-serif;}
 <header id="app-header">
   <!-- ROW 1: Logo + Nombre completo -->
   <div class="h-row1">
-    <div class="h-logo" style="background:transparent;box-shadow:none;padding:0;overflow:hidden;">
-      <img src="img/logo-arcangel.png" alt="Arcángel" style="width:46px;height:46px;object-fit:contain;border-radius:10px;">
+    <div class="h-logo-wrap">
+      <div class="h-logo-glow"></div>
+      <div class="h-logo" style="background:transparent;box-shadow:none;padding:0;overflow:hidden;position:relative;z-index:1;">
+        <img src="img/logo-arcangel.png" alt="Arcángel" style="width:46px;height:46px;object-fit:contain;border-radius:10px;">
+      </div>
     </div>
     <div style="min-width:0;flex:1;">
       <div class="h-title">QUINIELA ARCÁNGEL</div>
@@ -936,6 +1064,7 @@ select,input{font-family:'Barlow',sans-serif;}
       <button class="tab-btn" data-tab="ganadores">👑 Ganadores</button>
       <button class="tab-btn" data-tab="tendencia">📈 Tendencia</button>
       <button class="tab-btn" data-tab="reacciones">💬 Reacciones</button>
+      <button class="tab-btn" data-tab="calendario">📅 Calendario</button>
     </div>
     <!-- PARTIDOS -->
     <div id="tab-matches">
@@ -1034,6 +1163,10 @@ select,input{font-family:'Barlow',sans-serif;}
     <!-- REACCIONES -->
     <div id="tab-reacciones" style="display:none;">
       <div id="reacciones-content"></div>
+    </div>
+    <!-- CALENDARIO -->
+    <div id="tab-calendario" style="display:none;">
+      <div id="calendario-content"><div class="hist-loading">📅 Cargando calendario...</div></div>
     </div>
   </div>
   <div id="error-area"></div>
@@ -1492,8 +1625,19 @@ function renderLeaderboard(){
     }else if(expanded){
       picksHTML=`<div class="picks-panel open"><div style="color:var(--amber);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;">🔒 Pronósticos aún no revelados.</div></div>`;
     }
-    return`<div class="lb-row${isLeader?" leader":""}${expanded?" expanded":""}" onclick="togglePicks('${p.id}')">
-      <div class="lb-rank" style="color:${globalRank===0?"var(--amber)":globalRank===1?"#94a3b8":globalRank===2?"#b45309":"var(--text-d)"}">${rankIcon?`<span style="font-size:20px">${rankIcon}</span>`:globalRank+1}</div>
+    // Podium rank class + paid winner detection
+    const podiumClass=globalRank===0?" rank-1":globalRank===1?" rank-2":globalRank===2?" rank-3":"";
+    // Winner crown: shown when jornada done and participant is paid leader
+    const paidLeaders=leaderboard.filter(x=>x.paid&&x.aciertos===maxH);
+    const isWinner=jornadaFinalizada&&p.paid&&p.aciertos===maxH&&maxH>0&&paidLeaders.length>0;
+    const crownHTML=isWinner?`<div class="winner-crown-icon">👑</div>`:"";
+    return`<div class="lb-row${isLeader?" leader":""}${expanded?" expanded":""}${podiumClass}" onclick="togglePicks('${p.id}')">
+      <div class="lb-rank" style="color:${globalRank===0?"var(--amber)":globalRank===1?"#94a3b8":globalRank===2?"#b45309":"var(--text-d)"}">
+        <div class="crown-wrap">
+          ${crownHTML}
+          ${rankIcon?`<span style="font-size:20px">${rankIcon}</span>`:globalRank+1}
+        </div>
+      </div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <div class="lb-name">${p.displayName}</div>
@@ -2517,7 +2661,7 @@ document.getElementById("tabs").addEventListener("click",e=>{
   const btn=e.target.closest(".tab-btn");if(!btn)return;
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
   const tab=btn.dataset.tab;
-  ["matches","leaderboard","stats","historial","ganadores","tendencia","reacciones"].forEach(t=>{
+  ["matches","leaderboard","stats","historial","ganadores","tendencia","reacciones","calendario"].forEach(t=>{
     document.getElementById(`tab-${t}`).style.display=t===tab?"block":"none";
   });
   if(tab==="stats")renderCharts();
@@ -2525,6 +2669,7 @@ document.getElementById("tabs").addEventListener("click",e=>{
   if(tab==="ganadores")loadGanadores();
   if(tab==="tendencia")loadTendencia();
   if(tab==="reacciones")loadReacciones();
+  if(tab==="calendario")loadCalendario();
   if(tab==="leaderboard"){
     if(!Object.keys(rachaMap).length)loadRacha();
     const jDone2=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
@@ -3204,6 +3349,131 @@ function sendComment(matchId){
   saveReactions(stored);
   if(input)input.value="";
   renderReacciones(stored);
+}
+
+
+// ════════════════════════════════════════════════════════════
+// CALENDARIO DE JORNADAS
+// ════════════════════════════════════════════════════════════
+let calendarioLoaded=false;
+async function loadCalendario(){
+  if(calendarioLoaded)return;
+  const el=document.getElementById("calendario-content");
+  el.innerHTML=`<div class="hist-loading"><div style="font-size:32px;animation:spin 1.5s linear infinite;display:inline-block">📅</div><br>Cargando calendario...</div>`;
+  try{
+    const allPools=await db("pools?select=*&order=created_at.asc");
+    const allMatches=await db("matches?select=id,pool_id,kickoff_at,home_team,away_team,home_goals,away_goals&order=kickoff_at.asc");
+    const STATUS_ACTIVE=["active","activa","open","abierta","published"];
+    const STATUS_DONE=["finished","finalizada","cerrada","closed"];
+    const today=new Date();
+    today.setHours(0,0,0,0);
+
+    // Build a map: date-string (YYYY-MM-DD) → [pool info]
+    const dateMap={};
+    allPools.forEach(pool=>{
+      const pMatches=allMatches.filter(m=>m.pool_id===pool.id&&m.kickoff_at);
+      const dates=[...new Set(pMatches.map(m=>m.kickoff_at.slice(0,10)))];
+      const statusStr=String(pool.status||"").toLowerCase();
+      const allDone=pMatches.length>0&&pMatches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+      const status=allDone?"done":STATUS_ACTIVE.includes(statusStr)?"active":STATUS_DONE.includes(statusStr)?"done":"closed";
+      dates.forEach(d=>{
+        if(!dateMap[d])dateMap[d]=[];
+        dateMap[d].push({pool,status,matchCount:pMatches.filter(m=>m.kickoff_at.slice(0,10)===d).length});
+      });
+      // Also mark lock_at date
+      if(pool.lock_at){
+        const ld=pool.lock_at.slice(0,10);
+        if(!dateMap[ld])dateMap[ld]=[];
+        if(!dateMap[ld].some(x=>x.pool.id===pool.id))
+          dateMap[ld].push({pool,status,isLock:true,matchCount:0});
+      }
+    });
+
+    // Group pools by month for list view
+    const months={};
+    allPools.forEach(pool=>{
+      const refDate=pool.lock_at||pool.created_at;
+      const d=new Date(refDate);
+      const mkey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+      if(!months[mkey])months[mkey]=[];
+      months[mkey].push(pool);
+    });
+
+    // Render: legend + pool list by month
+    const STATUS_ACTIVE2=["active","activa","open","abierta","published"];
+    const legendHTML=`<div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22c55e;"></div>Activa</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#3b82f6;"></div>Finalizada</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f59e0b;"></div>Cerrada</div>
+    </div>`;
+
+    const monthLabels=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+    const poolListHTML=Object.entries(months).sort(([a],[b])=>b.localeCompare(a)).map(([mkey,mPools])=>{
+      const [yr,mo]=mkey.split("-");
+      const mLabel=`${monthLabels[parseInt(mo)-1]} ${yr}`;
+      const poolItems=mPools.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(pool=>{
+        const pMatches=allMatches.filter(m=>m.pool_id===pool.id);
+        const allDone=pMatches.length>0&&pMatches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+        const statusStr=String(pool.status||"").toLowerCase();
+        const isActive=STATUS_ACTIVE2.includes(statusStr);
+        const status=allDone?"done":isActive?"active":"closed";
+        const icon=status==="active"?"🟢":status==="done"?"✅":"🔒";
+        const cls=status==="active"?"cpi-active":status==="done"?"cpi-done":"cpi-closed";
+        const poolName=pool.name||pool.date_label||`Jornada ${pool.round}`;
+        const comp=pool.competition?` · ${pool.competition}`:"";
+        // Date range from matches
+        const dMs=pMatches.filter(m=>m.kickoff_at).sort((a,b)=>new Date(a.kickoff_at)-new Date(b.kickoff_at));
+        let dateRange="";
+        if(dMs.length){
+          const fmt=d=>new Date(d).toLocaleDateString("es-MX",{day:"2-digit",month:"short"});
+          dateRange=dMs.length>1&&dMs[0].kickoff_at.slice(0,10)!==dMs[dMs.length-1].kickoff_at.slice(0,10)
+            ?`${fmt(dMs[0].kickoff_at)} – ${fmt(dMs[dMs.length-1].kickoff_at)}`
+            :fmt(dMs[0].kickoff_at);
+        }
+        const badge=`<span class="date-badge ${status==="active"?"date-open":status==="done"?"date-done":"date-closed"}">${status==="active"?"Activa":status==="done"?"Finalizada":"Cerrada"}</span>`;
+        return`<div class="cal-pool-item ${cls}" onclick="jumpToPool('${pool.id}')">
+          <div class="cpi-icon">${icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="cpi-name">${poolName}</div>
+            <div class="cpi-meta">${comp?comp.slice(3):""}${dateRange?" · "+dateRange:""} · ${pMatches.length} partidos · ${fmxn(pool.price)}</div>
+          </div>
+          <div class="cpi-badge">${badge}</div>
+        </div>`;
+      }).join("");
+      return`<div class="cal-month">
+        <div class="cal-month-title">📅 ${mLabel}</div>
+        <div class="cal-pool-list">${poolItems}</div>
+      </div>`;
+    }).join("");
+
+    el.innerHTML=legendHTML+poolListHTML;
+    calendarioLoaded=true;
+  }catch(e){
+    const el2=document.getElementById("calendario-content");
+    if(el2)el2.innerHTML=`<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+}
+
+function jumpToPool(poolId){
+  const pool=pools.find(p=>p.id===poolId);
+  if(!pool)return;
+  currentPool=pool;
+  const sel=document.getElementById("pool-select");
+  if(sel){for(let o of sel.options){if(o.value===poolId){o.selected=true;break;}}}
+  expandedEntries={};historialLoaded=false;generalStatsLoaded=false;calendarioLoaded=false;
+  loadPoolData();
+  // Switch to matches tab
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  const matchBtn=document.querySelector(".tab-btn[data-tab='matches']");
+  if(matchBtn)matchBtn.classList.add("active");
+  ["leaderboard","stats","historial","ganadores","tendencia","reacciones","calendario"].forEach(t=>{
+    const el=document.getElementById(`tab-${t}`);if(el)el.style.display="none";
+  });
+  const tabMatches=document.getElementById("tab-matches");
+  if(tabMatches)tabMatches.style.display="block";
+  window.scrollTo({top:0,behavior:"smooth"});
+  showToastMsg(`Cargando jornada: ${pool.name||pool.date_label||""}...`,"📅");
 }
 
 // ── INIT ──
