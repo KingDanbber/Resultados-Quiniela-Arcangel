@@ -564,6 +564,25 @@ select,input{font-family:'Barlow',sans-serif;}
 /* hist-table responsive */
 .hist-table th,.hist-table td{white-space:nowrap;}
 .hist-table td:nth-child(2){white-space:normal;min-width:110px;}
+
+/* ── MINI STAT EN PICK CARD ── */
+.pick-mini-stat{
+  display:flex;align-items:center;gap:3px;
+  margin-top:5px;padding-top:5px;
+  border-top:1px solid var(--border-s);
+}
+.pick-mini-bar{
+  display:flex;height:3px;border-radius:2px;overflow:hidden;flex:1;gap:1px;
+}
+.pick-mini-seg{height:100%;border-radius:2px;}
+.pick-mini-lbl{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:9px;letter-spacing:.5px;color:var(--text-d);white-space:nowrap;
+}
+.pick-mini-agree{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:9px;color:var(--text-d);margin-top:4px;
+}
 /* ── MODAL ── */
 #modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
 #modal-overlay.open{display:flex;}
@@ -861,6 +880,38 @@ select,input{font-family:'Barlow',sans-serif;}
   letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m);}
 .bolsa-chart-wrap{position:relative;height:220px;margin-top:10px;}
 
+
+/* ── MATCH RESULT TOAST ── */
+#match-result-toasts{
+  position:fixed;bottom:80px;right:12px;z-index:9998;
+  display:flex;flex-direction:column;gap:8px;
+  max-width:290px;pointer-events:none;
+}
+.mr-toast{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:14px;padding:12px 14px;
+  box-shadow:0 8px 32px var(--shadow);
+  animation:mrSlideIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+  pointer-events:auto;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.mr-toast.fade-out{animation:mrFadeOut .4s ease forwards;}
+@keyframes mrSlideIn{from{opacity:0;transform:translateX(80px)}to{opacity:1;transform:translateX(0)}}
+@keyframes mrFadeOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(60px)}}
+.mr-toast-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.mr-toast-body{flex:1;min-width:0;}
+.mr-toast-title{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:13px;color:var(--text);line-height:1.2;
+}
+.mr-toast-score{
+  font-family:"Bebas Neue",sans-serif;font-size:20px;line-height:1;
+  margin:3px 0;
+}
+.mr-toast-result{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:11px;letter-spacing:.5px;
+}
 /* ── NOTIFICATION TOAST ── */
 #notif-toast{
   position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
@@ -2018,7 +2069,8 @@ function renderLeaderboard(){
         let chipClass="pick-pending",chipText=pickLabel(pickNorm);
         if(pickNorm&&result!==null)chipClass=correct?"pick-ok":"pick-fail";
         const realHTML=result?`<span class="pick-real">Real: <strong style="color:var(--text-m)">${pickLabel(result)}</strong></span>`:`<span class="pick-real" style="color:var(--text-d)">Pendiente</span>`;
-        return`<div class="pick-card ${result===null?"":correct?"correct":"wrong"}"><div class="pick-match-no">Partido ${match.match_no}</div><div class="pick-teams">${match.home_team} vs ${match.away_team}</div><div class="pick-row"><span class="pick-chip ${chipClass}">${chipText}</span>${realHTML}</div></div>`;
+        const miniStat=buildMatchMiniStat(match.id);
+        return`<div class="pick-card ${result===null?"":correct?"correct":"wrong"}"><div class="pick-match-no">Partido ${match.match_no}</div><div class="pick-teams">${match.home_team} vs ${match.away_team}</div><div class="pick-row"><span class="pick-chip ${chipClass}">${chipText}</span>${realHTML}</div>${miniStat}</div>`;
       }).join("");
       const goalStr=p.goalPred!=null?`<div style="margin-top:10px;font-size:12px;color:var(--text-m);font-family:'Barlow Condensed',sans-serif;font-weight:600;">🎯 Pronóstico total goles: <strong style="color:#93c5fd">${p.goalPred}</strong></div>`:"";
       picksHTML=`<div class="picks-panel open"><div class="picks-grid">${cards}</div>${goalStr}</div>`;
@@ -2067,6 +2119,28 @@ function togglePicks(id){expandedEntries[id]=!expandedEntries[id];renderLeaderbo
 
 // ── SEARCH ──
 document.getElementById("search-input").addEventListener("input",e=>{searchQuery=e.target.value;renderLeaderboard();});
+
+
+// ══ MINI STAT PER MATCH ══
+function buildMatchMiniStat(matchId){
+  // Count picks from all PAID entries for this match
+  const paidEntryIds=entries.filter(e=>e.paid).map(e=>e.id);
+  const matchPreds=preds.filter(p=>p.match_id===matchId&&paidEntryIds.includes(p.entry_id));
+  const total=matchPreds.length;
+  if(!total) return "";
+  const cnt={"1":0,"X":0,"2":0};
+  matchPreds.forEach(p=>{const n=normalizePick(p.pick);if(cnt[n]!==undefined)cnt[n]++;});
+  const pct=v=>total>0?Math.round(v/total*100):0;
+  const COL={"1":"#3b82f6","X":"#f59e0b","2":"#ef4444"};
+  const barSegs=["1","X","2"].map(k=>
+    cnt[k]>0?`<div class="pick-mini-seg" style="width:${pct(cnt[k])}%;background:${COL[k]};"></div>`:""
+  ).join("");
+  const summary=["1","X","2"].filter(k=>cnt[k]>0).map(k=>`<span style="color:${COL[k]};">${{"1":"L","X":"E","2":"V"}[k]}${cnt[k]}</span>`).join(" ");
+  return`<div class="pick-mini-stat">
+    <div class="pick-mini-bar">${barSegs}</div>
+    <span class="pick-mini-lbl">${summary} / ${total}</span>
+  </div>`;
+}
 
 // ── MATCH MODAL ──
 function openMatchModal(matchId){
@@ -3128,20 +3202,66 @@ function snapshotScores(){
 }
 
 function checkScoreChanges(newMatches){
-  if(!notifEnabled) return;
   newMatches.forEach(m=>{
     const newScore=m.home_goals!=null&&m.away_goals!=null?`${m.home_goals}-${m.away_goals}`:null;
     const oldScore=lastScoreSnapshot[m.id]||null;
     if(newScore && newScore!==oldScore){
       const result=getResult(m.home_goals,m.away_goals);
-      const resLabel={"1":"¡Gana Local!","X":"¡Empate!","2":"¡Gana Visita!"}[result]||"";
-      new Notification(`P${m.match_no}: ${m.home_team} vs ${m.away_team}`,{
-        body:`Resultado: ${m.home_goals} - ${m.away_goals}  ${resLabel}`,
-        icon:"img/logo-arcangel.png",
-        badge:"img/logo-arcangel.png"
-      });
+      // Build natural language message
+      const hg=m.home_goals, ag=m.away_goals;
+      const ht=m.home_team||"Local", at=m.away_team||"Visita";
+      let headline="", icon="⚽";
+      if(result==="1"){
+        icon="🏠";
+        if(hg-ag>=3) headline=`${ht} aplasta ${hg}-${ag} a ${at}`;
+        else if(hg-ag===2) headline=`${ht} vence ${hg}-${ag} a ${at}`;
+        else headline=`${ht} derrota ${hg}-${ag} a ${at}`;
+      } else if(result==="2"){
+        icon="✈️";
+        if(ag-hg>=3) headline=`${at} aplasta ${hg}-${ag} a ${ht} en casa`;
+        else if(ag-hg===2) headline=`${at} vence ${hg}-${ag} a ${ht} de visitante`;
+        else headline=`${at} derrota ${hg}-${ag} a ${ht} en casa`;
+      } else {
+        icon="🤝";
+        if(hg===0) headline=`${ht} empata ${hg}-${ag} sin goles vs ${at}`;
+        else headline=`${ht} y ${at} empatan ${hg}-${ag}`;
+      }
+      // Always show in-app toast
+      showMatchResultToast(icon, headline, hg, ag, result);
+      // Also system notification if permission granted
+      if(notifEnabled && "Notification" in window && Notification.permission==="granted"){
+        try{
+          new Notification(`⚽ Resultado P${m.match_no}`,{
+            body:`${headline}`,
+            icon:"img/logo-arcangel.png"
+          });
+        }catch(e){}
+      }
     }
   });
+}
+
+function showMatchResultToast(icon, headline, hg, ag, result){
+  const container=document.getElementById("match-result-toasts");
+  if(!container) return;
+  const RESULT_COLOR={"1":"var(--green)","X":"var(--amber)","2":"#ef4444"};
+  const RESULT_LBL={"1":"Local gana","X":"Empate","2":"Visita gana"};
+  const div=document.createElement("div");
+  div.className="mr-toast";
+  div.innerHTML=`
+    <div class="mr-toast-icon">${icon}</div>
+    <div class="mr-toast-body">
+      <div class="mr-toast-title">${headline}</div>
+      <div class="mr-toast-score" style="color:${RESULT_COLOR[result]||"var(--text)"};">${hg} - ${ag}</div>
+      <div class="mr-toast-result" style="color:${RESULT_COLOR[result]||"var(--text-m)"};">${RESULT_LBL[result]||""}</div>
+    </div>
+    <button onclick="this.closest('.mr-toast').remove()" style="background:none;border:none;color:var(--text-d);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;">✕</button>`;
+  container.appendChild(div);
+  // Auto-remove after 7s
+  setTimeout(()=>{
+    div.classList.add("fade-out");
+    setTimeout(()=>div.remove(), 400);
+  }, 7000);
 }
 
 document.getElementById("notif-btn").addEventListener("click", toggleNotifications);
@@ -3923,7 +4043,8 @@ function renderCardMode(filtered,leaderboard,completed,jornadaFinalizada,maxH){
         const pn=normalizePick(pick);let cc="pick-pending",ct=pickLabel(pn);
         if(pn&&result!==null)cc=correct?"pick-ok":"pick-fail";
         const rH=result?`<span class="pick-real">Real: <strong>${pickLabel(result)}</strong></span>`:`<span class="pick-real" style="color:var(--text-d)">Pendiente</span>`;
-        return`<div class="pick-card ${result===null?"":correct?"correct":"wrong"}"><div class="pick-match-no">P${match.match_no}</div><div class="pick-teams">${match.home_team} vs ${match.away_team}</div><div class="pick-row"><span class="pick-chip ${cc}">${ct}</span>${rH}</div></div>`;
+        const mStat=buildMatchMiniStat(match.id);
+        return`<div class="pick-card ${result===null?"":correct?"correct":"wrong"}"><div class="pick-match-no">P${match.match_no}</div><div class="pick-teams">${match.home_team} vs ${match.away_team}</div><div class="pick-row"><span class="pick-chip ${cc}">${ct}</span>${rH}</div>${mStat}</div>`;
       }).join("");
       const goalStr=p.goalPred!=null?`<div style="margin-top:10px;font-size:12px;color:var(--text-m);font-family:'Barlow Condensed',sans-serif;font-weight:600;">🎯 Total goles: <strong style="color:#93c5fd">${p.goalPred}</strong></div>`:"";
       picksContent=`<div class="picks-panel open" style="border-radius:0 0 18px 18px;"><div class="picks-grid">${cards}</div>${goalStr}</div>`;
@@ -4282,6 +4403,9 @@ loadPools();
 </div>
 
 
+
+<!-- MATCH RESULT TOASTS -->
+<div id="match-result-toasts"></div>
 <!-- NOTIFICATION TOAST -->
 <div id="notif-toast"></div>
 
