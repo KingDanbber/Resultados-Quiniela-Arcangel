@@ -499,6 +499,51 @@ select,input{font-family:'Barlow',sans-serif;}
   font-family:"Bebas Neue",sans-serif;font-size:12px;color:#fff;
   overflow:hidden;
 }
+
+/* ── PARTICIPANT PROFILE MODAL ── */
+#profile-modal{
+  display:none;position:fixed;inset:0;z-index:1100;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(10px);
+  align-items:flex-end;justify-content:center;
+}
+#profile-modal.open{display:flex;}
+#profile-box{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:24px 24px 0 0;width:100%;max-width:560px;
+  max-height:88vh;overflow-y:auto;
+  animation:modalIn .3s ease;
+  padding-bottom:env(safe-area-inset-bottom,16px);
+}
+.profile-header{
+  padding:20px 20px 0;display:flex;align-items:flex-start;gap:14px;
+  position:sticky;top:0;background:var(--bg3);z-index:2;
+  border-bottom:1px solid var(--border-s);padding-bottom:14px;
+}
+.profile-avatar-lg{
+  width:68px;height:68px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:"Bebas Neue",sans-serif;font-size:26px;color:#fff;
+  overflow:hidden;position:relative;
+}
+.profile-title{flex:1;min-width:0;}
+.profile-name{font-family:"Bebas Neue",sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--text);line-height:1;}
+.profile-area{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:12px;color:var(--text-m);margin-top:3px;letter-spacing:.5px;}
+.profile-boleta{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:11px;color:var(--text-d);margin-top:2px;}
+.profile-stats-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.profile-stat{background:var(--card2);border:1px solid var(--border-s);border-radius:10px;padding:8px 14px;text-align:center;flex:1;min-width:60px;}
+.profile-stat-val{font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--text);line-height:1;}
+.profile-stat-lbl{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-d);margin-top:2px;}
+.profile-section{padding:14px 20px 0;}
+.profile-section-title{font-family:"Bebas Neue",sans-serif;font-size:14px;letter-spacing:2px;color:var(--text-m);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.profile-history-table{width:100%;border-collapse:collapse;font-family:"Barlow Condensed",sans-serif;}
+.profile-history-table th{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-d);font-weight:700;padding:6px 8px;text-align:left;border-bottom:1px solid var(--border-s);}
+.profile-history-table td{padding:9px 8px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border-s);}
+.profile-history-table tr:last-child td{border-bottom:none;}
+.ph-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-weight:700;font-size:10px;}
+.ph-won{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.ph-paid{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);}
+.ph-unpaid{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.18);}
+.profile-close{background:var(--card2);border:1px solid var(--border-s);border-radius:10px;width:34px;height:34px;color:var(--text-m);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 /* ── COMPARADOR ── */
 .comp-picker{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 .comp-select{
@@ -1338,6 +1383,74 @@ select,input{font-family:'Barlow',sans-serif;}
   background:linear-gradient(135deg,#0a2010,#0f3020);
   border-top-color:rgba(74,222,128,.3);
 }
+
+/* ── GLOBAL SEARCH ── */
+#global-search-fab{
+  position:fixed;bottom:24px;right:16px;z-index:800;
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--acc2),var(--acc));
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:#fff;
+  box-shadow:0 4px 20px rgba(37,99,235,.5);
+  transition:transform .2s,box-shadow .2s;
+}
+#global-search-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(37,99,235,.65);}
+#global-search-overlay{
+  position:fixed;inset:0;z-index:1150;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(12px);
+  display:none;flex-direction:column;
+}
+#global-search-overlay.open{display:flex;}
+#global-search-topbar{
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  background:var(--bg3);border-bottom:1px solid var(--border);
+}
+#global-search-field{
+  flex:1;background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);padding:10px 14px;
+  font-size:15px;font-family:"Barlow",sans-serif;font-weight:600;outline:none;
+}
+#global-search-field:focus{border-color:var(--acc);}
+#global-search-close{
+  background:var(--card2);border:1px solid var(--border-s);
+  border-radius:10px;width:40px;height:40px;color:var(--text-m);
+  cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+#global-search-results{
+  flex:1;overflow-y:auto;padding:12px 16px;
+}
+.gs-section-title{
+  font-family:"Bebas Neue",sans-serif;font-size:13px;letter-spacing:2px;
+  color:var(--text-d);margin:16px 0 8px;
+}
+.gs-section-title:first-child{margin-top:0;}
+.gs-result{
+  background:var(--card2);border:1px solid var(--border-s);border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;transition:border-color .15s;
+}
+.gs-result:hover{border-color:var(--border);}
+.gs-result-icon{font-size:20px;flex-shrink:0;}
+.gs-result-main{flex:1;min-width:0;}
+.gs-result-title{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:14px;color:var(--text);
+}
+.gs-result-sub{
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;
+  font-size:11px;color:var(--text-m);margin-top:2px;
+}
+.gs-result-tag{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:10px;
+  padding:2px 8px;border-radius:20px;background:var(--card);color:var(--text-d);flex-shrink:0;
+}
+.gs-highlight{color:var(--acc);font-weight:900;}
+.gs-empty{
+  text-align:center;padding:40px 20px;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:15px;color:var(--text-d);
+}
 /* ── FOOTER ── */
 #app-footer{
   margin-top:48px;
@@ -1655,7 +1768,9 @@ let shareParticipant=null;
 let refreshSecs=60,refreshTimer=null;
 let isDark=true;
 let notifEnabled=false;
-let lastScoreSnapshot={};  // matchId → "hg-ag" to detect changes
+// Load saved snapshot from previous session
+let lastScoreSnapshot=(()=>{try{const s=localStorage.getItem("qa_score_snap");return s?JSON.parse(s):{};}catch{return{};} })();
+let _jornadaFinNotified=(()=>{try{return JSON.parse(localStorage.getItem("qa_jornada_fin")||"{}");}catch{return{};}})();
 
 // ── PWA: Manifest + Service Worker ──
 (function(){
@@ -1818,10 +1933,12 @@ async function loadPoolData(silent=false){
       db(`entries?pool_id=eq.${currentPool.id}&select=*&order=created_at.asc`),
       db(`pool_results?pool_id=eq.${currentPool.id}&select=*&limit=1`)
     ]);
-    // Capture snapshot before updating (for score change notifications)
-    if(silent) checkScoreChanges(m);
+    // Check score changes always (compares vs saved localStorage snapshot)
+    checkScoreChanges(m);
+    if(!silent) checkJornadaFinalizada(m);
     matches=m;entries=e;poolResult=pr[0]||null;
     lastScoreSnapshot=snapshotScores();
+    try{localStorage.setItem("qa_score_snap",JSON.stringify(lastScoreSnapshot));}catch{}
     const allPartIds=[...new Set(e.map(x=>x.participant_id).filter(Boolean))];
     if(allPartIds.length){
       try{const parts=await db(`participants?id=in.(${allPartIds.join(",")})&select=id,name,area`);participantsMap=Object.fromEntries(parts.map(p=>[p.id,p]));}
@@ -2007,6 +2124,24 @@ function renderMatches(){
 
 // ── BUILD LEADERBOARD ──
 function buildLeaderboard(){
+  // boleta number per-participant (grouped by participant_id or name_snapshot)
+  // Group entries by participant identity
+  const partGroups={};
+  entries.forEach(e=>{
+    const key=e.participant_id||e.participant_name_snapshot||e.id;
+    if(!partGroups[key]) partGroups[key]=[];
+    partGroups[key].push(e);
+  });
+  // Sort each group by created_at and assign position
+  const entryBoletaMap={};
+  Object.values(partGroups).forEach(group=>{
+    // Sort by created_at ascending (earliest = boleta #1)
+    const sorted=[...group].sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
+    sorted.forEach((e,i)=>{
+      // boletaNo = 0 means "only one boleta" → show nothing
+      entryBoletaMap[e.id]=sorted.length>1?i+1:0;
+    });
+  });
   return entries.map(entry=>{
     const myPreds=preds.filter(p=>p.entry_id===entry.id);
     const myGoalPred=predGoals.find(p=>p.entry_id===entry.id);
@@ -2022,7 +2157,8 @@ function buildLeaderboard(){
     const partFb=participantsMap[entry.participant_id]||{};
     const pid=entry.participant_id||entry.id;
     const racha=rachaMap[pid]||[];
-    return{...entry,displayName:entry.participant_name_snapshot||partFb.name||"Sin nombre",displayArea:entry.participant_area_snapshot||partFb.area||"",aciertos,details,goalPred:myGoalPred?.predicted_total_goals??null,racha};
+    const boletaNo=entryBoletaMap[entry.id]??0; // 0 = solo una boleta, no mostrar
+    return{...entry,displayName:entry.participant_name_snapshot||partFb.name||"Sin nombre",displayArea:entry.participant_area_snapshot||partFb.area||"",aciertos,details,goalPred:myGoalPred?.predicted_total_goals??null,racha,boletaNo};
   }).sort((a,b)=>{
     const jDone=matches.length>0&&matches.every(m=>m.home_goals!=null&&m.away_goals!=null);
     if(jDone&&a.paid!==b.paid) return a.paid?-1:1;
@@ -2092,11 +2228,11 @@ function renderLeaderboard(){
       </div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <div class="lb-name">${p.displayName}</div>
+          <div class="lb-name" onclick="event.stopPropagation();openParticipantProfile('${p.id}')" style="cursor:pointer;" title="Ver perfil">${p.displayName} <span style="font-size:10px;color:var(--acc);font-family:'Barlow Condensed',sans-serif;">👤</span></div>
           <button class="share-btn" onclick="event.stopPropagation();openShareModal('${p.id}')" title="Compartir quiniela">📤</button>
           <button class="link-btn" onclick="event.stopPropagation();copyDirectLink('${p.id}','${p.displayName.replace(/'/g,'')}')" title="Copiar link directo">🔗</button>
         </div>
-        <div class="lb-area">${p.displayArea||""}${revealPronostics?` <span class="lb-hint-txt">· ver picks ▾</span>`:""}</div>
+        <div class="lb-area">${p.displayArea||""}${revealPronostics?` <span class="lb-hint-txt">· ver picks ▾</span>`:""}${p.boletaNo>0?` <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--acc);font-weight:700;background:rgba(37,99,235,.08);padding:1px 5px;border-radius:4px;">· Boleta ${p.boletaNo}</span>`:""}</div>
         ${renderBadges(getAutoBadges(p,leaderboard,completed,jornadaFinalizada,maxH))}
         ${p.racha&&p.racha.length?`<div class="form-dots">${p.racha.map(r=>`<div class="form-dot ${r.win?"fd-w":"fd-l"}" title="${r.win?"✅ Buen resultado":"❌ Bajo"}">${r.win?"W":"L"}</div>`).join("")}</div>`:""}
       </div>
@@ -3244,15 +3380,15 @@ function checkScoreChanges(newMatches){
 function showMatchResultToast(icon, headline, hg, ag, result){
   const container=document.getElementById("match-result-toasts");
   if(!container) return;
-  const RESULT_COLOR={"1":"var(--green)","X":"var(--amber)","2":"#ef4444"};
-  const RESULT_LBL={"1":"Local gana","X":"Empate","2":"Visita gana"};
+  const RESULT_COLOR={"1":"var(--green)","X":"var(--amber)","2":"#ef4444","fin":"var(--amber)"};
+  const RESULT_LBL={"1":"Local gana","X":"Empate","2":"Visita gana","fin":"🏆 Jornada Finalizada"};
   const div=document.createElement("div");
   div.className="mr-toast";
   div.innerHTML=`
     <div class="mr-toast-icon">${icon}</div>
     <div class="mr-toast-body">
       <div class="mr-toast-title">${headline}</div>
-      <div class="mr-toast-score" style="color:${RESULT_COLOR[result]||"var(--text)"};">${hg} - ${ag}</div>
+      ${result!=="fin"?`<div class="mr-toast-score" style="color:${RESULT_COLOR[result]||"var(--text)"};">${hg} - ${ag}</div>`:""}
       <div class="mr-toast-result" style="color:${RESULT_COLOR[result]||"var(--text-m)"};">${RESULT_LBL[result]||""}</div>
     </div>
     <button onclick="this.closest('.mr-toast').remove()" style="background:none;border:none;color:var(--text-d);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;">✕</button>`;
@@ -4063,8 +4199,8 @@ function renderCardMode(filtered,leaderboard,completed,jornadaFinalizada,maxH){
           </div>
         </div>
         <div class="pc-info">
-          <div class="pc-name">${p.displayName}</div>
-          <div class="pc-area">${p.displayArea||""}</div>
+          <div class="pc-name" onclick="event.stopPropagation();openParticipantProfile('${p.id}')" style="cursor:pointer;" title="Ver perfil">${p.displayName} <span style="font-size:11px;color:var(--acc);">👤</span></div>
+          <div class="pc-area">${p.displayArea||""}${p.boletaNo>0?` · <span style="font-size:10px;color:var(--acc);font-weight:700;">Boleta ${p.boletaNo}</span>`:""}</div>
           <div class="pc-stats-row">
             <div class="pc-stat"><div class="pc-stat-val" style="color:${globalRank===0?"var(--amber)":"var(--text)"}">${completed>0?p.aciertos:"—"}</div><div class="pc-stat-lbl">Aciertos</div></div>
             <div class="pc-stat"><div class="pc-stat-val" style="color:var(--text-m)">${rankNum}</div><div class="pc-stat-lbl">Puesto</div></div>
@@ -4383,6 +4519,322 @@ function renderComparador(){
   el.innerHTML=summaryHTML+tableHTML;
 }
 
+
+// ══════════════════════════════════════════════════════════
+// JORNADA FINALIZADA NOTIFICATION
+// ══════════════════════════════════════════════════════════
+function checkJornadaFinalizada(newMatches){
+  if(!currentPool) return;
+  const allDone=newMatches.length>0&&newMatches.every(m=>m.home_goals!=null&&m.away_goals!=null);
+  if(!allDone) return;
+  const key=`${currentPool.id}`;
+  if(_jornadaFinNotified[key]) return; // already shown for this pool
+  // Mark as shown
+  _jornadaFinNotified[key]=true;
+  try{localStorage.setItem("qa_jornada_fin",JSON.stringify(_jornadaFinNotified));}catch{}
+  // Build winner message
+  const lb=buildLeaderboard();
+  const paid=lb.filter(p=>p.paid);
+  if(!paid.length) return;
+  const maxH=paid[0].aciertos;
+  const winners=paid.filter(p=>p.aciertos===maxH);
+  const jName=currentPool.name||currentPool.date_label||`Jornada ${currentPool.round}`;
+  let msg="",icon="🏆";
+  if(winners.length===1){
+    msg=`¡${winners[0].displayName.split(" ")[0]} campeón de ${jName}! ${maxH} aciertos 🔥⚽`;
+  } else {
+    const names=winners.map(w=>w.displayName.split(" ")[0]).join(" y ");
+    msg=`¡Empate épico en ${jName}! ${names} comparten la victoria con ${maxH} aciertos 🔥⚽`;
+  }
+  setTimeout(()=>showMatchResultToast("🏆",msg,maxH,"","fin"),1200);
+}
+
+// ══════════════════════════════════════════════════════════
+// PARTICIPANT PROFILE MODAL
+// ══════════════════════════════════════════════════════════
+async function openParticipantProfile(entryId){
+  const modal=document.getElementById("profile-modal");
+  const box=document.getElementById("profile-content");
+  if(!modal||!box) return;
+  modal.classList.add("open");
+  document.body.style.overflow="hidden";
+  box.innerHTML=`<div style="padding:30px;text-align:center;"><div style="font-size:32px;animation:spin 1s linear infinite;display:inline-block;">⚽</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--text-m);margin-top:8px;">Cargando perfil...</div></div>`;
+  try{
+    // Current jornada data
+    const lb=buildLeaderboard();
+    const p=lb.find(x=>x.id===entryId);
+    if(!p){box.innerHTML=`<div style="padding:20px;color:var(--text-m);">Participante no encontrado.</div>`;return;}
+    const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+    const jornadaFinalizada=matches.length>0&&completed===matches.length;
+    const maxH=lb.filter(x=>x.paid).reduce((mx,x)=>Math.max(mx,x.aciertos),0);
+    const isWinner=jornadaFinalizada&&p.paid&&p.aciertos===maxH&&maxH>0;
+    // Avatar
+    const slug=p.displayName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+    const avatarSrc=`img/avatars/${slug}.png`;
+    const initStr=p.displayName.split(" ").map(w=>w[0]||"").slice(0,2).join("").toUpperCase();
+    const avatarGrad=lb.indexOf(p)===0?"linear-gradient(135deg,#b45309,#f59e0b,#fbbf24)":lb.indexOf(p)===1?"linear-gradient(135deg,#475569,#94a3b8)":lb.indexOf(p)===2?"linear-gradient(135deg,#7c2d12,#b45309)":"linear-gradient(135deg,#1e3a8a,#2563eb)";
+    // Load historical data
+    const [allPools,allEntries,allMatches,allPreds,allResults]=await Promise.all([
+      db("pools?select=id,name,date_label,round,price,commission_pct,status&order=created_at.asc"),
+      db(`entries?participant_id=eq.${p.participant_id||"00000000-0000-0000-0000-000000000000"}&select=*`).catch(()=>[]),
+      db("matches?select=id,pool_id,home_goals,away_goals&order=match_no.asc"),
+      db("predictions_1x2?select=entry_id,match_id,pick"),
+      db("pool_results?select=*").catch(()=>[]),
+    ]);
+    // Also fetch by name snapshot fallback
+    let histEntries=allEntries;
+    if(!histEntries.length && p.participant_name_snapshot){
+      histEntries=await db(`entries?participant_name_snapshot=eq.${encodeURIComponent(p.participant_name_snapshot)}&select=*`).catch(()=>[]);
+    }
+    const STATUS_DONE=["finished","finalizada","closed","cerrada"];
+    // Build history rows
+    const histRows=[];
+    let totalPrize=0, totalHits=0, totalPlayed=0, wins=0;
+    allPools.forEach(pool=>{
+      const pEntries=histEntries.filter(e=>e.pool_id===pool.id);
+      if(!pEntries.length) return;
+      const pMatches=allMatches.filter(m=>m.pool_id===pool.id);
+      const compM=pMatches.filter(m=>m.home_goals!=null&&m.away_goals!=null);
+      if(!compM.length) return;
+      const pr=allResults.find(r=>r.pool_id===pool.id);
+      const paidAll=histEntries.filter(e=>e.pool_id===pool.id&&e.paid).length;
+      // Could be multiple entries (boletas) for this pool
+      pEntries.forEach(entry=>{
+        const myP=allPreds.filter(x=>x.entry_id===entry.id);
+        let hits=0;
+        compM.forEach(match=>{
+          const res=getResult(match.home_goals,match.away_goals);
+          const pred=myP.find(x=>x.match_id===match.id);
+          if(res&&normalizePick(pred?.pick)===res) hits++;
+        });
+        const allPaidEntries=histEntries.filter(e=>e.pool_id===pool.id&&e.paid);
+        const maxHits=allPaidEntries.length?Math.max(...allPaidEntries.map(ae=>{
+          const aePreds=allPreds.filter(x=>x.entry_id===ae.id);
+          let ah=0; compM.forEach(m=>{const r=getResult(m.home_goals,m.away_goals);const pp=aePreds.find(x=>x.match_id===m.id);if(r&&normalizePick(pp?.pick)===r)ah++;});return ah;
+        })):0;
+        const isWinnerHist=entry.paid&&hits===maxHits&&maxHits>0;
+        const poolAllPaid=allMatches.filter(m=>m.pool_id===pool.id).length&&histEntries.filter(e=>e.pool_id===pool.id&&e.paid);
+        const winnerCount=isWinnerHist?(allPaidEntries.filter(ae=>{
+          const aePreds2=allPreds.filter(x=>x.entry_id===ae.id);
+          let ah2=0; compM.forEach(m=>{const r=getResult(m.home_goals,m.away_goals);const pp2=aePreds2.find(x=>x.match_id===m.id);if(r&&normalizePick(pp2?.pick)===r)ah2++;});return ah2===maxHits;
+        }).length):0;
+        const gross=paidAll*(pool.price||0);
+        const comm=gross*((pool.commission_pct||0)/100);
+        const net=pr?.net_pot??(gross-comm);
+        const prize=isWinnerHist&&winnerCount>0?net/winnerCount:0;
+        if(prize>0){totalPrize+=prize;wins++;}
+        totalHits+=hits; totalPlayed++;
+        const poolLabel=pool.name||pool.date_label||`Jornada ${pool.round}`;
+        const efic=compM.length>0?Math.round(hits/compM.length*100):0;
+        histRows.push({poolLabel,hits,total:compM.length,efic,paid:entry.paid,prize,isWinner:isWinnerHist,status:String(pool.status||"").toLowerCase()});
+      });
+    });
+    histRows.reverse(); // most recent first
+    const eficGlobal=totalPlayed>0?Math.round(totalHits/(totalPlayed*(matches.length||9))*100):0;
+    // Render
+    const tableRows=histRows.map(row=>`<tr>
+      <td>${row.poolLabel}</td>
+      <td style="text-align:center;"><strong style="color:${row.efic>=60?"var(--green)":row.efic>=40?"var(--amber)":"#f87171"}">${row.hits}/${row.total}</strong> <span style="font-size:10px;color:var(--text-d);">${row.efic}%</span></td>
+      <td style="text-align:center;"><span class="ph-badge ${row.paid?"ph-paid":"ph-unpaid"}">${row.paid?"Pagado":"No Pag."}</span></td>
+      <td style="text-align:right;">${row.isWinner?`<span class="ph-badge ph-won">👑 ${fmxn(row.prize)}</span>`:`<span style="color:var(--text-d);font-size:12px;">—</span>`}</td>
+    </tr>`).join("");
+    const rankNum=lb.indexOf(p)+1;
+    const rankLabel=rankNum===1?"🥇":rankNum===2?"🥈":rankNum===3?"🥉":`#${rankNum}`;
+    box.innerHTML=`
+      <div class="profile-header">
+        <div style="position:relative;">
+          ${isWinner?`<div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:18px;animation:crownFloat 1.8s ease-in-out infinite;">👑</div>`:""}
+          <div class="profile-avatar-lg" style="background:${avatarGrad};cursor:pointer;" onclick="openAvatarView('${avatarSrc}','${p.displayName}')">
+            <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">${initStr}</span>
+          </div>
+        </div>
+        <div class="profile-title">
+          <div class="profile-name">${p.displayName}</div>
+          <div class="profile-area">${p.displayArea||""}</div>
+          <div class="profile-boleta">${p.boletaNo>0?`Boleta ${p.boletaNo} · `:""}${p.paid?"✓ Pagado":"✗ Pendiente"}</div>
+          <div class="profile-stats-row">
+            <div class="profile-stat"><div class="profile-stat-val" style="color:var(--amber)">${rankLabel}</div><div class="profile-stat-lbl">Puesto hoy</div></div>
+            <div class="profile-stat"><div class="profile-stat-val" style="color:var(--green)">${completed>0?p.aciertos:"—"}</div><div class="profile-stat-lbl">Aciertos</div></div>
+            <div class="profile-stat"><div class="profile-stat-val" style="color:#818cf8">${wins}</div><div class="profile-stat-lbl">Victorias</div></div>
+            <div class="profile-stat"><div class="profile-stat-val" style="color:var(--green);font-size:16px;">${fmxn(totalPrize)}</div><div class="profile-stat-lbl">Ganado</div></div>
+          </div>
+        </div>
+        <button class="profile-close" onclick="closeProfile()">✕</button>
+      </div>
+      ${histRows.length?`
+      <div class="profile-section">
+        <div class="profile-section-title">📋 Historial de Jornadas</div>
+        <div style="overflow-x:auto;">
+          <table class="profile-history-table">
+            <thead><tr><th>Jornada</th><th style="text-align:center;">Aciertos</th><th style="text-align:center;">Pago</th><th style="text-align:right;">Premio</th></tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>
+      </div>`:`<div style="padding:16px 20px;color:var(--text-d);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;">Sin historial previo.</div>`}
+      <div style="height:20px;"></div>`;
+  }catch(e){
+    if(box) box.innerHTML=`<div style="padding:20px;"><div class="error-box">⚠️ ${e.message}</div></div>`;
+  }
+}
+
+function closeProfile(){
+  const modal=document.getElementById("profile-modal");
+  if(modal){modal.classList.remove("open");document.body.style.overflow="";}
+}
+
+
+// ══════════════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ══════════════════════════════════════════════════════════
+let _gsCachedPools=[];
+
+function openGlobalSearch(){
+  const overlay=document.getElementById("global-search-overlay");
+  const field=document.getElementById("global-search-field");
+  if(!overlay) return;
+  overlay.classList.add("open");
+  document.body.style.overflow="hidden";
+  setTimeout(()=>field?.focus(),80);
+  runGlobalSearch(field?.value||"");
+}
+
+function closeGlobalSearch(){
+  const overlay=document.getElementById("global-search-overlay");
+  if(overlay){overlay.classList.remove("open");document.body.style.overflow="";}
+}
+
+function _gsHighlight(text, query){
+  if(!query) return text;
+  const safe=text.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const re=new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi");
+  return safe.replace(re,`<span class="gs-highlight">$1</span>`);
+}
+
+async function runGlobalSearch(q){
+  const el=document.getElementById("global-search-results");
+  if(!el) return;
+  q=(q||"").trim().toLowerCase();
+  if(q.length<2){
+    el.innerHTML=`<div class="gs-empty">Escribe al menos 2 caracteres para buscar</div>`;
+    return;
+  }
+  const results=[];
+
+  // ── 1. PARTICIPANTES EN JORNADA ACTUAL ──
+  const lb=buildLeaderboard();
+  const completed=matches.filter(m=>m.home_goals!=null&&m.away_goals!=null).length;
+  lb.forEach(p=>{
+    const inName=p.displayName.toLowerCase().includes(q);
+    const inArea=(p.displayArea||"").toLowerCase().includes(q);
+    if(inName||inArea){
+      const maxH=lb.filter(x=>x.paid).reduce((mx,x)=>Math.max(mx,x.aciertos),0);
+      const rank=lb.indexOf(p)+1;
+      const rankIcon=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":`#${rank}`;
+      results.push({
+        type:"participante",icon:"👤",
+        title:p.displayName,
+        sub:`${p.displayArea||""}${p.boletaNo>0?` · Boleta ${p.boletaNo}`:""} · ${completed>0?p.aciertos+" aciertos":""} · ${p.paid?"Pagado":"Pendiente"}`,
+        tag:rankIcon,
+        action:()=>{closeGlobalSearch();openParticipantProfile(p.id);},
+        score:inName?2:1
+      });
+    }
+  });
+
+  // ── 2. PARTIDOS EN JORNADA ACTUAL ──
+  matches.forEach(m=>{
+    const inHome=(m.home_team||"").toLowerCase().includes(q);
+    const inAway=(m.away_team||"").toLowerCase().includes(q);
+    if(inHome||inAway){
+      const hasScore=m.home_goals!=null&&m.away_goals!=null;
+      const scoreStr=hasScore?`${m.home_goals} - ${m.away_goals}`:"Sin resultado";
+      const result=hasScore?getResult(m.home_goals,m.away_goals):null;
+      const resLabel={"1":"Local","X":"Empate","2":"Visita"}[result]||"—";
+      results.push({
+        type:"partido",icon:"⚽",
+        title:`${m.home_team} vs ${m.away_team}`,
+        sub:`Partido ${m.match_no} · ${scoreStr}${hasScore?" · "+resLabel:""}`,
+        tag:"Partido",
+        action:()=>{closeGlobalSearch();document.querySelector('.tab-btn[data-tab="matches"]')?.click();},
+        score:1
+      });
+    }
+  });
+
+  // ── 3. JORNADAS (pools) ──
+  pools.forEach(pool=>{
+    const name=pool.name||pool.date_label||`Jornada ${pool.round}`;
+    const comp=pool.competition||"";
+    if(name.toLowerCase().includes(q)||comp.toLowerCase().includes(q)){
+      results.push({
+        type:"jornada",icon:"📅",
+        title:name,
+        sub:`${comp}${pool.price?` · $${pool.price}`:""}`,
+        tag:"Jornada",
+        action:()=>{closeGlobalSearch();jumpToPool(pool.id);},
+        score:1
+      });
+    }
+  });
+
+  // ── 4. EQUIPOS (team logos map keys) ──
+  const teamNames=[...new Set(matches.flatMap(m=>[m.home_team,m.away_team]).filter(Boolean))];
+  teamNames.forEach(team=>{
+    if(team.toLowerCase().includes(q)){
+      const teamMatches=matches.filter(m=>m.home_team===team||m.away_team===team);
+      if(!results.find(r=>r.title===team)){
+        results.push({
+          type:"equipo",icon:"🏟️",
+          title:team,
+          sub:`${teamMatches.length} partido(s) en esta jornada`,
+          tag:"Equipo",
+          action:()=>{closeGlobalSearch();document.querySelector('.tab-btn[data-tab="matches"]')?.click();},
+          score:0.5
+        });
+      }
+    }
+  });
+
+  if(!results.length){
+    el.innerHTML=`<div class="gs-empty">🔍 Sin resultados para "<strong>${q}</strong>"<br><span style="font-size:12px;color:var(--text-d);margin-top:4px;display:block;">Intenta con el nombre del participante o equipo</span></div>`;
+    return;
+  }
+
+  // Group by type
+  const groups={participante:[],partido:[],jornada:[],equipo:[]};
+  const groupLabels={participante:"👤 Participantes",partido:"⚽ Partidos",jornada:"📅 Jornadas",equipo:"🏟️ Equipos"};
+  results.forEach(r=>groups[r.type]?.push(r));
+
+  let html="";
+  Object.entries(groups).forEach(([type,items])=>{
+    if(!items.length) return;
+    html+=`<div class="gs-section-title">${groupLabels[type]}</div>`;
+    items.slice(0,6).forEach((r,i)=>{
+      html+=`<div class="gs-result" onclick="window._gsActions[${results.indexOf(r)}]()">
+        <div class="gs-result-icon">${r.icon}</div>
+        <div class="gs-result-main">
+          <div class="gs-result-title">${_gsHighlight(r.title,q)}</div>
+          <div class="gs-result-sub">${r.sub}</div>
+        </div>
+        <div class="gs-result-tag">${r.tag}</div>
+      </div>`;
+    });
+    if(items.length>6) html+=`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-d);text-align:center;padding:4px 0;">+${items.length-6} más</div>`;
+  });
+  // Store actions
+  window._gsActions=results.map(r=>r.action);
+  el.innerHTML=html;
+}
+
+// Close on Escape key
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    const ov=document.getElementById("global-search-overlay");
+    if(ov&&ov.classList.contains("open")) closeGlobalSearch();
+  }
+});
+
 // ── INIT ──
 loadPools();
 </script>
@@ -4429,6 +4881,28 @@ loadPools();
   </div>
 </div>
 
+
+
+<!-- GLOBAL SEARCH FAB -->
+<button id="global-search-fab" onclick="openGlobalSearch()" title="Búsqueda global">🔍</button>
+
+<!-- GLOBAL SEARCH OVERLAY -->
+<div id="global-search-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+  <div id="global-search-topbar">
+    <span style="font-size:20px;">🔍</span>
+    <input id="global-search-field" type="search" placeholder="Buscar participantes, partidos, jornadas..." autocomplete="off" oninput="runGlobalSearch(this.value)">
+    <button id="global-search-close" onclick="closeGlobalSearch()">✕</button>
+  </div>
+  <div id="global-search-results">
+    <div class="gs-empty">Escribe para buscar en toda la quiniela</div>
+  </div>
+</div>
+<!-- PARTICIPANT PROFILE MODAL -->
+<div id="profile-modal" onclick="if(event.target===this)closeProfile()">
+  <div id="profile-box">
+    <div id="profile-content"><!-- filled by JS --></div>
+  </div>
+</div>
 <!-- AVATAR FULLSCREEN MODAL -->
 <div id="avatar-modal" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.92);align-items:center;justify-content:center;backdrop-filter:blur(8px);" onclick="closeAvatarView()">
   <div style="position:relative;max-width:340px;width:90%;text-align:center;">
