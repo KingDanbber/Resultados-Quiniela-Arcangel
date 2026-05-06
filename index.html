@@ -8,6 +8,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Arcángel"/>
+<meta name="description" content="Resultados en vivo de la Quiniela Arcángel. Pasión x Ganar ⚽"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="img/logo-arcangel.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="img/logo-arcangel.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="img/logo-arcangel.png"/>
+<link rel="apple-touch-startup-image" href="img/logo-arcangel.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1772,41 +1779,26 @@ let notifEnabled=false;
 let lastScoreSnapshot=(()=>{try{const s=localStorage.getItem("qa_score_snap");return s?JSON.parse(s):{};}catch{return{};} })();
 let _jornadaFinNotified=(()=>{try{return JSON.parse(localStorage.getItem("qa_jornada_fin")||"{}");}catch{return{};}})();
 
-// ── PWA: Manifest + Service Worker ──
+// ── PWA: Service Worker Registration ──
 (function(){
-  // Dynamic manifest (works without a separate file)
-  const manifest={
-    name:"Quiniela Arcángel",
-    short_name:"Arcángel",
-    description:"Resultados en vivo de la Quiniela Arcángel. Pasión x Ganar ⚽",
-    start_url:"./",
-    display:"standalone",
-    orientation:"portrait",
-    background_color:"#06090f",
-    theme_color:"#1d4ed8",
-    categories:["sports","entertainment"],
-    lang:"es",
-    icons:[
-      {src:"img/logo-arcangel.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},
-      {src:"img/logo-arcangel.png",sizes:"512x512",type:"image/png",purpose:"any maskable"},
-      {src:"https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/26bd.png",sizes:"72x72",type:"image/png"}
-    ],
-    screenshots:[],
-    shortcuts:[
-      {name:"Clasificación",short_name:"Ranking",description:"Ver ranking de la jornada activa",url:"./?tab=leaderboard",icons:[{src:"img/logo-arcangel.png",sizes:"96x96"}]},
-      {name:"Partidos",short_name:"Partidos",description:"Ver resultados de partidos",url:"./?tab=matches",icons:[{src:"img/logo-arcangel.png",sizes:"96x96"}]}
-    ]
-  };
-  const blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
-  const mUrl=URL.createObjectURL(blob);
-  const mLink=document.createElement("link");mLink.rel="manifest";mLink.href=mUrl;document.head.appendChild(mLink);
-
-  // Service Worker: requires a separate sw.js file on the server
-  // To enable offline: create sw.js in same folder as the HTML
-  if("serviceWorker" in navigator && window.location.protocol==="https:"){
-    navigator.serviceWorker.register("./sw.js")
-      .then(reg=>console.log("SW registered:",reg.scope))
-      .catch(()=>{}); // silent fail if sw.js not present
+  // manifest.json is static — linked in <head>
+  // Register service worker for offline support + installability
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>{
+      navigator.serviceWorker.register("./sw.js",{scope:"./"})
+        .then(reg=>{
+          console.log("[SW] Registrado:",reg.scope);
+          reg.addEventListener("updatefound",()=>{
+            const nw=reg.installing;
+            nw.addEventListener("statechange",()=>{
+              if(nw.state==="installed"&&navigator.serviceWorker.controller){
+                showToastMsg("Nueva versión disponible — recarga para actualizar","🔄");
+              }
+            });
+          });
+        })
+        .catch(err=>console.warn("[SW] Error:",err));
+    });
   }
 
   // PWA Install prompt
