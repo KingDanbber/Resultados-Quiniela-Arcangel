@@ -346,6 +346,170 @@ select,input{font-family:'Barlow',sans-serif;}
 .unpaid-notice-text strong{color:var(--text);}
 
 
+
+/* ═══════════════════════════════════════════════
+   SKELETON LOADING
+═══════════════════════════════════════════════ */
+@keyframes shimmer{
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+.skeleton{
+  background:linear-gradient(90deg,var(--card2) 25%,rgba(255,255,255,.05) 50%,var(--card2) 75%);
+  background-size:800px 100%;
+  animation:shimmer 1.4s ease-in-out infinite;
+  border-radius:8px;
+}
+.skel-card{
+  background:var(--card);border:1px solid var(--border-s);
+  border-radius:14px;padding:18px;overflow:hidden;
+}
+.skel-line{height:12px;margin-bottom:8px;}
+.skel-circle{border-radius:50%;}
+.skel-match{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-bottom:4px;
+}
+
+/* ═══════════════════════════════════════════════
+   LIVE SCORE ANIMATION — GOL FLASH
+═══════════════════════════════════════════════ */
+@keyframes golFlash{
+  0%{transform:scale(1);color:var(--text);}
+  15%{transform:scale(1.6);color:#f59e0b;filter:drop-shadow(0 0 12px #f59e0b);}
+  35%{transform:scale(1.45);color:#fbbf24;}
+  55%{transform:scale(1.55);color:#f59e0b;filter:drop-shadow(0 0 8px #f59e0b);}
+  80%{transform:scale(1.15);color:#fde68a;}
+  100%{transform:scale(1);color:var(--text);}
+}
+@keyframes cardGolGlow{
+  0%{box-shadow:none;border-color:rgba(37,99,235,.35);}
+  30%{box-shadow:0 0 0 3px rgba(245,158,11,.6),0 0 24px rgba(245,158,11,.3);border-color:#f59e0b;}
+  70%{box-shadow:0 0 0 2px rgba(245,158,11,.3);border-color:rgba(245,158,11,.5);}
+  100%{box-shadow:none;border-color:rgba(37,99,235,.35);}
+}
+.score-num.gol-anim{animation:golFlash .9s cubic-bezier(.36,.07,.19,.97) forwards;}
+.match-card.gol-card{animation:cardGolGlow 1.2s ease forwards;}
+.gol-badge{
+  position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#f59e0b,#fbbf24);
+  color:#000;font-family:"Bebas Neue",sans-serif;font-size:11px;
+  letter-spacing:2px;padding:2px 10px;border-radius:20px;
+  animation:slideInCard .3s ease,fadeOut 1s ease 2s forwards;
+  pointer-events:none;white-space:nowrap;z-index:5;
+}
+@keyframes fadeOut{to{opacity:0;transform:translateX(-50%) translateY(-8px);}}
+
+/* ═══════════════════════════════════════════════
+   HOVER / TOUCH EFFECTS — Gradient spotlight
+═══════════════════════════════════════════════ */
+.match-card{position:relative;isolation:isolate;}
+.match-card::after{
+  content:"";position:absolute;inset:0;border-radius:14px;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.07) 0%,transparent 60%);
+  opacity:0;transition:opacity .25s;pointer-events:none;z-index:1;
+}
+.match-card:hover::after,.match-card.touch-active::after{opacity:1;}
+.match-card>*{position:relative;z-index:2;}
+
+
+/* ── MATCH VIEW TOGGLE ── */
+#mundial-toggle-wrap .view-toggle-btn{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:12px;letter-spacing:.5px;
+  padding:8px 10px;border:none;cursor:pointer;
+  background:transparent;color:var(--text-m);
+  transition:all .2s;display:inline-flex;align-items:center;gap:5px;
+  justify-content:center;
+}
+#mundial-toggle-wrap .view-toggle-btn.active{
+  background:var(--acc);color:#fff;
+  box-shadow:0 2px 10px rgba(37,99,235,.4);
+}
+#mundial-toggle-wrap .view-toggle-btn:not(.active):hover{
+  color:var(--text);background:rgba(255,255,255,.04);
+}
+/* ═══════════════════════════════════════════════
+   MAPA DE GRUPOS MUNDIAL
+═══════════════════════════════════════════════ */
+.mundial-header{
+  background:linear-gradient(135deg,var(--card2),var(--card));
+  border:1px solid var(--border-s);border-radius:16px;
+  padding:16px 18px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.mundial-title{
+  font-family:"Bebas Neue",sans-serif;font-size:22px;
+  letter-spacing:3px;color:var(--text);
+}
+.mundial-subtitle{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:12px;color:var(--text-m);letter-spacing:1px;margin-top:2px;
+}
+.mundial-pdf-btn{
+  background:linear-gradient(135deg,var(--acc2),var(--acc));
+  border:none;border-radius:10px;padding:9px 16px;cursor:pointer;
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:13px;letter-spacing:1px;color:#fff;
+  display:flex;align-items:center;gap:7px;transition:opacity .2s;
+  flex-shrink:0;
+}
+.mundial-pdf-btn:hover{opacity:.85;}
+.grupos-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px;
+}
+.grupo-card{
+  background:var(--card2);border:1px solid var(--border-s);
+  border-radius:14px;overflow:hidden;
+}
+.grupo-header{
+  background:linear-gradient(90deg,var(--acc2),var(--acc));
+  padding:9px 14px;display:flex;align-items:center;gap:8px;
+}
+.grupo-letter{
+  font-family:"Bebas Neue",sans-serif;font-size:22px;
+  letter-spacing:2px;color:#fff;
+}
+.grupo-label{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.75);
+}
+.grupo-table{width:100%;border-collapse:collapse;}
+.grupo-table th{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text-d);padding:6px 10px;text-align:center;
+  border-bottom:1px solid var(--border-s);
+}
+.grupo-table th:first-child{text-align:left;}
+.grupo-table td{
+  padding:9px 10px;font-family:"Barlow Condensed",sans-serif;
+  font-weight:700;font-size:13px;color:var(--text);
+  border-bottom:1px solid var(--border-s);text-align:center;
+}
+.grupo-table td:first-child{text-align:left;font-size:12px;}
+.grupo-table tr:last-child td{border-bottom:none;}
+.grupo-table tr.clasificado td{background:rgba(34,197,94,.05);}
+.grupo-table tr.clasificado td:first-child{
+  border-left:2px solid var(--green);
+}
+.g-team-flag{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:6px;}
+.g-team-name{vertical-align:middle;}
+.g-pts{color:var(--amber);font-family:"Bebas Neue",sans-serif;font-size:15px;}
+.g-form{display:flex;gap:2px;justify-content:center;}
+.g-form-dot{
+  width:8px;height:8px;border-radius:50%;
+}
+.g-form-w{background:var(--green);}
+.g-form-d{background:var(--amber);}
+.g-form-l{background:#ef4444;}
+.grupo-no-data{
+  padding:16px;text-align:center;
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;
+  font-size:12px;color:var(--text-d);letter-spacing:1px;
+}
 /* ── STAGGER ENTRY ANIMATION ── */
 @keyframes slideInCard{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 .match-card.animate-in{animation:slideInCard .35s ease forwards;opacity:0;}
@@ -1615,7 +1779,22 @@ select,input{font-family:'Barlow',sans-serif;}
 
 <!-- MAIN -->
 <div id="main">
-  <div id="loader"><div class="loader-ball">⚽</div><div class="loader-text">Cargando jornada...</div></div>
+  <div id="loader">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+      <div class="skel-card"><div class="skeleton skel-line" style="width:40%;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:70%;margin:0 auto;height:24px;"></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:40%;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:70%;margin:0 auto;height:24px;"></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:40%;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:70%;margin:0 auto;height:24px;"></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:40%;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:70%;margin:0 auto;height:24px;"></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:40%;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:70%;margin:0 auto;height:24px;"></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:40%;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:70%;margin:0 auto;height:24px;"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="skel-card"><div class="skeleton skel-line" style="width:50%;margin-bottom:14px;"></div><div class="skel-match"><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div><div style="flex-shrink:0"><div class="skeleton skel-line" style="width:44px;height:28px;"></div></div><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:50%;margin-bottom:14px;"></div><div class="skel-match"><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div><div style="flex-shrink:0"><div class="skeleton skel-line" style="width:44px;height:28px;"></div></div><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:50%;margin-bottom:14px;"></div><div class="skel-match"><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div><div style="flex-shrink:0"><div class="skeleton skel-line" style="width:44px;height:28px;"></div></div><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div></div></div>
+      <div class="skel-card"><div class="skeleton skel-line" style="width:50%;margin-bottom:14px;"></div><div class="skel-match"><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div><div style="flex-shrink:0"><div class="skeleton skel-line" style="width:44px;height:28px;"></div></div><div style="text-align:center;flex:1"><div class="skeleton skel-circle" style="width:40px;height:40px;margin:0 auto 6px;"></div><div class="skeleton skel-line" style="width:80%;margin:0 auto;"></div></div></div></div>
+    </div>
+  </div>
   <div id="content" style="display:none;">
     <div id="pool-info" style="margin-bottom:16px;"></div>
     <div id="kpi-grid"></div>
@@ -1630,8 +1809,28 @@ select,input{font-family:'Barlow',sans-serif;}
     </div>
     <!-- PARTIDOS -->
     <div id="tab-matches">
-      <div id="payment-status-bar"></div>
-      <div id="match-grid"></div>
+      <!-- Mundial toggle — only visible for Mundial pools -->
+      <div id="mundial-toggle-wrap" style="display:none;margin-bottom:14px;">
+        <div style="display:flex;background:var(--card2);border:1px solid var(--border-s);border-radius:12px;padding:3px;gap:3px;">
+          <button id="view-matches-btn" class="view-toggle-btn active" onclick="switchMatchView('partidos')" style="flex:1;border-radius:9px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg>
+            Ver Partidos
+          </button>
+          <button id="view-mundial-btn" class="view-toggle-btn" onclick="switchMatchView('grupos')" style="flex:1;border-radius:9px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Mapa de Grupos
+          </button>
+        </div>
+      </div>
+      <!-- Partidos view -->
+      <div id="partidos-view">
+        <div id="payment-status-bar"></div>
+        <div id="match-grid"></div>
+      </div>
+      <!-- Mundial grupos view (embedded) -->
+      <div id="mundial-view" style="display:none;">
+        <div id="mundial-content"><div class="hist-loading">🌍 Cargando mapa de grupos...</div></div>
+      </div>
     </div>
     <!-- CLASIFICACIÓN -->
     <div id="tab-leaderboard" style="display:none;">
@@ -1937,7 +2136,7 @@ async function loadPools(){
       if(p.id===active.id) opt.selected=true;
       sel.appendChild(opt);
     });
-    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;narratorShown=false;loadPoolData();});
+    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;narratorShown=false;mundialGroupsLoaded=false;_matchView="partidos";loadPoolData();});
     currentPool=active;
     loadPoolData();
   }catch(e){showError(e.message);showLoader(false);}
@@ -2028,6 +2227,8 @@ function render(silent=false){
   }
   document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}${dateRangeHTML}`;
   renderKPIs();renderPaymentStatusBar();renderMatches();renderLeaderboard();
+  updateMundialTab();
+  mundialGroupsLoaded=false;_matchView="partidos"; // reset on pool change
   const activeTab=document.querySelector(".tab-btn.active")?.dataset.tab;
   if(activeTab==="stats") renderCharts();
   if(!silent) setTimeout(checkDirectLink, 300);
@@ -2272,7 +2473,7 @@ function renderMatches(){
   if(!matches.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1">No hay partidos en esta jornada.</div>`;return;}
   grid.innerHTML=matches.map((m,mi)=>{
     const result=getResult(m.home_goals,m.away_goals);const hasScore=result!==null;
-    return`<div class="match-card${hasScore?" has-score":""} animate-in" style="animation-delay:${mi*55}ms" onclick="openMatchModal('${m.id}')">
+    return`<div class="match-card${hasScore?" has-score":""} animate-in" style="animation-delay:${mi*55}ms" id="mc-${m.id}" onclick="openMatchModal('${m.id}')">
       <div class="match-head"><span class="match-no">Partido ${m.match_no||"—"}</span><span class="match-time">${fdate(m.kickoff_at)}</span></div>
       <div class="match-body">
         <div class="team-col"><div style="display:flex;justify-content:center;">${logoHTML(m.home_logo_url,m.home_team)}</div><div class="team-name">${m.home_team||""}</div></div>
@@ -2282,6 +2483,8 @@ function renderMatches(){
       <div class="match-hint">👆 Ver pronósticos</div>
     </div>`;
   }).join("");
+  // Init hover/touch spotlight effects
+  requestAnimationFrame(initMatchCardEffects);
 }
 
 // ── BUILD LEADERBOARD ──
@@ -3524,6 +3727,21 @@ function checkScoreChanges(newMatches){
         if(hg===0) headline=`${ht} empata ${hg}-${ag} sin goles vs ${at}`;
         else headline=`${ht} y ${at} empatan ${hg}-${ag}`;
       }
+      // Animate score card
+      const mc=document.getElementById(`mc-${m.id}`);
+      if(mc){
+        mc.classList.add("gol-card");
+        // Flash score numbers
+        mc.querySelectorAll(".score-num").forEach(el=>el.classList.add("gol-anim"));
+        // Show GOL badge
+        const badge=document.createElement("div");
+        badge.className="gol-badge";
+        badge.textContent=result==="X"?"EMPATE":"¡GOL!";
+        mc.style.position="relative";
+        mc.appendChild(badge);
+        setTimeout(()=>{mc.classList.remove("gol-card");badge.remove();},2800);
+        setTimeout(()=>mc.querySelectorAll(".score-num").forEach(el=>el.classList.remove("gol-anim")),1000);
+      }
       // Always show in-app toast
       showMatchResultToast(icon, headline, hg, ag, result);
       // Also system notification if permission granted
@@ -4682,6 +4900,59 @@ function renderComparador(){
 }
 
 
+
+
+// ═══════════════════════════════════════════════
+// MATCH VIEW TOGGLE (Partidos ↔ Mapa de Grupos)
+// ═══════════════════════════════════════════════
+let _matchView="partidos"; // "partidos" | "grupos"
+function switchMatchView(view){
+  _matchView=view;
+  const pv=document.getElementById("partidos-view");
+  const mv=document.getElementById("mundial-view");
+  const mb=document.getElementById("view-matches-btn");
+  const gb=document.getElementById("view-mundial-btn");
+  if(view==="grupos"){
+    if(pv) pv.style.display="none";
+    if(mv) mv.style.display="block";
+    if(mb) mb.classList.remove("active");
+    if(gb) gb.classList.add("active");
+    loadMundialGroups(); // lazy load
+  } else {
+    if(pv) pv.style.display="block";
+    if(mv) mv.style.display="none";
+    if(mb) mb.classList.add("active");
+    if(gb) gb.classList.remove("active");
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOUCH / HOVER SPOTLIGHT ON MATCH CARDS
+// ═══════════════════════════════════════════════
+function initMatchCardEffects(){
+  document.querySelectorAll(".match-card").forEach(card=>{
+    card.addEventListener("mousemove",e=>{
+      const r=card.getBoundingClientRect();
+      const x=((e.clientX-r.left)/r.width*100).toFixed(1);
+      const y=((e.clientY-r.top)/r.height*100).toFixed(1);
+      card.style.setProperty("--mx",x+"%");
+      card.style.setProperty("--my",y+"%");
+    });
+    card.addEventListener("touchstart",e=>{
+      const t=e.touches[0];
+      const r=card.getBoundingClientRect();
+      const x=((t.clientX-r.left)/r.width*100).toFixed(1);
+      const y=((t.clientY-r.top)/r.height*100).toFixed(1);
+      card.style.setProperty("--mx",x+"%");
+      card.style.setProperty("--my",y+"%");
+      card.classList.add("touch-active");
+    },{passive:true});
+    card.addEventListener("touchend",()=>{
+      setTimeout(()=>card.classList.remove("touch-active"),300);
+    },{passive:true});
+  });
+}
+
 // ══════════════════════════════════════════════════════════
 // JORNADA FINALIZADA NOTIFICATION
 // ══════════════════════════════════════════════════════════
@@ -5045,6 +5316,178 @@ function applyIconSVGs(){
   });
 }
 document.addEventListener("DOMContentLoaded", applyIconSVGs);
+
+
+// ═══════════════════════════════════════════════════════════
+// MUNDIAL 2026 — MAPA DE GRUPOS
+// ═══════════════════════════════════════════════════════════
+// Show/hide Mundial tab based on current pool competition
+function updateMundialTab(){
+  const isMundial=currentPool&&(
+    String(currentPool.competition||"").toLowerCase().includes("mundial")||
+    String(currentPool.competition||"").toLowerCase().includes("MUNDIAL")||
+    String(currentPool.name||"").toLowerCase().includes("mundial")||
+    String(currentPool.name||"").toLowerCase().includes("MUNDIAL")
+  );
+  const toggle=document.getElementById("mundial-toggle-wrap");
+  if(toggle) toggle.style.display=isMundial?"block":"none";
+  // Reset to partidos view when switching pools
+  if(!isMundial && _matchView==="grupos") switchMatchView("partidos");
+}
+
+let mundialGroupsLoaded=false;
+async function loadMundialGroups(){
+  if(mundialGroupsLoaded) return;
+  const el=document.getElementById("mundial-content");
+  if(!el) return;
+  el.innerHTML=`<div class="hist-loading">🌍 Calculando grupos...</div>`;
+  try{
+    // Build groups from current pool's matches using team names
+    // Groups are inferred from match numbering (matches 1-8 = group A etc)
+    // or the admin can name teams as "Grupo A - Team"
+    // Primary: compute standings from completed matches
+    const teamStats={};
+    matches.forEach(m=>{
+      [m.home_team,m.away_team].forEach(t=>{
+        if(t&&!teamStats[t]) teamStats[t]={name:t,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[]};
+      });
+      if(m.home_goals!=null&&m.away_goals!=null){
+        const ht=teamStats[m.home_team], at=teamStats[m.away_team];
+        if(!ht||!at) return;
+        ht.pj++;at.pj++;
+        ht.gf+=m.home_goals;ht.gc+=m.away_goals;
+        at.gf+=m.away_goals;at.gc+=m.home_goals;
+        const res=getResult(m.home_goals,m.away_goals);
+        if(res==="1"){ht.pg++;ht.pts+=3;at.pp++;ht.form.push("w");at.form.push("l");}
+        else if(res==="2"){at.pg++;at.pts+=3;ht.pp++;at.form.push("w");ht.form.push("l");}
+        else{ht.pe++;at.pe++;ht.pts++;at.pts++;ht.form.push("d");at.form.push("d");}
+      }
+    });
+    const teams=Object.values(teamStats);
+    if(!teams.length){
+      el.innerHTML=`<div class="grupo-no-data">No hay equipos registrados en esta jornada.</div>`;
+      return;
+    }
+    // Try to detect groups: if pool has "grupo_config" in description OR
+    // infer groups of 4 from team count (total teams / 4)
+    // We'll group teams in alphabetical blocks of 4 as fallback
+    const totalTeams=teams.length;
+    const teamsPerGroup=4;
+    const numGroups=Math.ceil(totalTeams/teamsPerGroup);
+    const groupLetters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    // Sort teams: try to match to known group patterns, else alpha sort
+    teams.sort((a,b)=>a.name.localeCompare(b.name));
+    const groups=[];
+    for(let i=0;i<numGroups;i++){
+      const grpTeams=teams.slice(i*teamsPerGroup,(i+1)*teamsPerGroup);
+      // Sort by pts desc, gd desc, gf desc
+      grpTeams.sort((a,b)=>b.pts-a.pts||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf);
+      groups.push({letter:groupLetters[i],teams:grpTeams});
+    }
+    // Render
+    const headerHTML=`
+      <div class="mundial-header">
+        <div>
+          <div class="mundial-title">🌍 Mundial 2026 — Grupos</div>
+          <div class="mundial-subtitle">${currentPool?.name||""} · ${teams.length} selecciones</div>
+        </div>
+        <button class="mundial-pdf-btn" onclick="exportMundialPDF()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="12 18 12 12 9 15 12 12 15 15"/></svg>
+          Descargar PDF
+        </button>
+      </div>`;
+    const gruposHTML=groups.map(g=>{
+      const rows=g.teams.map((t,idx)=>{
+        const gd=t.gf-t.gc;
+        const flagSrc=getLocalLogo(t.name)||"";
+        const formDots=(t.form.slice(-3)).map(f=>`<div class="g-form-dot g-form-${f}"></div>`).join("");
+        const isClasificado=idx<2&&t.pj>0;
+        return`<tr class="${isClasificado?"clasificado":""}">
+          <td><img src="${flagSrc}" class="g-team-flag" onerror="this.style.display='none'">${t.name}</td>
+          <td>${t.pj}</td><td>${t.pg}</td><td>${t.pe}</td><td>${t.pp}</td>
+          <td>${t.gf}</td><td>${t.gc}</td>
+          <td style="color:${gd>0?"var(--green)":gd<0?"#f87171":"var(--text-m)"}">${gd>0?"+":""}${gd}</td>
+          <td><span class="g-pts">${t.pts}</span></td>
+          <td><div class="g-form">${formDots}</div></td>
+        </tr>`;
+      }).join("");
+      return`<div class="grupo-card">
+        <div class="grupo-header">
+          <div class="grupo-letter">GRUPO ${g.letter}</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="grupo-table">
+            <thead><tr>
+              <th style="min-width:120px">Selección</th>
+              <th>PJ</th><th>G</th><th>E</th><th>P</th>
+              <th>GF</th><th>GC</th><th>DG</th>
+              <th>Pts</th><th>Forma</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }).join("");
+    el.innerHTML=headerHTML+`<div class="grupos-grid">${gruposHTML}</div>`;
+    mundialGroupsLoaded=true;
+  }catch(err){
+    if(el) el.innerHTML=`<div class="error-box">⚠️ ${err.message}</div>`;
+  }
+}
+
+// ── MUNDIAL PDF EXPORT ──
+async function exportMundialPDF(){
+  if(typeof jsPDF==="undefined"){showToastMsg("Cargando PDF...","⏳");return;}
+  const {jsPDF:JSPDF}=jsPDF;
+  const doc=new JSPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  const W=210;
+  const pdfSafeM=s=>String(s||"").normalize("NFD").split("").filter(ch=>{const cp=ch.codePointAt(0);return!(cp>=0x0300&&cp<=0x036F);}).join("").replace(/[^\x00-\xFF]/g,"").trim();
+  const now=new Date().toLocaleDateString("es-MX",{day:"2-digit",month:"long",year:"numeric"});
+  // Header
+  doc.setFillColor(13,21,48);doc.rect(0,0,W,32,"F");
+  doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont("helvetica","bold");
+  doc.text("MUNDIAL 2026 - MAPA DE GRUPOS",14,12);
+  doc.setFontSize(9);doc.setFont("helvetica","normal");
+  doc.setTextColor(147,197,253);
+  doc.text(pdfSafeM(currentPool?.name||""),14,20);
+  doc.text(`Generado: ${now}`,W-14,20,{align:"right"});
+  let y=38;
+  // Get groups data from DOM
+  document.querySelectorAll(".grupo-card").forEach((gCard,gi)=>{
+    const letter=gCard.querySelector(".grupo-letter")?.textContent||`Grupo ${gi+1}`;
+    if(y>240){doc.addPage();y=16;}
+    doc.setFillColor(21,61,128);doc.rect(14,y,W-28,8,"F");
+    doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text(pdfSafeM(letter),16,y+5.5);
+    y+=10;
+    const rows=[];
+    gCard.querySelectorAll("tbody tr").forEach(tr=>{
+      const tds=[...tr.querySelectorAll("td")].map(td=>pdfSafeM(td.textContent.trim()));
+      rows.push(tds);
+    });
+    doc.autoTable({
+      startY:y,
+      head:[["Selección","PJ","G","E","P","GF","GC","DG","Pts","Forma"]],
+      body:rows,
+      theme:"grid",
+      styles:{font:"helvetica",fontSize:8,cellPadding:2,textColor:[226,232,240],fillColor:[13,19,36]},
+      headStyles:{fillColor:[37,99,235],textColor:[255,255,255],fontStyle:"bold",fontSize:8},
+      alternateRowStyles:{fillColor:[20,30,54]},
+      columnStyles:{0:{cellWidth:45},1:{halign:"center"},2:{halign:"center"},3:{halign:"center"},4:{halign:"center"},5:{halign:"center"},6:{halign:"center"},7:{halign:"center"},8:{halign:"center",fontStyle:"bold"},9:{halign:"center"}},
+      margin:{left:14,right:14},
+    });
+    y=doc.lastAutoTable.finalY+6;
+  });
+  // Footer
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFontSize(8);doc.setTextColor(71,85,105);
+    doc.text("Quiniela Arcangel  |  Pasion x Ganar",14,292);
+    doc.text(`Pagina ${i} de ${pages}`,W-14,292,{align:"right"});
+  }
+  doc.save(`mundial2026-grupos-${Date.now()}.pdf`);
+}
 
 // ── INIT ──
 loadPools();
