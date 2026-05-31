@@ -5340,20 +5340,42 @@ async function loadMundialGroups(){
   if(mundialGroupsLoaded) return;
   const el=document.getElementById("mundial-content");
   if(!el) return;
-  el.innerHTML=`<div class="hist-loading">🌍 Calculando grupos...</div>`;
+  el.innerHTML=`<div class="hist-loading">🌍 Cargando grupos oficiales...</div>`;
   try{
-    // Build groups from current pool's matches using team names
-    // Groups are inferred from match numbering (matches 1-8 = group A etc)
-    // or the admin can name teams as "Grupo A - Team"
-    // Primary: compute standings from completed matches
+    // ── GRUPOS OFICIALES MUNDIAL 2026 FIFA ──────────────────
+    const GRUPOS_OFICIALES=[
+      {letter:"A", teams:["México","Sudáfrica","Corea del Sur","República Checa"]},
+      {letter:"B", teams:["Canadá","Bosnia y Herzegovina","Qatar","Suiza"]},
+      {letter:"C", teams:["Brasil","Marruecos","Haití","Escocia"]},
+      {letter:"D", teams:["Estados Unidos","Paraguay","Australia","Turquía"]},
+      {letter:"E", teams:["Alemania","Curazao","Costa de Marfil","Ecuador"]},
+      {letter:"F", teams:["Países Bajos","Japón","Suecia","Túnez"]},
+      {letter:"G", teams:["Bélgica","Egipto","Irán","Nueva Zelanda"]},
+      {letter:"H", teams:["España","Cabo Verde","Arabia Saudita","Uruguay"]},
+      {letter:"I", teams:["Francia","Senegal","Irak","Noruega"]},
+      {letter:"J", teams:["Argentina","Argelia","Austria","Jordania"]},
+      {letter:"K", teams:["Portugal","Congo","Uzbekistán","Colombia"]},
+      {letter:"L", teams:["Inglaterra","Croacia","Ghana","Panamá"]},
+    ];
+
+    // Normalize helper — same as getLocalLogo
+    const norm=s=>String(s||"").normalize("NFD").split("").filter(ch=>{
+      const cp=ch.codePointAt(0);return!(cp>=0x0300&&cp<=0x036F);
+    }).join("").trim().toLowerCase().replace(/\s+/g," ");
+
+    // Build stats map from current pool matches
     const teamStats={};
+    // Initialize all teams from current matches
     matches.forEach(m=>{
       [m.home_team,m.away_team].forEach(t=>{
-        if(t&&!teamStats[t]) teamStats[t]={name:t,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[]};
+        if(t&&!teamStats[norm(t)]){
+          teamStats[norm(t)]={name:t,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[]};
+        }
       });
       if(m.home_goals!=null&&m.away_goals!=null){
-        const ht=teamStats[m.home_team], at=teamStats[m.away_team];
-        if(!ht||!at) return;
+        const hk=norm(m.home_team),ak=norm(m.away_team);
+        const ht=teamStats[hk],at=teamStats[ak];
+        if(!ht||!at)return;
         ht.pj++;at.pj++;
         ht.gf+=m.home_goals;ht.gc+=m.away_goals;
         at.gf+=m.away_goals;at.gc+=m.home_goals;
@@ -5363,49 +5385,81 @@ async function loadMundialGroups(){
         else{ht.pe++;at.pe++;ht.pts++;at.pts++;ht.form.push("d");at.form.push("d");}
       }
     });
-    const teams=Object.values(teamStats);
-    if(!teams.length){
+
+    if(!Object.keys(teamStats).length){
       el.innerHTML=`<div class="grupo-no-data">No hay equipos registrados en esta jornada.</div>`;
       return;
     }
-    // Try to detect groups: if pool has "grupo_config" in description OR
-    // infer groups of 4 from team count (total teams / 4)
-    // We'll group teams in alphabetical blocks of 4 as fallback
-    const totalTeams=teams.length;
-    const teamsPerGroup=4;
-    const numGroups=Math.ceil(totalTeams/teamsPerGroup);
-    const groupLetters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-    // Sort teams: try to match to known group patterns, else alpha sort
-    teams.sort((a,b)=>a.name.localeCompare(b.name));
+
+    // Match pool teams to official groups
     const groups=[];
-    for(let i=0;i<numGroups;i++){
-      const grpTeams=teams.slice(i*teamsPerGroup,(i+1)*teamsPerGroup);
-      // Sort by pts desc, gd desc, gf desc
-      grpTeams.sort((a,b)=>b.pts-a.pts||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf);
-      groups.push({letter:groupLetters[i],teams:grpTeams});
-    }
-    // Render
+    GRUPOS_OFICIALES.forEach(g=>{
+      const grpTeams=[];
+      g.teams.forEach(officialName=>{
+        const ok=norm(officialName);
+        // Exact match first
+        let stat=teamStats[ok];
+        if(!stat){
+          // Partial match — find best match in pool
+          const keys=Object.keys(teamStats);
+          const found=keys.find(k=>k.includes(ok)||ok.includes(k)||
+            ok.split(" ").some(w=>w.length>3&&k.includes(w)));
+          if(found) stat=teamStats[found];
+        }
+        if(stat){
+          grpTeams.push(stat);
+        } else {
+          // Team registered in official groups but not in this pool's matches — show empty
+          grpTeams.push({
+            name:officialName,
+            pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[],
+            _notInPool:true
+          });
+        }
+      });
+      // Sort: pts desc → gd desc → gf desc → name asc
+      grpTeams.sort((a,b)=>
+        b.pts-a.pts||
+        (b.gf-b.gc)-(a.gf-a.gc)||
+        b.gf-a.gf||
+        a.name.localeCompare(b.name)
+      );
+      groups.push({letter:g.letter, teams:grpTeams});
+    });
+
+    // Only show groups that have at least one team from this pool
+    const activeGroups=groups.filter(g=>g.teams.some(t=>!t._notInPool));
+
     const headerHTML=`
       <div class="mundial-header">
         <div>
-          <div class="mundial-title">🌍 Mundial 2026 — Grupos</div>
-          <div class="mundial-subtitle">${currentPool?.name||""} · ${teams.length} selecciones</div>
+          <div class="mundial-title">🌍 Mundial 2026 — Grupos Oficiales</div>
+          <div class="mundial-subtitle">${currentPool?.name||""} · 48 selecciones · 12 grupos</div>
         </div>
         <button class="mundial-pdf-btn" onclick="exportMundialPDF()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="12 18 12 12 9 15 12 12 15 15"/></svg>
           Descargar PDF
         </button>
       </div>`;
-    const gruposHTML=groups.map(g=>{
+
+    const gruposHTML=(activeGroups.length?activeGroups:groups).map(g=>{
       const rows=g.teams.map((t,idx)=>{
         const gd=t.gf-t.gc;
         const flagSrc=getLocalLogo(t.name)||"";
         const formDots=(t.form.slice(-3)).map(f=>`<div class="g-form-dot g-form-${f}"></div>`).join("");
         const isClasificado=idx<2&&t.pj>0;
-        return`<tr class="${isClasificado?"clasificado":""}">
-          <td><img src="${flagSrc}" class="g-team-flag" onerror="this.style.display='none'">${t.name}</td>
-          <td>${t.pj}</td><td>${t.pg}</td><td>${t.pe}</td><td>${t.pp}</td>
-          <td>${t.gf}</td><td>${t.gc}</td>
+        const dimmed=t._notInPool?"opacity:.4;":"";
+        return`<tr class="${isClasificado?"clasificado":""}" style="${dimmed}">
+          <td>
+            ${flagSrc?`<img src="${flagSrc}" class="g-team-flag" onerror="this.style.display='none'">`:``}
+            <span class="g-team-name">${t.name}</span>
+          </td>
+          <td>${t.pj}</td>
+          <td>${t.pg}</td>
+          <td>${t.pe}</td>
+          <td>${t.pp}</td>
+          <td>${t.gf}</td>
+          <td>${t.gc}</td>
           <td style="color:${gd>0?"var(--green)":gd<0?"#f87171":"var(--text-m)"}">${gd>0?"+":""}${gd}</td>
           <td><span class="g-pts">${t.pts}</span></td>
           <td><div class="g-form">${formDots}</div></td>
@@ -5418,20 +5472,28 @@ async function loadMundialGroups(){
         <div style="overflow-x:auto;">
           <table class="grupo-table">
             <thead><tr>
-              <th style="min-width:120px">Selección</th>
-              <th>PJ</th><th>G</th><th>E</th><th>P</th>
-              <th>GF</th><th>GC</th><th>DG</th>
-              <th>Pts</th><th>Forma</th>
+              <th style="min-width:130px">Selección</th>
+              <th title="Partidos jugados">PJ</th>
+              <th title="Ganados">G</th>
+              <th title="Empates">E</th>
+              <th title="Perdidos">P</th>
+              <th title="Goles a favor">GF</th>
+              <th title="Goles en contra">GC</th>
+              <th title="Diferencia de goles">DG</th>
+              <th title="Puntos">Pts</th>
+              <th title="Últimos 3 partidos">Forma</th>
             </tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
       </div>`;
     }).join("");
+
     el.innerHTML=headerHTML+`<div class="grupos-grid">${gruposHTML}</div>`;
     mundialGroupsLoaded=true;
   }catch(err){
-    if(el) el.innerHTML=`<div class="error-box">⚠️ ${err.message}</div>`;
+    const el2=document.getElementById("mundial-content");
+    if(el2) el2.innerHTML=`<div class="error-box">⚠️ ${err.message}</div>`;
   }
 }
 
