@@ -2254,7 +2254,8 @@ function renderKPIs(){
   // Commission note
   let commNoteEl=document.getElementById("comm-note-wrap");
   if(!commNoteEl){commNoteEl=document.createElement("div");commNoteEl.id="comm-note-wrap";document.getElementById("kpi-grid").after(commNoteEl);}
-  if(currentPool.commission_pct&&currentPool.commission_pct>0){
+  const _cp=parseFloat(currentPool.commission_pct||0);
+  if(_cp>0){
     commNoteEl.innerHTML=`<div class="comm-note">
       <span style="font-size:16px;flex-shrink:0;">ℹ️</span>
       <div class="comm-note-text">Se aplica una comisión del <strong>${currentPool.commission_pct}%</strong> sobre la bolsa total,
@@ -2424,6 +2425,9 @@ const TEAM_LOGO_MAP = {
   'costa de marfil':         'img/mundial2026/costa-de-marfil.png',
   'ivory coast':             'img/mundial2026/costa-de-marfil.png',
   'congo':                   'img/mundial2026/congo.png',
+  'rep dem del congo':       'img/mundial2026/congo.png',
+  'republica democratica del congo': 'img/mundial2026/congo.png',
+  'democratic republic of congo': 'img/mundial2026/congo.png',
   'haiti':                   'img/mundial2026/haiti.png',
   'uzbekistan':              'img/mundial2026/uzbekistan.png',
   'noruega':                 'img/mundial2026/noruega.png',
@@ -5342,7 +5346,7 @@ async function loadMundialGroups(){
   if(!el) return;
   el.innerHTML=`<div class="hist-loading">🌍 Cargando grupos oficiales...</div>`;
   try{
-    // ── GRUPOS OFICIALES MUNDIAL 2026 FIFA ──────────────────
+    // ── GRUPOS OFICIALES MUNDIAL 2026 FIFA (orden oficial FIFA) ─
     const GRUPOS_OFICIALES=[
       {letter:"A", teams:["México","Sudáfrica","Corea del Sur","República Checa"]},
       {letter:"B", teams:["Canadá","Bosnia y Herzegovina","Qatar","Suiza"]},
@@ -5406,24 +5410,25 @@ async function loadMundialGroups(){
             ok.split(" ").some(w=>w.length>3&&k.includes(w)));
           if(found) stat=teamStats[found];
         }
-        if(stat){
-          grpTeams.push(stat);
-        } else {
-          // Team registered in official groups but not in this pool's matches — show empty
-          grpTeams.push({
-            name:officialName,
-            pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[],
-            _notInPool:true
-          });
-        }
+        const teamEntry={
+          ...(stat||{name:officialName,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[]}),
+          _officialOrder: grpTeams.length,  // preserve FIFA official order
+          _notInPool: !stat,
+        };
+        grpTeams.push(teamEntry);
       });
-      // Sort: pts desc → gd desc → gf desc → name asc
-      grpTeams.sort((a,b)=>
-        b.pts-a.pts||
-        (b.gf-b.gc)-(a.gf-a.gc)||
-        b.gf-a.gf||
-        a.name.localeCompare(b.name)
-      );
+      // Sort: pts desc → gd desc → gf desc → official FIFA order
+      // If all teams have 0 pts (pre-tournament), keep official order
+      const allZero=grpTeams.every(t=>t.pts===0&&t.pj===0);
+      if(!allZero){
+        grpTeams.sort((a,b)=>
+          b.pts-a.pts||
+          (b.gf-b.gc)-(a.gf-a.gc)||
+          b.gf-a.gf||
+          (a._officialOrder??0)-(b._officialOrder??0)
+        );
+      }
+      // else: keep insertion order (already official)
       groups.push({letter:g.letter, teams:grpTeams});
     });
 
@@ -5499,8 +5504,14 @@ async function loadMundialGroups(){
 
 // ── MUNDIAL PDF EXPORT ──
 async function exportMundialPDF(){
-  if(typeof jsPDF==="undefined"){showToastMsg("Cargando PDF...","⏳");return;}
-  const {jsPDF:JSPDF}=jsPDF;
+  // jsPDF CDN exposes window.jspdf (lowercase) not window.jsPDF
+  if(typeof window.jspdf==="undefined"){
+    showToastMsg("Preparando PDF, espera...","⏳");
+    await new Promise(r=>setTimeout(r,1800));
+    if(typeof window.jspdf==="undefined"){showToastMsg("Error: jsPDF no cargado","❌");return;}
+  }
+  showToastMsg("Generando PDF de grupos...","📄");
+  const {jsPDF:JSPDF}=window.jspdf;
   const doc=new JSPDF({orientation:"portrait",unit:"mm",format:"a4"});
   const W=210;
   const pdfSafeM=s=>String(s||"").normalize("NFD").split("").filter(ch=>{const cp=ch.codePointAt(0);return!(cp>=0x0300&&cp<=0x036F);}).join("").replace(/[^\x00-\xFF]/g,"").trim();
