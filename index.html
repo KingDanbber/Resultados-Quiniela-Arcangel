@@ -41,7 +41,7 @@
 }
 /* ── RESET & BASE ── */
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:var(--bg);min-height:100vh;font-family:'Barlow',sans-serif;color:var(--text);transition:background .3s,color .3s;}
+html,body{background:var(--bg);min-height:100vh;overflow-x:hidden;font-family:'Barlow',sans-serif;color:var(--text);transition:background .3s,color .3s;}
 ::-webkit-scrollbar{width:5px;background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--acc);border-radius:3px;}
 a{color:inherit;text-decoration:none;}
@@ -429,6 +429,7 @@ select,input{font-family:'Barlow',sans-serif;}
 #mundial-toggle-wrap .view-toggle-btn:not(.active):hover{
   color:var(--text);background:rgba(255,255,255,.04);
 }
+
 
 /* ═══════════════════════════════════════════════
    FIXTURE COMPLETO
@@ -1327,6 +1328,22 @@ select,input{font-family:'Barlow',sans-serif;}
 .cpi-name{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:15px;color:var(--text);}
 .cpi-meta{font-size:11px;color:var(--text-m);font-family:"Barlow Condensed",sans-serif;margin-top:2px;}
 .cpi-badge{margin-left:auto;flex-shrink:0;}
+
+/* ── TROPHY 3D ── */
+#trophy-3d-wrap{
+  width:100%;height:200px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:8px;position:relative;
+  border-radius:16px;overflow:hidden;
+  background:radial-gradient(ellipse at center,rgba(245,158,11,.12) 0%,transparent 70%);
+}
+#trophy-3d-canvas{display:block;cursor:grab;}
+#trophy-3d-canvas:active{cursor:grabbing;}
+.trophy-3d-label{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  font-family:"Bebas Neue",sans-serif;font-size:11px;letter-spacing:2px;
+  color:rgba(245,158,11,.6);white-space:nowrap;
+}
 /* ── HALL OF FAME ── */
 .hof-pool{margin-bottom:24px;}
 .hof-pool-title{
@@ -1934,7 +1951,7 @@ select,input{font-family:'Barlow',sans-serif;}
       <button class="tab-btn" data-tab="comparador">⚡ Comparar</button>
     </div>
     <!-- PARTIDOS -->
-    <div id="tab-matches">
+    <div id="tab-matches" style="overflow-x:hidden;">
       <!-- Mundial toggle — only visible for Mundial pools -->
       <div id="mundial-toggle-wrap" style="display:none;margin-bottom:14px;">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);background:var(--card2);border:1px solid var(--border-s);border-radius:12px;padding:3px;gap:3px;">
@@ -1968,7 +1985,7 @@ select,input{font-family:'Barlow',sans-serif;}
       <div id="fixture-view" style="display:none;">
         <div id="fixture-content"></div>
       </div>
-      <div id="bracket-view" style="display:none;">
+      <div id="bracket-view" style="display:none;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;">
         <div id="bracket-content"></div>
       </div>
     </div>
@@ -2276,7 +2293,7 @@ async function loadPools(){
       if(p.id===active.id) opt.selected=true;
       sel.appendChild(opt);
     });
-    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;narratorShown=false;mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_matchView="partidos";loadPoolData();});
+    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;narratorShown=false;ganadoresLoaded=false;mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_allMundialMatches=null;_matchView="partidos";loadPoolData();});
     currentPool=active;
     loadPoolData();
   }catch(e){showError(e.message);showLoader(false);}
@@ -2299,6 +2316,7 @@ async function loadPoolData(silent=false){
     matches=m;entries=e;poolResult=pr[0]||null;
     lastScoreSnapshot=snapshotScores();
     try{localStorage.setItem("qa_score_snap",JSON.stringify(lastScoreSnapshot));}catch{}
+    mundialGroupsLoaded=false; // allow podium refresh on each data load
     const allPartIds=[...new Set(e.map(x=>x.participant_id).filter(Boolean))];
     if(allPartIds.length){
       try{const parts=await db(`participants?id=in.(${allPartIds.join(",")})&select=id,name,area`);participantsMap=Object.fromEntries(parts.map(p=>[p.id,p]));}
@@ -2368,7 +2386,7 @@ function render(silent=false){
   document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}${dateRangeHTML}`;
   renderKPIs();renderPaymentStatusBar();renderMatches();renderLeaderboard();
   updateMundialTab();
-  mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_matchView="partidos"; // reset on pool change
+  mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_allMundialMatches=null;_matchView="partidos"; // reset on pool change
   const activeTab=document.querySelector(".tab-btn.active")?.dataset.tab;
   if(activeTab==="stats") renderCharts();
   if(!silent) setTimeout(checkDirectLink, 300);
@@ -3786,6 +3804,7 @@ document.getElementById("tabs").addEventListener("click",e=>{
   ["matches","leaderboard","stats","historial","ganadores","calendario","comparador"].forEach(t=>{
     document.getElementById(`tab-${t}`).style.display=t===tab?"block":"none";
   });
+  if(tab!=="ganadores") disposeThreeScene("trophy");
   if(tab==="stats")renderCharts();
   if(tab==="historial")loadHistorial();
   if(tab==="ganadores")loadGanadores();
@@ -4398,7 +4417,13 @@ async function loadGanadores(){
       el.innerHTML=`<div class="empty">Aún no hay jornadas finalizadas con ganadores.</div>`;return;
     }
     // Render — most recent first
-    el.innerHTML=poolCards.reverse().map(({poolLabel,comp,net,winners,prize,maxH,isSplit,totalParts,pool})=>{
+    // Trophy 3D header
+    el.innerHTML=`<div id="trophy-3d-wrap">
+      <canvas id="trophy-3d-canvas" width="300" height="180"></canvas>
+      <div class="trophy-3d-label">HALL OF FAME · QUINIELA ARCÁNGEL</div>
+    </div>
+    <div id="hof-list"></div>`;
+    document.getElementById("hof-list").innerHTML=poolCards.reverse().map(({poolLabel,comp,net,winners,prize,maxH,isSplit,totalParts,pool})=>{
       const trophyEmoji=isSplit?"🤝":"🏆";
       const winHTML=winners.map(w=>`
         <div class="hof-card${isSplit?" split":""}">
@@ -4423,6 +4448,8 @@ async function loadGanadores(){
       </div>`;
     }).join("");
     ganadoresLoaded=true;
+    // Init trophy after DOM ready
+    requestAnimationFrame(()=>initTrophy3D());
   }catch(e){
     const el2=document.getElementById("ganadores-content");
     if(el2)el2.innerHTML=`<div class="error-box">⚠️ ${e.message}</div>`;
@@ -4621,7 +4648,7 @@ function jumpToPool(poolId){
   currentPool=pool;
   const sel=document.getElementById("pool-select");
   if(sel){for(let o of sel.options){if(o.value===poolId){o.selected=true;break;}}}
-  expandedEntries={};historialLoaded=false;generalStatsLoaded=false;calendarioLoaded=false;
+  expandedEntries={};historialLoaded=false;generalStatsLoaded=false;calendarioLoaded=false;ganadoresLoaded=false;mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;narratorShown=false;_matchView="partidos";
   loadPoolData();
   // Switch to matches tab
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
@@ -5073,7 +5100,9 @@ function switchMatchView(view){
   // Lazy load
   if(view==="grupos") loadMundialGroups();
   if(view==="fixture") loadFixture();
-  if(view==="bracket") loadBracket();
+  if(view==="bracket"){bracketLoaded=false;loadBracket();}
+  // Reset horizontal scroll on view switch
+  requestAnimationFrame(()=>{window.scrollTo({left:0,behavior:"instant"});document.documentElement.scrollLeft=0;document.body.scrollLeft=0;});
 }
 
 
@@ -5118,20 +5147,23 @@ const FIXTURE_2026=(()=>{
 
 let fixtureLoaded=false;
 let fixtureFilter="all";
-function loadFixture(){
+async function loadFixture(){
   if(fixtureLoaded) return;
+  await loadAllMundialMatches(); // fetch all jornadas scores first
   renderFixture();
   fixtureLoaded=true;
 }
 function renderFixture(){
   const el=document.getElementById("fixture-content");
   if(!el)return;
-  // Build score lookup from current pool matches
+  // Build score lookup from ALL mundial matches (cross-jornada)
   const norm=s=>String(s||"").normalize("NFD").split("").filter(ch=>{const cp=ch.codePointAt(0);return!(cp>=0x0300&&cp<=0x036F);}).join("").trim().toLowerCase();
   const scoreMap={};
-  matches.forEach(m=>{
+  const fixtureSrc=_allMundialMatches||matches;
+  fixtureSrc.forEach(m=>{
     const k=`${norm(m.home_team)}-${norm(m.away_team)}`;
-    scoreMap[k]={hg:m.home_goals,ag:m.away_goals};
+    if(m.home_goals!=null&&m.away_goals!=null)
+      scoreMap[k]={hg:m.home_goals,ag:m.away_goals};
   });
   const getScore=(home,away)=>scoreMap[`${norm(home)}-${norm(away)}`]||scoreMap[`${norm(away)}-${norm(home)}_flip`]||null;
 
@@ -5197,17 +5229,38 @@ function renderFixture(){
 }
 function setFixtureFilter(f){
   fixtureFilter=f;
-  fixtureLoaded=false;
-  renderFixture();
-  fixtureLoaded=true;
+  renderFixture(); // rerender immediately (matches already cached)
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER: Load all Mundial matches across all jornadas (cached)
+// ═══════════════════════════════════════════════════════════════
+async function loadAllMundialMatches(){
+  if(_allMundialMatches!==null) return _allMundialMatches;
+  const isMundial=p=>
+    String(p.competition||"").toLowerCase().includes("mundial")||
+    String(p.name||"").toLowerCase().includes("mundial");
+  const mundialPools=pools.filter(isMundial);
+  let all=[];
+  for(const p of mundialPools){
+    try{
+      const m=await db(`matches?pool_id=eq.${p.id}&select=*`);
+      if(Array.isArray(m)) all=[...all,...m];
+    }catch(e){}
+  }
+  _allMundialMatches=all.length?all:[...matches];
+  return _allMundialMatches;
 }
 
 // ═══════════════════════════════════════════════════════════════
 // BRACKET INTERACTIVO MUNDIAL 2026
 // ═══════════════════════════════════════════════════════════════
 let bracketLoaded=false;
-function loadBracket(){
+let _allMundialMatches=null; // cached cross-jornada matches
+async function loadBracket(){
   if(bracketLoaded)return;
+  await loadAllMundialMatches(); // cache before rendering
   renderBracket();
   bracketLoaded=true;
 }
@@ -5234,7 +5287,8 @@ function renderBracket(){
   // Build stats per team
   const stats={};
   Object.values(GRUPOS_2026).flat().forEach(t=>{stats[norm(t)]={name:t,pj:0,pts:0,gf:0,gc:0};});
-  matches.forEach(m=>{
+  const bracketSrc=_allMundialMatches||matches;
+  bracketSrc.forEach(m=>{
     if(m.home_goals==null||m.away_goals==null)return;
     const hk=norm(m.home_team),ak=norm(m.away_team);
     if(!stats[hk]||!stats[ak])return;
@@ -5775,10 +5829,13 @@ async function loadMundialGroups(){
       const cp=ch.codePointAt(0);return!(cp>=0x0300&&cp<=0x036F);
     }).join("").trim().toLowerCase().replace(/\s+/g," ");
 
-    // Build stats map from current pool matches
+    // Accumulate group standings across ALL pools of same competition
+    // Use shared cache (loads fresh every time grupos view opens)
+    _allMundialMatches=null; // force reload to get latest
+    const allCompMatches=await loadAllMundialMatches();
+
     const teamStats={};
-    // Initialize all teams from current matches
-    matches.forEach(m=>{
+    allCompMatches.forEach(m=>{
       [m.home_team,m.away_team].forEach(t=>{
         if(t&&!teamStats[norm(t)]){
           teamStats[norm(t)]={name:t,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,form:[]};
@@ -5799,7 +5856,7 @@ async function loadMundialGroups(){
     });
 
     if(!Object.keys(teamStats).length){
-      el.innerHTML=`<div class="grupo-no-data">No hay equipos registrados en esta jornada.</div>`;
+      el.innerHTML=`<div class="grupo-no-data">No hay equipos registrados en las jornadas del Mundial 2026.</div>`;
       return;
     }
 
@@ -5844,6 +5901,18 @@ async function loadMundialGroups(){
     const activeGroups=groups.filter(g=>g.teams.some(t=>!t._notInPool));
 
     const headerHTML=`
+      <div id="globe-3d-wrap">
+        <canvas id="globe-canvas" width="320" height="200"></canvas>
+        <div class="globe-seats">
+          <span class="globe-seat">🇲🇽 Guadalajara</span>
+          <span class="globe-seat">🇲🇽 Monterrey</span>
+          <span class="globe-seat">🇺🇸 Dallas</span>
+          <span class="globe-seat">🇺🇸 Los Ángeles</span>
+          <span class="globe-seat">🇺🇸 Nueva York</span>
+          <span class="globe-seat">🇨🇦 Toronto</span>
+          <span class="globe-seat">🇨🇦 Vancouver</span>
+        </div>
+      </div>
       <div class="mundial-header">
         <div>
           <div class="mundial-title">🌍 Mundial 2026 — Grupos Oficiales</div>
@@ -5904,6 +5973,7 @@ async function loadMundialGroups(){
 
     el.innerHTML=headerHTML+`<div class="grupos-grid">${gruposHTML}</div>`;
     mundialGroupsLoaded=true;
+    requestAnimationFrame(()=>initGlobe3D());
   }catch(err){
     const el2=document.getElementById("mundial-content");
     if(el2) el2.innerHTML=`<div class="error-box">⚠️ ${err.message}</div>`;
@@ -5969,6 +6039,251 @@ async function exportMundialPDF(){
   }
   doc.save(`mundial2026-grupos-${Date.now()}.pdf`);
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// THREE.JS LAZY LOADER
+// ═══════════════════════════════════════════════════════════════
+let _threeJSLoaded=false;
+let _threeJSLoading=false;
+let _threeJSCallbacks=[];
+
+function loadThreeJS(callback){
+  if(_threeJSLoaded){ callback(window.THREE); return; }
+  _threeJSCallbacks.push(callback);
+  if(_threeJSLoading) return;
+  _threeJSLoading=true;
+  const s=document.createElement("script");
+  s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+  s.onload=()=>{
+    _threeJSLoaded=true;_threeJSLoading=false;
+    _threeJSCallbacks.forEach(cb=>cb(window.THREE));
+    _threeJSCallbacks=[];
+  };
+  s.onerror=()=>{console.warn("Three.js CDN failed");_threeJSLoading=false;};
+  document.head.appendChild(s);
+}
+
+// Track active Three.js scenes for cleanup
+const _threeScenes={};
+function disposeThreeScene(key){
+  const sc=_threeScenes[key];
+  if(!sc) return;
+  if(sc.animId) cancelAnimationFrame(sc.animId);
+  if(sc.renderer){ sc.renderer.dispose(); sc.renderer.domElement?.remove(); }
+  if(sc.geometry) sc.geometry.dispose();
+  if(sc.material) sc.material.dispose();
+  delete _threeScenes[key];
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// THREE.JS: TROPHY 3D — Hall of Fame
+// ═══════════════════════════════════════════════════════════════
+function initTrophy3D(){
+  const canvas=document.getElementById("trophy-3d-canvas");
+  if(!canvas)return;
+  disposeThreeScene("trophy");
+  loadThreeJS(THREE=>{
+    const W=Math.min(canvas.offsetWidth||300,340),H=200;
+    canvas.width=W;canvas.height=H;
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(42,W/H,0.1,50);
+    camera.position.set(0,0.3,4.2);
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setClearColor(0,0);
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffd700,0.5));
+    const d1=new THREE.DirectionalLight(0xffe066,1.4);d1.position.set(3,5,4);scene.add(d1);
+    const d2=new THREE.DirectionalLight(0xffaa00,0.6);d2.position.set(-3,2,-3);scene.add(d2);
+    const pt=new THREE.PointLight(0xf59e0b,2.5,10);pt.position.set(0,3,2);scene.add(pt);
+    // Gold material
+    const gold=new THREE.MeshStandardMaterial({color:0xfbbf24,metalness:.92,roughness:.08});
+    const dark=new THREE.MeshStandardMaterial({color:0x1a0f00,metalness:.7,roughness:.3});
+    const group=new THREE.Group();
+    // Cup body — correct LatheGeometry with proper Vector2 array
+    const profile=[
+      new THREE.Vector2(0.00,0.00),
+      new THREE.Vector2(0.50,0.08),
+      new THREE.Vector2(0.65,0.25),
+      new THREE.Vector2(0.70,0.50),
+      new THREE.Vector2(0.65,0.80),
+      new THREE.Vector2(0.52,1.00),
+      new THREE.Vector2(0.38,1.20),
+      new THREE.Vector2(0.28,1.40),
+      new THREE.Vector2(0.22,1.50),
+      new THREE.Vector2(0.26,1.58),
+      new THREE.Vector2(0.55,1.64),
+      new THREE.Vector2(0.60,1.70),
+      new THREE.Vector2(0.55,1.74),
+      new THREE.Vector2(0.24,1.78),
+      new THREE.Vector2(0.18,1.82),
+    ];
+    const cup=new THREE.Mesh(new THREE.LatheGeometry(profile,40),gold);
+    cup.scale.set(.58,.58,.58);cup.position.y=-.85;
+    group.add(cup);
+    // Handles
+    [-1,1].forEach(s=>{
+      const h=new THREE.Mesh(new THREE.TorusGeometry(.26,.055,10,24,Math.PI),gold);
+      h.position.set(s*.38,.08,0);h.rotation.z=s*Math.PI/2;
+      group.add(h);
+    });
+    // Star
+    const star=new THREE.Mesh(new THREE.OctahedronGeometry(.14,0),
+      new THREE.MeshStandardMaterial({color:0xffffff,metalness:1,roughness:0,emissive:0xffd700,emissiveIntensity:.5}));
+    star.position.y=1.20;group.add(star);
+    // Base
+    (()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.45,.55,.13,32),dark);m.position.set(0,-.92,0);group.add(m);})();
+    (()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.60,.60,.06,32),gold);m.position.set(0,-1.02,0);group.add(m);})();
+    scene.add(group);
+    // Sparkles
+    const sp=new Float32Array(120);for(let i=0;i<40;i++){sp[i*3]=(Math.random()-.5)*5;sp[i*3+1]=(Math.random()-.5)*5;sp[i*3+2]=(Math.random()-.5)*3;}
+    const sparks=new THREE.Points(
+      Object.assign(new THREE.BufferGeometry(),{}).setAttribute("position",new THREE.BufferAttribute(sp,3)),
+      new THREE.PointsMaterial({color:0xffd700,size:.035,transparent:true,opacity:.8}));
+    scene.add(sparks);
+    // Drag
+    let drag=false,lx=0;
+    const onDown=x=>{drag=true;lx=x;};
+    const onUp=()=>{drag=false;};
+    const onMove=x=>{if(drag){group.rotation.y+=(x-lx)*.012;lx=x;}};
+    canvas.addEventListener("mousedown",e=>onDown(e.clientX),{passive:true});
+    canvas.addEventListener("touchstart",e=>onDown(e.touches[0].clientX),{passive:true});
+    window.addEventListener("mouseup",onUp);window.addEventListener("touchend",onUp);
+    canvas.addEventListener("mousemove",e=>onMove(e.clientX),{passive:true});
+    canvas.addEventListener("touchmove",e=>onMove(e.touches[0].clientX),{passive:true});
+    // Animate
+    let t=0,animId;
+    (function tick(){
+      animId=requestAnimationFrame(tick);
+      _threeScenes.trophy={renderer,animId};
+      t+=.016;
+      if(!drag)group.rotation.y+=.009;
+      group.position.y=Math.sin(t*1.1)*.07;
+      star.rotation.y+=.04;star.rotation.x+=.025;
+      pt.intensity=2+Math.sin(t*2.8)*.5;
+      sparks.rotation.y+=.003;
+      renderer.render(scene,camera);
+    })();
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// THREE.JS: GLOBE 3D — Mundial 2026
+// ═══════════════════════════════════════════════════════════════
+function initGlobe3D(){
+  const canvas=document.getElementById("globe-canvas");
+  if(!canvas)return;
+  disposeThreeScene("globe");
+  loadThreeJS(THREE=>{
+    const W=Math.min(canvas.offsetWidth||320,380),H=210;
+    canvas.width=W;canvas.height=H;
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(38,W/H,0.1,100);
+    camera.position.set(0,0,3.0);
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setClearColor(0,0);
+    // Lights
+    scene.add(new THREE.AmbientLight(0x223366,.9));
+    const sun=new THREE.DirectionalLight(0x88aaff,1.4);sun.position.set(5,3,5);scene.add(sun);
+    (()=>{const d2=new THREE.DirectionalLight(0x2244cc,.4);d2.position.set(-4,-2,-4);scene.add(d2);})();
+    // Ocean globe
+    const globe=new THREE.Mesh(new THREE.SphereGeometry(1,56,56),
+      new THREE.MeshStandardMaterial({color:0x0d2a52,metalness:.1,roughness:.8}));
+    scene.add(globe);
+    // Continents — small flat patches at real positions
+    const landMat=new THREE.MeshStandardMaterial({color:0x2d6a3f,roughness:.9,metalness:0});
+    // [lat, lon, size] — realistic continent approximations
+    const lands=[
+      // North America
+      [55,-100,.14],[45,-90,.12],[38,-95,.11],[50,-120,.09],[30,-105,.10],
+      [20,-99,.09],[15,-86,.07],[25,-80,.08],
+      // South America
+      [-5,-57,.13],[-10,-50,.12],[5,-55,.10],[-20,-48,.11],[-30,-53,.10],[-40,-65,.09],
+      // Europe
+      [50,10,.09],[55,20,.08],[47,15,.09],[60,25,.08],[45,5,.08],[40,-3,.08],
+      // Africa
+      [15,25,.12],[5,20,.12],[-5,28,.11],[-15,30,.10],[0,15,.10],[30,28,.09],
+      // Asia
+      [55,85,.13],[45,80,.12],[35,105,.12],[60,110,.11],[30,75,.11],[25,88,.10],[40,55,.10],
+      // Australia
+      [-25,135,.12],[-32,142,.10],[-20,125,.09],
+      // Antarctica (small)
+      [-85,0,.08],[-85,90,.07],[-85,180,.07],[-85,-90,.07],
+    ];
+    const ll2v=(lat,lon,r=1.005)=>{
+      const ph=(90-lat)*Math.PI/180,th=(lon+180)*Math.PI/180;
+      return new THREE.Vector3(-r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));
+    };
+    lands.forEach(([lat,lon,sz])=>{
+      const m=new THREE.Mesh(new THREE.SphereGeometry(sz,6,6),landMat);
+      m.position.copy(ll2v(lat,lon));
+      globe.add(m); // attach to globe so they rotate together
+    });
+    // Atmosphere
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.10,32,32),
+      new THREE.MeshStandardMaterial({color:0x1a55cc,transparent:true,opacity:.10,side:THREE.BackSide})));
+    // Sedes 2026
+    const sedeData=[
+      {lat:20.7,lon:-103.4,col:0xff3300,name:"GDL"},
+      {lat:25.7,lon:-100.3,col:0xff3300,name:"MTY"},
+      {lat:32.8,lon:-96.8, col:0x0055ff,name:"DAL"},
+      {lat:34.0,lon:-118.2,col:0x0055ff,name:"LAX"},
+      {lat:40.7,lon:-74.0, col:0x0055ff,name:"NYC"},
+      {lat:43.7,lon:-79.4, col:0xff0000,name:"TOR"},
+      {lat:49.3,lon:-123.1,col:0xff0000,name:"VAN"},
+    ];
+    const rings=[];
+    sedeData.forEach(({lat,lon,col})=>{
+      const pos=ll2v(lat,lon,1.02);
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(.038,8,8),
+        new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.9}));
+      dot.position.copy(pos);globe.add(dot);
+      const rMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.7,side:THREE.DoubleSide});
+      const ring=new THREE.Mesh(new THREE.RingGeometry(.04,.08,20),rMat);
+      ring.position.copy(pos);ring.lookAt(0,0,0);
+      scene.add(ring);
+      rings.push({ring,rMat,phase:Math.random()*Math.PI*2,pos,lat,lon});
+    });
+    // Stars
+    const sp=new Float32Array(400*3);
+    for(let i=0;i<400;i++){const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(7+Math.random()*4);sp[i*3]=v.x;sp[i*3+1]=v.y;sp[i*3+2]=v.z;}
+    scene.add(new THREE.Points((()=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(sp,3));return g;})(),
+      new THREE.PointsMaterial({color:0xffffff,size:.03,transparent:true,opacity:.5})));
+    // Drag with inertia
+    let drag=false,lx=0,vel=0;
+    const onDown=x=>{drag=true;lx=x;vel=0;};
+    const onUp=()=>{drag=false;};
+    const onMove=x=>{if(!drag)return;const dx=(x-lx)*.007;vel=dx;globe.rotation.y+=dx;lx=x;};
+    canvas.addEventListener("mousedown",e=>onDown(e.clientX),{passive:true});
+    canvas.addEventListener("touchstart",e=>onDown(e.touches[0].clientX),{passive:true});
+    window.addEventListener("mouseup",onUp);window.addEventListener("touchend",onUp);
+    canvas.addEventListener("mousemove",e=>onMove(e.clientX),{passive:true});
+    canvas.addEventListener("touchmove",e=>onMove(e.touches[0].clientX),{passive:true});
+    // Rings update when globe rotates
+    let t=0,animId;
+    (function tick(){
+      animId=requestAnimationFrame(tick);
+      _threeScenes.globe={renderer,animId};
+      t+=.016;
+      if(!drag){vel*=.95;globe.rotation.y+=.005+vel;}
+      // Update ring positions to match globe rotation
+      rings.forEach(({ring,rMat,phase,lat,lon},i)=>{
+        const ph=(90-lat)*Math.PI/180,th=(lon+180+globe.rotation.y*180/Math.PI)*Math.PI/180;
+        ring.position.set(-1.02*Math.sin(ph)*Math.cos(th),1.02*Math.cos(ph),1.02*Math.sin(ph)*Math.sin(th));
+        ring.lookAt(camera.position);
+        const sc=.7+.7*Math.abs(Math.sin(t*2+phase));
+        ring.scale.setScalar(sc);
+        rMat.opacity=.7*(1-Math.abs(Math.sin(t*2+phase))*.6);
+      });
+      renderer.render(scene,camera);
+    })();
+  });
+}
+
 
 // ── INIT ──
 loadPools();
