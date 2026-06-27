@@ -861,6 +861,61 @@ select,input{font-family:'Barlow',sans-serif;}
 .comp-pending{color:var(--text-d);}
 .comp-agree{color:var(--amber);font-size:12px;}
 
+
+/* ── NARRATOR BOX ── */
+#lb-narrator{
+  margin-bottom:16px;
+  border-radius:14px;
+  overflow:hidden;
+  display:none;
+}
+#lb-narrator.visible{display:block;}
+.narrator-card{
+  background:linear-gradient(135deg,rgba(245,158,11,.10),rgba(37,99,235,.08));
+  border:1px solid rgba(245,158,11,.3);
+  border-radius:14px;
+  padding:14px 16px;
+  position:relative;
+  overflow:hidden;
+}
+.narrator-card::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(245,158,11,.04),transparent);
+  animation:narratorShimmer 3s ease-in-out infinite;
+}
+@keyframes narratorShimmer{0%,100%{opacity:0}50%{opacity:1}}
+.narrator-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.narrator-mic{font-size:18px;flex-shrink:0;}
+.narrator-title{
+  font-family:"Bebas Neue",sans-serif;font-size:11px;
+  letter-spacing:2.5px;color:var(--amber);text-transform:uppercase;
+}
+.narrator-live{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);
+  border-radius:20px;padding:2px 8px;
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:9px;letter-spacing:1.5px;color:#f87171;margin-left:auto;
+  flex-shrink:0;
+}
+.narrator-live-dot{width:5px;height:5px;border-radius:50%;background:#ef4444;animation:pulse 1.2s ease-in-out infinite;display:inline-block;}
+.narrator-msg{
+  font-family:"Barlow Condensed",sans-serif;font-weight:800;
+  font-size:16px;color:var(--text);letter-spacing:.3px;line-height:1.35;
+}
+.narrator-msg.highlight{color:var(--amber);}
+.narrator-sub{
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;
+  font-size:11px;color:var(--text-m);margin-top:8px;
+  border-top:1px solid rgba(255,255,255,.06);padding-top:6px;
+}
+.narrator-msgs{display:flex;flex-direction:column;gap:4px;}
+.narrator-separator{
+  width:30px;height:2px;background:rgba(245,158,11,.4);
+  border-radius:1px;margin:2px 0;
+}
 /* ── NARRADOR ── */
 #narrador-banner{
   display:none;
@@ -1992,6 +2047,7 @@ select,input{font-family:'Barlow',sans-serif;}
     <!-- CLASIFICACIÓN -->
     <div id="tab-leaderboard" style="display:none;">
       <div id="podio-3d"></div>
+      <div id="lb-narrator"></div>
       <div class="unpaid-notice">
         <div class="unpaid-notice-icon">⚠️</div>
         <div class="unpaid-notice-body">
@@ -2293,7 +2349,7 @@ async function loadPools(){
       if(p.id===active.id) opt.selected=true;
       sel.appendChild(opt);
     });
-    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;narratorShown=false;ganadoresLoaded=false;mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_allMundialMatches=null;_matchView="partidos";loadPoolData();});
+    sel.addEventListener("change",()=>{currentPool=pools.find(p=>p.id===sel.value);expandedEntries={};historialLoaded=false;generalStatsLoaded=false;narratorShown=false;ganadoresLoaded=false;mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_allMundialMatches=null;_prevLbSnapshot=null;_matchView="partidos";loadPoolData();});
     currentPool=active;
     loadPoolData();
   }catch(e){showError(e.message);showLoader(false);}
@@ -2386,7 +2442,7 @@ function render(silent=false){
   document.getElementById("pool-info").innerHTML=`<h2 class="pool-name${silent?"":" fu"}">${poolName}</h2>${poolMeta?`<div class="pool-meta">${poolMeta}</div>`:""}${dateRangeHTML}`;
   renderKPIs();renderPaymentStatusBar();renderMatches();renderLeaderboard();
   updateMundialTab();
-  mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_allMundialMatches=null;_matchView="partidos"; // reset on pool change
+  mundialGroupsLoaded=false;fixtureLoaded=false;bracketLoaded=false;_allMundialMatches=null;_prevLbSnapshot=null;_matchView="partidos"; // reset on pool change
   const activeTab=document.querySelector(".tab-btn.active")?.dataset.tab;
   if(activeTab==="stats") renderCharts();
   if(!silent) setTimeout(checkDirectLink, 300);
@@ -2472,11 +2528,11 @@ const TEAM_LOGO_MAP = {
   'belgica':                 'img/mundial2026/belgica.png',
   'belgium':                 'img/mundial2026/belgica.png',
   'belgique':                'img/mundial2026/belgica.png',
-  'bosnia y herzegovina':    'img/mundial2026/bosniayherzegovina.png',
-  'bosnia':                  'img/mundial2026/bosniayherzegovina.png',
-  'bosnia herzegovina':      'img/mundial2026/bosniayherzegovina.png',
-  'bosniayherzeegovina':     'img/mundial2026/bosniayherzegovina.png',
-  'bosniaherzegovina':       'img/mundial2026/bosniayherzegovina.png',
+  'bosnia y herzegovina':    'img/mundial2026/bosniayherzeegovina.png',
+  'bosnia':                  'img/mundial2026/bosniayherzeegovina.png',
+  'bosnia herzegovina':      'img/mundial2026/bosniayherzeegovina.png',
+  'bosniayherzeegovina':     'img/mundial2026/bosniayherzeegovina.png',
+  'bosniaherzegovina':       'img/mundial2026/bosniayherzeegovina.png',
   'brasil':                  'img/mundial2026/brasil.png',
   'brazil':                  'img/mundial2026/brasil.png',
   'cabo verde':              'img/mundial2026/cabo-verde.png',
@@ -2705,7 +2761,8 @@ function renderLeaderboard(){
   // Render 3D podio when jornada done & >=3 paid participants
   renderPodio3D(leaderboard, completed, jornadaFinalizada, maxH);
   // Narrador — solo cuando cambia de tab (no en búsquedas)
-  if(!searchQuery&&!narratorShown&&completed>0){narratorShown=true;showNarrador(leaderboard,completed,jornadaFinalizada,maxH);}
+  // Narrator updates on every render (tracks rank changes)
+  if(!searchQuery&&completed>0) renderNarratorBox(leaderboard,completed,jornadaFinalizada,maxH);
   const q=searchQuery.toLowerCase();
   const filtered=q?leaderboard.filter(p=>p.displayName.toLowerCase().includes(q)||p.displayArea.toLowerCase().includes(q)):leaderboard;
   const lbEl=document.getElementById("lb-rows");
@@ -4895,39 +4952,115 @@ try{if(localStorage.getItem("qa_install_dismissed")==="1"){const ibw=document.ge
 // ══════════════════════════════════════════════════════════
 let narratorShown=false;
 function showNarrador(leaderboard,completed,jornadaFinalizada,maxH){
-  if(!completed||leaderboard.length===0) return;
-  const el=document.getElementById("narrador-banner");
-  if(!el) return;
-  const paidLb=leaderboard.filter(p=>p.paid);
-  const leader=paidLb[0];
-  if(!leader) return;
-  const name=leader.displayName.split(" ")[0];
-  const isTied=paidLb.filter(p=>p.aciertos===maxH&&p.paid).length>1;
-  let msg="",sub="";
-  if(jornadaFinalizada){
-    if(isTied){
-      const winners=paidLb.filter(p=>p.aciertos===maxH&&p.paid).map(p=>p.displayName.split(" ")[0]).join(" y ");
-      msg=`🏆 ¡EMPATE HISTÓRICO! ${winners} comparten la victoria`;
-      sub=`${maxH} aciertos cada uno — la bolsa se reparte`;
-    } else {
-      const phrases=["¡CAMPEÓN DE LA JORNADA","¡EL GRANDE","¡VICTORIA TOTAL"];
-      msg=`${phrases[Math.floor(Math.random()*phrases.length)]}! ${name} se lleva todo`;
-      sub=`${maxH} aciertos · ¡Felicidades ${leader.displayName}!`;
+  // Keep old banner for backward compat — now just calls renderNarratorBox
+  renderNarratorBox(leaderboard,completed,jornadaFinalizada,maxH);
+}
+
+// ── NARRATOR BOX — renders inside Clasificación tab ──
+let _prevLbSnapshot=null; // to detect rank changes
+function renderNarratorBox(lb,completed,jornadaDone,maxH){
+  const el=document.getElementById("lb-narrator");
+  if(!el||!completed||!lb.length) return;
+  const paid=lb.filter(p=>p.paid);
+  if(!paid.length){el.classList.remove("visible");return;}
+  const totalM=(lb[0]&&lb[0].details&&lb[0].details.length)||matches.length||24;
+  const leader=paid[0];
+  const L=n=>n.split(" ")[0]; // first name only
+  const msgs=[];
+
+  if(jornadaDone){
+    // ── JORNADA FINISHED ──
+    const winners=paid.filter(p=>p.aciertos===maxH&&maxH>0);
+    if(winners.length===1){
+      msgs.push({t:`🏆 ¡¡CAMPEÓN DE LA JORNADA!!`,h:true});
+      msgs.push({t:`¡¡${L(leader.displayName)} LO LOGRÓ!! ${maxH} aciertos y se lleva TODO. ¡Felicidades crack!`,h:false});
+    } else if(winners.length===2){
+      const names=winners.map(w=>L(w.displayName)).join(" y ");
+      msgs.push({t:`🤝 ¡¡EMPATE ÉPICO EN LA CIMA!!`,h:true});
+      msgs.push({t:`¡${names} comparten el primer lugar con ${maxH} aciertos! ¡Increíble final!`,h:false});
+    } else if(winners.length>2){
+      const names=winners.map(w=>L(w.displayName)).slice(0,3).join(", ")+(winners.length>3?` y ${winners.length-3} más`:"");
+      msgs.push({t:`🤝 ¡¡EMPATE HISTÓRICO!!`,h:true});
+      msgs.push({t:`¡${names} se dividen la corona con ${maxH} aciertos! ¡Esto no se ve nunca!`,h:false});
     }
   } else {
-    const pct=completed>0?Math.round(leader.aciertos/completed*100):0;
-    const phrases=[
-      `${name} LIDERA con ${leader.aciertos} aciertos — ¡Va por todo!`,
-      `¡CUIDADO! ${name} va en primer lugar`,
-      `${name} DOMINA la jornada hasta ahora`,
+    // ── IN PROGRESS ──
+    // Detect rank changes vs previous snapshot
+    const rankChanges=[];
+    if(_prevLbSnapshot){
+      lb.forEach((p,newIdx)=>{
+        const prevIdx=_prevLbSnapshot.findIndex(x=>x.id===p.id);
+        if(prevIdx>=0&&prevIdx!==newIdx&&paid.includes(p)){
+          rankChanges.push({name:L(p.displayName),from:prevIdx+1,to:newIdx+1,hits:p.aciertos});
+        }
+      });
+    }
+
+    // Rank change messages (most dramatic first)
+    rankChanges.sort((a,b)=>a.to-b.to).slice(0,2).forEach(({name,from,to,hits})=>{
+      if(to===1&&from!==1){
+        msgs.push({t:`🔥 ¡¡${name} SUBE AL LIDERATO!! ¡A ${hits} aciertos y robando el trono!`,h:true});
+      } else if(to<=3&&from>3){
+        msgs.push({t:`📈 ¡${name} SE METE en el TOP ${to}! ¡${hits} aciertos y subiendo!`,h:false});
+      } else if(to>1&&from===1){
+        msgs.push({t:`😱 ¡${name} PIERDE el liderato! ¡Se le escapó!`,h:false});
+      } else if(to<from){
+        msgs.push({t:`⚡ ¡${name} sube del ${from}° al ${to}° con ${hits} aciertos!`,h:false});
+      }
+    });
+
+    // Current standings narration
+    const pct=totalM>0?Math.round(leader.aciertos/totalM*100):0;
+    const pos2=paid[1],pos3=paid[2];
+    const leaderPhrases=[
+      `🎙️ ¡NO TE PASES!! ¡${L(leader.displayName)} LIDERA con ${leader.aciertos} aciertos!`,
+      `🔥 ¡${L(leader.displayName)} está imparable! ${leader.aciertos} de ${totalM} ¡y contando!`,
+      `⚡ ¡Atención al marcador! ¡${L(leader.displayName)} manda y no da brazo a torcer!`,
+      `📢 ¡${L(leader.displayName)} AL FRENTE con ${leader.aciertos} correctas! ¿Quién lo para?`,
     ];
-    msg=phrases[Math.floor(Math.random()*phrases.length)];
-    sub=`${completed} de ${leaderboard[0]?.details?.length||"?"} partidos completados · ${pct}% de eficiencia`;
+    if(leader.aciertos>0) msgs.push({t:leaderPhrases[Math.floor(Date.now()/8000)%leaderPhrases.length],h:msgs.length===0});
+
+    if(pos2){
+      const diff=leader.aciertos-pos2.aciertos;
+      if(diff===0){
+        msgs.push({t:`😤 ¡${L(pos2.displayName)} EMPATADO en la cima! ¡Va a ser una noche larga!`,h:false});
+      } else if(diff===1){
+        msgs.push({t:`🎯 ¡${L(pos2.displayName)} a solo UN ACIERTO! ¡Esto está AL ROJO VIVO!`,h:false});
+      } else if(diff<=3){
+        msgs.push({t:`📊 ${L(pos2.displayName)} acecha desde el 2° lugar con ${pos2.aciertos} aciertos.`,h:false});
+      }
+    }
+
+    if(pos3&&pos3.aciertos>0){
+      const p3phrases=[
+        `🥉 ${L(pos3.displayName)} se mantiene firme en el TOP 3.`,
+        `💪 ${L(pos3.displayName)} no se rinde — ${pos3.aciertos} aciertos desde el 3er puesto.`,
+      ];
+      msgs.push({t:p3phrases[Math.floor(Date.now()/10000)%p3phrases.length],h:false});
+    }
   }
-  el.innerHTML=`<div>${msg}</div><div class="narrador-sub">${sub}</div>`;
-  el.classList.add("show");
-  setTimeout(()=>{el.classList.remove("show");setTimeout(()=>{el.style.display="none";},300);},4500);
-  el.style.display="block";
+
+  if(!msgs.length){el.classList.remove("visible");return;}
+  // Update snapshot
+  _prevLbSnapshot=lb.map(p=>({id:p.id,rank:lb.indexOf(p),aciertos:p.aciertos}));
+
+  const isLive=!jornadaDone&&completed>0;
+  el.innerHTML=`<div class="narrator-card">
+    <div class="narrator-header">
+      <span class="narrator-mic">🎙️</span>
+      <span class="narrator-title">Narrador de la Jornada</span>
+      ${isLive?`<span class="narrator-live"><span class="narrator-live-dot"></span>EN VIVO</span>`:`<span class="narrator-live" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#4ade80;"><span style="width:5px;height:5px;border-radius:50%;background:#22c55e;display:inline-block;"></span>FIN</span>`}
+    </div>
+    <div class="narrator-msgs">
+      ${msgs.map((m,i)=>`
+        ${i>0?'<div class="narrator-separator"></div>':''}
+        <div class="narrator-msg${m.h?' highlight':''}">
+          ${m.t}
+        </div>`).join("")}
+    </div>
+    <div class="narrator-sub">${completed}/${totalM} partidos · Máx. aciertos: ${maxH} · ${Math.round(completed/totalM*100)}% completado</div>
+  </div>`;
+  el.classList.add("visible");
 }
 
 // ══════════════════════════════════════════════════════════
@@ -6178,7 +6311,7 @@ function initGlobe3D(){
   if(!canvas)return;
   disposeThreeScene("globe");
   loadThreeJS(THREE=>{
-    const W=Math.min(canvas.offsetWidth||320,380),H=210;
+    const W=Math.min(canvas.offsetWidth||340,400),H=220;
     canvas.width=W;canvas.height=H;
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(38,W/H,0.1,100);
@@ -6186,103 +6319,183 @@ function initGlobe3D(){
     const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
     renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     renderer.setClearColor(0,0);
+
     // Lights
-    scene.add(new THREE.AmbientLight(0x223366,.9));
-    const sun=new THREE.DirectionalLight(0x88aaff,1.4);sun.position.set(5,3,5);scene.add(sun);
-    (()=>{const d2=new THREE.DirectionalLight(0x2244cc,.4);d2.position.set(-4,-2,-4);scene.add(d2);})();
-    // Ocean globe
-    const globe=new THREE.Mesh(new THREE.SphereGeometry(1,56,56),
-      new THREE.MeshStandardMaterial({color:0x0d2a52,metalness:.1,roughness:.8}));
+    scene.add(new THREE.AmbientLight(0x223366,1.0));
+    const sun=new THREE.DirectionalLight(0x88aaff,1.8);sun.position.set(5,3,5);scene.add(sun);
+    const rim=new THREE.DirectionalLight(0x2244cc,0.5);rim.position.set(-4,-2,-4);scene.add(rim);
+
+    // ── GLOBE GROUP (ocean + land rotate together) ──
+    const globe=new THREE.Group();
     scene.add(globe);
-    // Continents — small flat patches at real positions
-    const landMat=new THREE.MeshStandardMaterial({color:0x2d6a3f,roughness:.9,metalness:0});
-    // [lat, lon, size] — realistic continent approximations
-    const lands=[
-      // North America
-      [55,-100,.14],[45,-90,.12],[38,-95,.11],[50,-120,.09],[30,-105,.10],
-      [20,-99,.09],[15,-86,.07],[25,-80,.08],
-      // South America
-      [-5,-57,.13],[-10,-50,.12],[5,-55,.10],[-20,-48,.11],[-30,-53,.10],[-40,-65,.09],
-      // Europe
-      [50,10,.09],[55,20,.08],[47,15,.09],[60,25,.08],[45,5,.08],[40,-3,.08],
-      // Africa
-      [15,25,.12],[5,20,.12],[-5,28,.11],[-15,30,.10],[0,15,.10],[30,28,.09],
-      // Asia
-      [55,85,.13],[45,80,.12],[35,105,.12],[60,110,.11],[30,75,.11],[25,88,.10],[40,55,.10],
-      // Australia
-      [-25,135,.12],[-32,142,.10],[-20,125,.09],
-      // Antarctica (small)
-      [-85,0,.08],[-85,90,.07],[-85,180,.07],[-85,-90,.07],
-    ];
-    const ll2v=(lat,lon,r=1.005)=>{
+
+    // Ocean sphere
+    const ocean=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),
+      new THREE.MeshStandardMaterial({color:0x0d2a52,metalness:0.05,roughness:0.85}));
+    globe.add(ocean);
+
+    // ── CONTINENT MESH — merged BufferGeometry ──
+    const R=1.007; // slightly above sphere
+    const ll2v=(lat,lon)=>{
       const ph=(90-lat)*Math.PI/180,th=(lon+180)*Math.PI/180;
-      return new THREE.Vector3(-r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));
+      return[
+        -R*Math.sin(ph)*Math.cos(th),
+        R*Math.cos(ph),
+        R*Math.sin(ph)*Math.sin(th)
+      ];
     };
-    lands.forEach(([lat,lon,sz])=>{
-      const m=new THREE.Mesh(new THREE.SphereGeometry(sz,6,6),landMat);
-      m.position.copy(ll2v(lat,lon));
-      globe.add(m); // attach to globe so they rotate together
-    });
+
+    // Simplified isLand lookup (5° grid)
+    const isLand=(lat,lon)=>{
+      while(lon>180)lon-=360;while(lon<-180)lon+=360;
+      // North America
+      if(lat>=49&&lat<=73&&lon>=-141&&lon<=-53)return true;
+      if(lat>=25&&lat<=49&&lon>=-125&&lon<=-67)return true;
+      if(lat>=15&&lat<=30&&lon>=-120&&lon<=-85)return true;
+      if(lat>=7&&lat<=25&&lon>=-92&&lon<=-61)return true;
+      // Greenland
+      if(lat>=60&&lat<=84&&lon>=-56&&lon<=-16)return true;
+      // South America
+      if(lat>=-56&&lat<=12&&lon>=-82&&lon<=-34)return true;
+      // Europe
+      if(lat>=36&&lat<=71&&lon>=-12&&lon<=42)return true;
+      if(lat>=57&&lat<=72&&lon>=15&&lon<=32)return true; // Scandinavia
+      // Africa
+      if(lat>=-35&&lat<=38&&lon>=-18&&lon<=53)return true;
+      // Middle East
+      if(lat>=12&&lat<=42&&lon>=25&&lon<=62)return true;
+      // Asia main
+      if(lat>=0&&lat<=78&&lon>=60&&lon<=150)return true;
+      if(lat>=25&&lat<=78&&lon>=25&&lon<=60)return true;
+      // Southeast Asia
+      if(lat>=-10&&lat<=25&&lon>=95&&lon<=145)return true;
+      // Japan / Korean peninsula
+      if(lat>=24&&lat<=46&&lon>=124&&lon<=146)return true;
+      // Australia
+      if(lat>=-44&&lat<=-11&&lon>=113&&lon<=155)return true;
+      // New Zealand
+      if(lat>=-47&&lat<=-34&&lon>=166&&lon<=178)return true;
+      // Iceland
+      if(lat>=63&&lat<=67&&lon>=-25&&lon<=-13)return true;
+      // Antarctica
+      if(lat<=-70)return true;
+      return false;
+    }
+
+    // Build merged geometry — quad per 5° land tile
+    const verts=[];const idxs=[];let vi=0;
+    const STEP=5;
+    for(let lat=-85;lat<85;lat+=STEP){
+      for(let lon=-180;lon<180;lon+=STEP){
+        if(!isLand(lat+STEP/2,lon+STEP/2))continue;
+        const corners=[ll2v(lat,lon),ll2v(lat+STEP,lon),ll2v(lat+STEP,lon+STEP),ll2v(lat,lon+STEP)];
+        corners.forEach(v=>{verts.push(...v);});
+        idxs.push(vi,vi+1,vi+2,vi,vi+2,vi+3);
+        vi+=4;
+      }
+    }
+    const landGeo=new THREE.BufferGeometry();
+    landGeo.setAttribute("position",new THREE.BufferAttribute(new Float32Array(verts),3));
+    landGeo.setIndex(idxs);
+    landGeo.computeVertexNormals();
+    const land=new THREE.Mesh(landGeo,
+      new THREE.MeshStandardMaterial({color:0x2d6a3f,roughness:0.95,metalness:0.0,side:THREE.DoubleSide}));
+    globe.add(land);
+
+    // Graticule lines (lat/lon grid) — subtle
+    const lineMat=new THREE.LineBasicMaterial({color:0x1a3a7a,transparent:true,opacity:0.4});
+    for(let lo=-180;lo<180;lo+=30){
+      const pts=[];
+      for(let la=-90;la<=90;la+=3){const v=ll2v(la,lo);pts.push(new THREE.Vector3(...v));}
+      globe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+    }
+    for(let la=-60;la<=60;la+=30){
+      const pts=[];
+      for(let lo=-180;lo<=180;lo+=3){const v=ll2v(la,lo);pts.push(new THREE.Vector3(...v));}
+      globe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+    }
+    // Equator — brighter
+    const eqPts=[];for(let lo=-180;lo<=180;lo+=2){eqPts.push(new THREE.Vector3(...ll2v(0,lo)));}
+    globe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(eqPts),
+      new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:0.6})));
+
     // Atmosphere
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.10,32,32),
-      new THREE.MeshStandardMaterial({color:0x1a55cc,transparent:true,opacity:.10,side:THREE.BackSide})));
-    // Sedes 2026
-    const sedeData=[
-      {lat:20.7,lon:-103.4,col:0xff3300,name:"GDL"},
-      {lat:25.7,lon:-100.3,col:0xff3300,name:"MTY"},
-      {lat:32.8,lon:-96.8, col:0x0055ff,name:"DAL"},
-      {lat:34.0,lon:-118.2,col:0x0055ff,name:"LAX"},
-      {lat:40.7,lon:-74.0, col:0x0055ff,name:"NYC"},
-      {lat:43.7,lon:-79.4, col:0xff0000,name:"TOR"},
-      {lat:49.3,lon:-123.1,col:0xff0000,name:"VAN"},
+    globe.add(new THREE.Mesh(new THREE.SphereGeometry(1.10,32,32),
+      new THREE.MeshStandardMaterial({color:0x1a55cc,transparent:true,opacity:0.08,side:THREE.BackSide})));
+
+    // ── SEDE MARKERS (World Cup 2026 host cities) ──
+    const SEDES=[
+      {name:"México City",lat:19.4,lon:-99.1,col:0xff4400},
+      {name:"Guadalajara",lat:20.7,lon:-103.4,col:0xff4400},
+      {name:"Monterrey",lat:25.7,lon:-100.3,col:0xff4400},
+      {name:"Dallas",lat:32.8,lon:-96.8,col:0x0088ff},
+      {name:"Los Ángeles",lat:34.0,lon:-118.2,col:0x0088ff},
+      {name:"Nueva York",lat:40.7,lon:-74.0,col:0x0088ff},
+      {name:"San Francisco",lat:37.8,lon:-122.4,col:0x0088ff},
+      {name:"Seattle",lat:47.6,lon:-122.3,col:0x0088ff},
+      {name:"Atlanta",lat:33.7,lon:-84.4,col:0x0088ff},
+      {name:"Boston",lat:42.4,lon:-71.1,col:0x0088ff},
+      {name:"Kansas City",lat:39.1,lon:-94.6,col:0x0088ff},
+      {name:"Miami",lat:25.8,lon:-80.2,col:0x0088ff},
+      {name:"Toronto",lat:43.7,lon:-79.4,col:0xff3333},
+      {name:"Vancouver",lat:49.3,lon:-123.1,col:0xff3333},
     ];
     const rings=[];
-    sedeData.forEach(({lat,lon,col})=>{
-      const pos=ll2v(lat,lon,1.02);
-      const dot=new THREE.Mesh(new THREE.SphereGeometry(.038,8,8),
-        new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.9}));
-      dot.position.copy(pos);globe.add(dot);
-      const rMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.7,side:THREE.DoubleSide});
-      const ring=new THREE.Mesh(new THREE.RingGeometry(.04,.08,20),rMat);
-      ring.position.copy(pos);ring.lookAt(0,0,0);
+    SEDES.forEach(s=>{
+      const pos=new THREE.Vector3(...ll2v(s.lat,s.lon,1));
+      // Dot
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(0.022,8,8),
+        new THREE.MeshStandardMaterial({color:s.col,emissive:s.col,emissiveIntensity:0.9}));
+      dot.position.copy(pos.clone().multiplyScalar(1.025/R));
+      globe.add(dot);
+      // Ring (in scene, not globe, so it faces camera)
+      const rMat=new THREE.MeshBasicMaterial({color:s.col,transparent:true,opacity:0.7,side:THREE.DoubleSide});
+      const ring=new THREE.Mesh(new THREE.RingGeometry(0.03,0.055,20),rMat);
       scene.add(ring);
-      rings.push({ring,rMat,phase:Math.random()*Math.PI*2,pos,lat,lon});
+      rings.push({ring,rMat,lat:s.lat,lon:s.lon,phase:Math.random()*Math.PI*2});
     });
+
     // Stars
     const sp=new Float32Array(400*3);
     for(let i=0;i<400;i++){const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(7+Math.random()*4);sp[i*3]=v.x;sp[i*3+1]=v.y;sp[i*3+2]=v.z;}
-    scene.add(new THREE.Points((()=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(sp,3));return g;})(),
-      new THREE.PointsMaterial({color:0xffffff,size:.03,transparent:true,opacity:.5})));
-    // Drag with inertia
+    scene.add(new THREE.Points(new THREE.BufferGeometry().setAttribute("position",new THREE.BufferAttribute(sp,3)),
+      new THREE.PointsMaterial({color:0xffffff,size:0.028,transparent:true,opacity:0.5})));
+
+    // ── INTERACTION ──
     let drag=false,lx=0,vel=0;
     const onDown=x=>{drag=true;lx=x;vel=0;};
     const onUp=()=>{drag=false;};
-    const onMove=x=>{if(!drag)return;const dx=(x-lx)*.007;vel=dx;globe.rotation.y+=dx;lx=x;};
+    const onMove=x=>{if(!drag)return;const dx=(x-lx)*0.007;vel=dx;globe.rotation.y+=dx;lx=x;};
     canvas.addEventListener("mousedown",e=>onDown(e.clientX),{passive:true});
     canvas.addEventListener("touchstart",e=>onDown(e.touches[0].clientX),{passive:true});
     window.addEventListener("mouseup",onUp);window.addEventListener("touchend",onUp);
     canvas.addEventListener("mousemove",e=>onMove(e.clientX),{passive:true});
     canvas.addEventListener("touchmove",e=>onMove(e.touches[0].clientX),{passive:true});
-    // Rings update when globe rotates
+
+    // ── ANIMATE ──
     let t=0,animId;
+    const ll2pos=(lat,lon,gy)=>{
+      const ph=(90-lat)*Math.PI/180,th=(lon+180+gy*180/Math.PI)*Math.PI/180;
+      return new THREE.Vector3(-1.03*Math.sin(ph)*Math.cos(th),1.03*Math.cos(ph),1.03*Math.sin(ph)*Math.sin(th));
+    };
     (function tick(){
       animId=requestAnimationFrame(tick);
       _threeScenes.globe={renderer,animId};
-      t+=.016;
-      if(!drag){vel*=.95;globe.rotation.y+=.005+vel;}
+      t+=0.016;
+      if(!drag){vel*=0.96;globe.rotation.y+=0.005+vel;}
       // Update ring positions to match globe rotation
-      rings.forEach(({ring,rMat,phase,lat,lon},i)=>{
-        const ph=(90-lat)*Math.PI/180,th=(lon+180+globe.rotation.y*180/Math.PI)*Math.PI/180;
-        ring.position.set(-1.02*Math.sin(ph)*Math.cos(th),1.02*Math.cos(ph),1.02*Math.sin(ph)*Math.sin(th));
+      rings.forEach(({ring,rMat,lat,lon,phase})=>{
+        ring.position.copy(ll2pos(lat,lon,globe.rotation.y));
         ring.lookAt(camera.position);
-        const sc=.7+.7*Math.abs(Math.sin(t*2+phase));
+        const sc=0.8+0.7*Math.abs(Math.sin(t*2.2+phase));
         ring.scale.setScalar(sc);
-        rMat.opacity=.7*(1-Math.abs(Math.sin(t*2+phase))*.6);
+        rMat.opacity=0.8*(1-Math.abs(Math.sin(t*2.2+phase))*0.6);
       });
       renderer.render(scene,camera);
     })();
   });
 }
+
 
 
 // ── INIT ──
