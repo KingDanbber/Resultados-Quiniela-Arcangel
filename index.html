@@ -2528,11 +2528,11 @@ const TEAM_LOGO_MAP = {
   'belgica':                 'img/mundial2026/belgica.png',
   'belgium':                 'img/mundial2026/belgica.png',
   'belgique':                'img/mundial2026/belgica.png',
-  'bosnia y herzegovina':    'img/mundial2026/bosniayherzeegovina.png',
-  'bosnia':                  'img/mundial2026/bosniayherzeegovina.png',
-  'bosnia herzegovina':      'img/mundial2026/bosniayherzeegovina.png',
-  'bosniayherzeegovina':     'img/mundial2026/bosniayherzeegovina.png',
-  'bosniaherzegovina':       'img/mundial2026/bosniayherzeegovina.png',
+  'bosnia y herzegovina':    'img/mundial2026/bosniayherzegovina.png',
+  'bosnia':                  'img/mundial2026/bosniayherzegovina.png',
+  'bosnia herzegovina':      'img/mundial2026/bosniayherzegovina.png',
+  'bosniayherzeegovina':     'img/mundial2026/bosniayherzegovina.png',
+  'bosniaherzegovina':       'img/mundial2026/bosniayherzegovina.png',
   'brasil':                  'img/mundial2026/brasil.png',
   'brazil':                  'img/mundial2026/brasil.png',
   'cabo verde':              'img/mundial2026/cabo-verde.png',
@@ -6311,190 +6311,205 @@ function initGlobe3D(){
   if(!canvas)return;
   disposeThreeScene("globe");
   loadThreeJS(THREE=>{
-    const W=Math.min(canvas.offsetWidth||340,400),H=220;
+    const W=Math.min(canvas.offsetWidth||340,400),H=230;
     canvas.width=W;canvas.height=H;
     const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(38,W/H,0.1,100);
-    camera.position.set(0,0,3.0);
-    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
-    renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-    renderer.setClearColor(0,0);
+    const camera=new THREE.PerspectiveCamera(42,W/H,0.1,1000);
+    camera.position.set(0,0.15,3.6);
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:"high-performance"});
+    renderer.setSize(W,H);
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    // Set sRGB encoding (r128 API)
+    if(typeof THREE.sRGBEncoding!=="undefined"){
+      renderer.outputEncoding=THREE.sRGBEncoding;
+    }
+    renderer.setClearColor(0x000000,0);
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0x223366,1.0));
-    const sun=new THREE.DirectionalLight(0x88aaff,1.8);sun.position.set(5,3,5);scene.add(sun);
-    const rim=new THREE.DirectionalLight(0x2244cc,0.5);rim.position.set(-4,-2,-4);scene.add(rim);
+    // ── EARTH GROUP ──
+    const earthGroup=new THREE.Group();
+    scene.add(earthGroup);
 
-    // ── GLOBE GROUP (ocean + land rotate together) ──
-    const globe=new THREE.Group();
-    scene.add(globe);
-
-    // Ocean sphere
-    const ocean=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),
-      new THREE.MeshStandardMaterial({color:0x0d2a52,metalness:0.05,roughness:0.85}));
-    globe.add(ocean);
-
-    // ── CONTINENT MESH — merged BufferGeometry ──
-    const R=1.007; // slightly above sphere
-    const ll2v=(lat,lon)=>{
-      const ph=(90-lat)*Math.PI/180,th=(lon+180)*Math.PI/180;
-      return[
-        -R*Math.sin(ph)*Math.cos(th),
-        R*Math.cos(ph),
-        R*Math.sin(ph)*Math.sin(th)
-      ];
-    };
-
-    // Simplified isLand lookup (5° grid)
-    const isLand=(lat,lon)=>{
-      while(lon>180)lon-=360;while(lon<-180)lon+=360;
-      // North America
-      if(lat>=49&&lat<=73&&lon>=-141&&lon<=-53)return true;
-      if(lat>=25&&lat<=49&&lon>=-125&&lon<=-67)return true;
-      if(lat>=15&&lat<=30&&lon>=-120&&lon<=-85)return true;
-      if(lat>=7&&lat<=25&&lon>=-92&&lon<=-61)return true;
-      // Greenland
-      if(lat>=60&&lat<=84&&lon>=-56&&lon<=-16)return true;
-      // South America
-      if(lat>=-56&&lat<=12&&lon>=-82&&lon<=-34)return true;
-      // Europe
-      if(lat>=36&&lat<=71&&lon>=-12&&lon<=42)return true;
-      if(lat>=57&&lat<=72&&lon>=15&&lon<=32)return true; // Scandinavia
-      // Africa
-      if(lat>=-35&&lat<=38&&lon>=-18&&lon<=53)return true;
-      // Middle East
-      if(lat>=12&&lat<=42&&lon>=25&&lon<=62)return true;
-      // Asia main
-      if(lat>=0&&lat<=78&&lon>=60&&lon<=150)return true;
-      if(lat>=25&&lat<=78&&lon>=25&&lon<=60)return true;
-      // Southeast Asia
-      if(lat>=-10&&lat<=25&&lon>=95&&lon<=145)return true;
-      // Japan / Korean peninsula
-      if(lat>=24&&lat<=46&&lon>=124&&lon<=146)return true;
-      // Australia
-      if(lat>=-44&&lat<=-11&&lon>=113&&lon<=155)return true;
-      // New Zealand
-      if(lat>=-47&&lat<=-34&&lon>=166&&lon<=178)return true;
-      // Iceland
-      if(lat>=63&&lat<=67&&lon>=-25&&lon<=-13)return true;
-      // Antarctica
-      if(lat<=-70)return true;
-      return false;
+    // Load satellite textures from Three.js CDN
+    const loader=new THREE.TextureLoader();
+    const BASE="https://threejs.org/examples/textures/planets/";
+    const earthTex  =loader.load(BASE+"earth_atmos_2048.jpg");
+    const normalTex =loader.load(BASE+"earth_normal_2048.jpg");
+    const specularTex=loader.load(BASE+"earth_specular_2048.jpg");
+    const cloudTex  =loader.load(BASE+"earth_clouds_1024.png");
+    if(typeof THREE.sRGBEncoding!=="undefined"){
+      earthTex.encoding=THREE.sRGBEncoding;
+      cloudTex.encoding=THREE.sRGBEncoding;
     }
 
-    // Build merged geometry — quad per 5° land tile
-    const verts=[];const idxs=[];let vi=0;
-    const STEP=5;
-    for(let lat=-85;lat<85;lat+=STEP){
-      for(let lon=-180;lon<180;lon+=STEP){
-        if(!isLand(lat+STEP/2,lon+STEP/2))continue;
-        const corners=[ll2v(lat,lon),ll2v(lat+STEP,lon),ll2v(lat+STEP,lon+STEP),ll2v(lat,lon+STEP)];
-        corners.forEach(v=>{verts.push(...v);});
-        idxs.push(vi,vi+1,vi+2,vi,vi+2,vi+3);
-        vi+=4;
-      }
-    }
-    const landGeo=new THREE.BufferGeometry();
-    landGeo.setAttribute("position",new THREE.BufferAttribute(new Float32Array(verts),3));
-    landGeo.setIndex(idxs);
-    landGeo.computeVertexNormals();
-    const land=new THREE.Mesh(landGeo,
-      new THREE.MeshStandardMaterial({color:0x2d6a3f,roughness:0.95,metalness:0.0,side:THREE.DoubleSide}));
-    globe.add(land);
+    // ── EARTH ──
+    const earth=new THREE.Mesh(
+      new THREE.SphereGeometry(1,96,96),
+      new THREE.MeshPhongMaterial({
+        map:earthTex,
+        normalMap:normalTex,
+        normalScale:new THREE.Vector2(0.72,0.72),
+        specularMap:specularTex,
+        specular:new THREE.Color(0x224466),
+        shininess:20,
+      })
+    );
+    earth.rotation.y=-0.5;
+    earthGroup.add(earth);
 
-    // Graticule lines (lat/lon grid) — subtle
-    const lineMat=new THREE.LineBasicMaterial({color:0x1a3a7a,transparent:true,opacity:0.4});
-    for(let lo=-180;lo<180;lo+=30){
-      const pts=[];
-      for(let la=-90;la<=90;la+=3){const v=ll2v(la,lo);pts.push(new THREE.Vector3(...v));}
-      globe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
-    }
-    for(let la=-60;la<=60;la+=30){
-      const pts=[];
-      for(let lo=-180;lo<=180;lo+=3){const v=ll2v(la,lo);pts.push(new THREE.Vector3(...v));}
-      globe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
-    }
-    // Equator — brighter
-    const eqPts=[];for(let lo=-180;lo<=180;lo+=2){eqPts.push(new THREE.Vector3(...ll2v(0,lo)));}
-    globe.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(eqPts),
-      new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:0.6})));
+    // ── CLOUDS ──
+    const clouds=new THREE.Mesh(
+      new THREE.SphereGeometry(1.018,64,64),
+      new THREE.MeshPhongMaterial({
+        map:cloudTex,
+        transparent:true,
+        opacity:0.38,
+        depthWrite:false,
+        blending:THREE.AdditiveBlending,
+      })
+    );
+    clouds.rotation.y=-0.5;
+    earthGroup.add(clouds);
 
-    // Atmosphere
-    globe.add(new THREE.Mesh(new THREE.SphereGeometry(1.10,32,32),
-      new THREE.MeshStandardMaterial({color:0x1a55cc,transparent:true,opacity:0.08,side:THREE.BackSide})));
+    // ── ATMOSPHERE GLOW (Mie scattering shader) ──
+    earthGroup.add(new THREE.Mesh(
+      new THREE.SphereGeometry(1.14,64,64),
+      new THREE.ShaderMaterial({
+        transparent:true,
+        side:THREE.BackSide,
+        blending:THREE.AdditiveBlending,
+        depthWrite:false,
+        vertexShader:`
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          void main(){
+            vNormal=normalize(normalMatrix*normal);
+            vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
+            vViewPosition=-mvPosition.xyz;
+            gl_Position=projectionMatrix*mvPosition;
+          }`,
+        fragmentShader:`
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          void main(){
+            float intensity=pow(0.72-dot(vNormal,normalize(vViewPosition)),3.6);
+            gl_FragColor=vec4(0.12,0.52,1.0,intensity*0.75);
+          }`,
+      })
+    ));
 
-    // ── SEDE MARKERS (World Cup 2026 host cities) ──
+    // ── LIGHTS ──
+    scene.add(new THREE.AmbientLight(0x1d3557,0.22));
+    const sun=new THREE.DirectionalLight(0xffffff,2.3);
+    sun.position.set(5,2.5,5);
+    scene.add(sun);
+    const softLight=new THREE.DirectionalLight(0x4f8cff,0.26);
+    softLight.position.set(-5,-2,-4);
+    scene.add(softLight);
+
+    // ── SEDES MARKERS ──
     const SEDES=[
-      {name:"México City",lat:19.4,lon:-99.1,col:0xff4400},
-      {name:"Guadalajara",lat:20.7,lon:-103.4,col:0xff4400},
-      {name:"Monterrey",lat:25.7,lon:-100.3,col:0xff4400},
-      {name:"Dallas",lat:32.8,lon:-96.8,col:0x0088ff},
-      {name:"Los Ángeles",lat:34.0,lon:-118.2,col:0x0088ff},
-      {name:"Nueva York",lat:40.7,lon:-74.0,col:0x0088ff},
-      {name:"San Francisco",lat:37.8,lon:-122.4,col:0x0088ff},
-      {name:"Seattle",lat:47.6,lon:-122.3,col:0x0088ff},
-      {name:"Atlanta",lat:33.7,lon:-84.4,col:0x0088ff},
-      {name:"Boston",lat:42.4,lon:-71.1,col:0x0088ff},
-      {name:"Kansas City",lat:39.1,lon:-94.6,col:0x0088ff},
-      {name:"Miami",lat:25.8,lon:-80.2,col:0x0088ff},
-      {name:"Toronto",lat:43.7,lon:-79.4,col:0xff3333},
-      {name:"Vancouver",lat:49.3,lon:-123.1,col:0xff3333},
+      {lat:19.4,lon:-99.1, col:0xff4400},
+      {lat:20.7,lon:-103.4,col:0xff4400},
+      {lat:25.7,lon:-100.3,col:0xff4400},
+      {lat:32.8,lon:-96.8, col:0x0088ff},
+      {lat:34.0,lon:-118.2,col:0x0088ff},
+      {lat:40.7,lon:-74.0, col:0x0088ff},
+      {lat:37.8,lon:-122.4,col:0x0088ff},
+      {lat:47.6,lon:-122.3,col:0x0088ff},
+      {lat:33.7,lon:-84.4, col:0x0088ff},
+      {lat:42.4,lon:-71.1, col:0x0088ff},
+      {lat:39.1,lon:-94.6, col:0x0088ff},
+      {lat:25.8,lon:-80.2, col:0x0088ff},
+      {lat:43.7,lon:-79.4, col:0xff3333},
+      {lat:49.3,lon:-123.1,col:0xff3333},
     ];
+    const ll2v=(lat,lon,r)=>{
+      const ph=(90-lat)*Math.PI/180,th=(lon+180)*Math.PI/180;
+      return new THREE.Vector3(-r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));
+    };
     const rings=[];
     SEDES.forEach(s=>{
-      const pos=new THREE.Vector3(...ll2v(s.lat,s.lon,1));
-      // Dot
-      const dot=new THREE.Mesh(new THREE.SphereGeometry(0.022,8,8),
-        new THREE.MeshStandardMaterial({color:s.col,emissive:s.col,emissiveIntensity:0.9}));
-      dot.position.copy(pos.clone().multiplyScalar(1.025/R));
-      globe.add(dot);
-      // Ring (in scene, not globe, so it faces camera)
-      const rMat=new THREE.MeshBasicMaterial({color:s.col,transparent:true,opacity:0.7,side:THREE.DoubleSide});
-      const ring=new THREE.Mesh(new THREE.RingGeometry(0.03,0.055,20),rMat);
+      const pos=ll2v(s.lat,s.lon,1.025);
+      const dot=new THREE.Mesh(
+        new THREE.SphereGeometry(0.016,8,8),
+        new THREE.MeshStandardMaterial({color:s.col,emissive:s.col,emissiveIntensity:1.2})
+      );
+      dot.position.copy(pos);
+      earthGroup.add(dot);
+      const rMat=new THREE.MeshBasicMaterial({color:s.col,transparent:true,opacity:0.75,side:THREE.DoubleSide});
+      const ring=new THREE.Mesh(new THREE.RingGeometry(0.022,0.04,20),rMat);
       scene.add(ring);
       rings.push({ring,rMat,lat:s.lat,lon:s.lon,phase:Math.random()*Math.PI*2});
     });
 
-    // Stars
-    const sp=new Float32Array(400*3);
-    for(let i=0;i<400;i++){const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(7+Math.random()*4);sp[i*3]=v.x;sp[i*3+1]=v.y;sp[i*3+2]=v.z;}
-    scene.add(new THREE.Points(new THREE.BufferGeometry().setAttribute("position",new THREE.BufferAttribute(sp,3)),
-      new THREE.PointsMaterial({color:0xffffff,size:0.028,transparent:true,opacity:0.5})));
+    // ── STARS ──
+    const sp=new Float32Array(2000*3);
+    for(let i=0;i<2000;i++){
+      const r=35+Math.random()*80;
+      const theta=Math.random()*Math.PI*2;
+      const phi=Math.acos(2*Math.random()-1);
+      sp[i*3]=r*Math.sin(phi)*Math.cos(theta);
+      sp[i*3+1]=r*Math.cos(phi);
+      sp[i*3+2]=r*Math.sin(phi)*Math.sin(theta);
+    }
+    const starGeo=new THREE.BufferGeometry();
+    starGeo.setAttribute("position",new THREE.BufferAttribute(sp,3));
+    const starField=new THREE.Points(starGeo,
+      new THREE.PointsMaterial({color:0xffffff,size:0.08,transparent:true,opacity:0.85,sizeAttenuation:true}));
+    scene.add(starField);
 
-    // ── INTERACTION ──
-    let drag=false,lx=0,vel=0;
-    const onDown=x=>{drag=true;lx=x;vel=0;};
+    // ── DRAG CONTROLS ──
+    let drag=false,lx=0,ly=0,velX=0,velY=0;
+    const onDown=(x,y)=>{drag=true;lx=x;ly=y;velX=0;velY=0;};
     const onUp=()=>{drag=false;};
-    const onMove=x=>{if(!drag)return;const dx=(x-lx)*0.007;vel=dx;globe.rotation.y+=dx;lx=x;};
-    canvas.addEventListener("mousedown",e=>onDown(e.clientX),{passive:true});
-    canvas.addEventListener("touchstart",e=>onDown(e.touches[0].clientX),{passive:true});
+    const onMove=(x,y)=>{
+      if(!drag)return;
+      const dx=(x-lx)*0.007,dy=(y-ly)*0.004;
+      velX=dx;velY=dy;
+      earthGroup.rotation.y+=dx;
+      earthGroup.rotation.x=Math.max(-1.1,Math.min(1.1,earthGroup.rotation.x+dy));
+      lx=x;ly=y;
+    };
+    canvas.addEventListener("mousedown",e=>onDown(e.clientX,e.clientY),{passive:true});
+    canvas.addEventListener("touchstart",e=>onDown(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
     window.addEventListener("mouseup",onUp);window.addEventListener("touchend",onUp);
-    canvas.addEventListener("mousemove",e=>onMove(e.clientX),{passive:true});
-    canvas.addEventListener("touchmove",e=>onMove(e.touches[0].clientX),{passive:true});
+    canvas.addEventListener("mousemove",e=>onMove(e.clientX,e.clientY),{passive:true});
+    canvas.addEventListener("touchmove",e=>onMove(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
 
     // ── ANIMATE ──
-    let t=0,animId;
+    const clock=new THREE.Clock();
+    let animId;
     const ll2pos=(lat,lon,gy)=>{
       const ph=(90-lat)*Math.PI/180,th=(lon+180+gy*180/Math.PI)*Math.PI/180;
-      return new THREE.Vector3(-1.03*Math.sin(ph)*Math.cos(th),1.03*Math.cos(ph),1.03*Math.sin(ph)*Math.sin(th));
+      return new THREE.Vector3(-1.038*Math.sin(ph)*Math.cos(th),1.038*Math.cos(ph),1.038*Math.sin(ph)*Math.sin(th));
     };
+    let t=0;
     (function tick(){
       animId=requestAnimationFrame(tick);
       _threeScenes.globe={renderer,animId};
-      t+=0.016;
-      if(!drag){vel*=0.96;globe.rotation.y+=0.005+vel;}
-      // Update ring positions to match globe rotation
+      const delta=clock.getDelta();
+      t+=delta;
+      if(!drag){
+        velX*=0.92;velY*=0.92;
+        earthGroup.rotation.y+=0.0028+velX;
+        earthGroup.rotation.x=Math.max(-1.1,Math.min(1.1,earthGroup.rotation.x+velY));
+        // Clouds rotate slightly faster
+        clouds.rotation.y+=delta*0.02;
+      }
+      starField.rotation.y+=delta*0.001;
+      // Update sede rings
       rings.forEach(({ring,rMat,lat,lon,phase})=>{
-        ring.position.copy(ll2pos(lat,lon,globe.rotation.y));
+        ring.position.copy(ll2pos(lat,lon,earthGroup.rotation.y));
         ring.lookAt(camera.position);
         const sc=0.8+0.7*Math.abs(Math.sin(t*2.2+phase));
         ring.scale.setScalar(sc);
-        rMat.opacity=0.8*(1-Math.abs(Math.sin(t*2.2+phase))*0.6);
+        rMat.opacity=0.75*(1-Math.abs(Math.sin(t*2.2+phase))*0.6);
       });
       renderer.render(scene,camera);
     })();
   });
 }
+
 
 
 
