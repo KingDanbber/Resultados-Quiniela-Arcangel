@@ -1910,6 +1910,37 @@ select,input{font-family:'Barlow',sans-serif;}
   font-family:"Barlow Condensed",sans-serif;font-weight:700;
   font-size:11px;letter-spacing:1px;color:var(--text-m);
 }
+
+/* ── GLOBE VENUES PANEL ── */
+#globe-3d-wrap{position:relative;}
+#globe-venues-panel{
+  margin-bottom:14px;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  padding:2px 0 8px;
+}
+#globe-venues-panel::-webkit-scrollbar{display:none;}
+#globe-venues-list{
+  display:flex;gap:8px;padding:0 2px;width:max-content;
+}
+.gv-card{
+  background:var(--card2);border:1px solid var(--border-s);
+  border-radius:12px;padding:9px 12px;cursor:pointer;
+  transition:all .2s;display:flex;flex-direction:column;
+  gap:3px;min-width:130px;max-width:150px;flex-shrink:0;
+}
+.gv-card:hover,.gv-card.active{
+  border-color:rgba(251,191,36,.5);background:rgba(30,41,59,.9);transform:translateY(-2px);
+}
+.gv-card.active{border-color:#fbbf24;background:rgba(251,191,36,.08);}
+.gv-flag{font-size:16px;line-height:1;}
+.gv-city{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:12px;color:var(--text);line-height:1.2;}
+.gv-stadium{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:9px;color:var(--text-d);line-height:1.3;letter-spacing:.3px;}
+.gv-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:20px;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:8px;letter-spacing:.5px;margin-top:2px;width:fit-content;}
+.gv-badge.mx{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.2);}
+.gv-badge.us{background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.2);}
+.gv-badge.ca{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.2);}
+
 </style>
 </head>
 <body>
@@ -2762,7 +2793,7 @@ function renderLeaderboard(){
   renderPodio3D(leaderboard, completed, jornadaFinalizada, maxH);
   // Narrador — solo cuando cambia de tab (no en búsquedas)
   // Narrator updates on every render (tracks rank changes)
-  if(!searchQuery&&completed>0) renderNarratorBox(leaderboard,completed,jornadaFinalizada,maxH);
+  if(!searchQuery) renderNarratorBox(leaderboard,completed,jornadaFinalizada,maxH);
   const q=searchQuery.toLowerCase();
   const filtered=q?leaderboard.filter(p=>p.displayName.toLowerCase().includes(q)||p.displayArea.toLowerCase().includes(q)):leaderboard;
   const lbEl=document.getElementById("lb-rows");
@@ -4960,17 +4991,24 @@ function showNarrador(leaderboard,completed,jornadaFinalizada,maxH){
 let _prevLbSnapshot=null; // to detect rank changes
 function renderNarratorBox(lb,completed,jornadaDone,maxH){
   const el=document.getElementById("lb-narrator");
-  if(!el||!completed||!lb.length) return;
+  if(!el||!lb.length){if(el)el.classList.remove("visible");return;}
   const paid=lb.filter(p=>p.paid);
-  if(!paid.length){el.classList.remove("visible");return;}
+  const totalPaid=paid.length;
+  // Show narrator even with 0 completed — "awaiting results" mode
+  if(!totalPaid&&!completed){
+    // No confirmed participants and no results yet
+    el.classList.remove("visible");return;
+  }
   const totalM=(lb[0]&&lb[0].details&&lb[0].details.length)||matches.length||24;
-  const leader=paid[0];
+  const activeList=totalPaid>0?paid:lb.slice(0,Math.min(10,lb.length));
+  if(!activeList.length){el.classList.remove("visible");return;}
+  const leader=activeList[0];
   const L=n=>n.split(" ")[0]; // first name only
   const msgs=[];
 
   if(jornadaDone){
     // ── JORNADA FINISHED ──
-    const winners=paid.filter(p=>p.aciertos===maxH&&maxH>0);
+    const winners=activeList.filter(p=>p.aciertos===maxH&&maxH>0);
     if(winners.length===1){
       msgs.push({t:`🏆 ¡¡CAMPEÓN DE LA JORNADA!!`,h:true});
       msgs.push({t:`¡¡${L(leader.displayName)} LO LOGRÓ!! ${maxH} aciertos y se lleva TODO. ¡Felicidades crack!`,h:false});
@@ -4996,6 +5034,13 @@ function renderNarratorBox(lb,completed,jornadaDone,maxH){
       });
     }
 
+    // AWAITING RESULTS — no matches played yet
+    if(completed===0){
+      const names=activeList.slice(0,3).map(p=>L(p.displayName)).join(", ");
+      msgs.push({t:`⏳ ¡Jornada ${totalPaid>0?"activa":"próxima"}! Esperando resultados...`,h:false});
+      if(activeList.length>0) msgs.push({t:`👥 ${activeList.length} participante${activeList.length>1?"s":""} en competencia. ¡Suerte a todos!`,h:false});
+      // Skip to render
+    } else {
     // Rank change messages (most dramatic first)
     rankChanges.sort((a,b)=>a.to-b.to).slice(0,2).forEach(({name,from,to,hits})=>{
       if(to===1&&from!==1){
@@ -5011,7 +5056,7 @@ function renderNarratorBox(lb,completed,jornadaDone,maxH){
 
     // Current standings narration
     const pct=totalM>0?Math.round(leader.aciertos/totalM*100):0;
-    const pos2=paid[1],pos3=paid[2];
+    const pos2=activeList[1],pos3=activeList[2];
     const leaderPhrases=[
       `🎙️ ¡NO TE PASES!! ¡${L(leader.displayName)} LIDERA con ${leader.aciertos} aciertos!`,
       `🔥 ¡${L(leader.displayName)} está imparable! ${leader.aciertos} de ${totalM} ¡y contando!`,
@@ -5040,11 +5085,12 @@ function renderNarratorBox(lb,completed,jornadaDone,maxH){
     }
   }
 
+  } // end else (completed > 0)
   if(!msgs.length){el.classList.remove("visible");return;}
   // Update snapshot
   _prevLbSnapshot=lb.map(p=>({id:p.id,rank:lb.indexOf(p),aciertos:p.aciertos}));
 
-  const isLive=!jornadaDone&&completed>0;
+  const isLive=!jornadaDone&&(completed>0||totalPaid>0);
   el.innerHTML=`<div class="narrator-card">
     <div class="narrator-header">
       <span class="narrator-mic">🎙️</span>
@@ -6035,16 +6081,12 @@ async function loadMundialGroups(){
 
     const headerHTML=`
       <div id="globe-3d-wrap">
-        <canvas id="globe-canvas" width="320" height="200"></canvas>
-        <div class="globe-seats">
-          <span class="globe-seat">🇲🇽 Guadalajara</span>
-          <span class="globe-seat">🇲🇽 Monterrey</span>
-          <span class="globe-seat">🇺🇸 Dallas</span>
-          <span class="globe-seat">🇺🇸 Los Ángeles</span>
-          <span class="globe-seat">🇺🇸 Nueva York</span>
-          <span class="globe-seat">🇨🇦 Toronto</span>
-          <span class="globe-seat">🇨🇦 Vancouver</span>
-        </div>
+        <canvas id="globe-canvas" width="340" height="240"></canvas>
+        <div id="globe-active-city" style="position:absolute;bottom:50px;left:50%;transform:translateX(-50%);background:rgba(2,6,23,.82);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:6px 14px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;color:#fde68a;letter-spacing:1px;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;backdrop-filter:blur(8px);"></div>
+      </div>
+      <!-- SEDES PANEL -->
+      <div id="globe-venues-panel">
+        <div id="globe-venues-list"></div>
       </div>
       <div class="mundial-header">
         <div>
@@ -6310,155 +6352,179 @@ function initGlobe3D(){
   const canvas=document.getElementById("globe-canvas");
   if(!canvas)return;
   disposeThreeScene("globe");
+
+  // ── 16 OFFICIAL VENUES ──
+  const VENUES=[
+    {city:"Toronto",        country:"Canadá",         code:"CA",flag:"🇨🇦",stadium:"BMO Field",               lat:43.6532,lon:-79.3832},
+    {city:"Vancouver",      country:"Canadá",         code:"CA",flag:"🇨🇦",stadium:"BC Place",                lat:49.2827,lon:-123.1207},
+    {city:"Seattle",        country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Lumen Field",             lat:47.6062,lon:-122.3321},
+    {city:"San Francisco",  country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Levi's Stadium",          lat:37.3541,lon:-121.9552},
+    {city:"Los Ángeles",    country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"SoFi Stadium",            lat:33.9535,lon:-118.3392},
+    {city:"Kansas City",    country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Arrowhead Stadium",       lat:39.0489,lon:-94.4839},
+    {city:"Dallas",         country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"AT&T Stadium",            lat:32.7473,lon:-97.0945},
+    {city:"Houston",        country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"NRG Stadium",             lat:29.6847,lon:-95.4107},
+    {city:"Atlanta",        country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Mercedes-Benz Stadium",  lat:33.7554,lon:-84.4009},
+    {city:"Miami",          country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Hard Rock Stadium",      lat:25.958,lon:-80.2389},
+    {city:"Boston",         country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Gillette Stadium",       lat:42.0909,lon:-71.2643},
+    {city:"Philadelphia",   country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"Lincoln Financial Field",lat:39.9008,lon:-75.1675},
+    {city:"Nueva York",     country:"Estados Unidos",  code:"US",flag:"🇺🇸",stadium:"MetLife Stadium",        lat:40.8135,lon:-74.0745},
+    {city:"Ciudad de México",country:"México",         code:"MX",flag:"🇲🇽",stadium:"Estadio Azteca",         lat:19.3029,lon:-99.1505},
+    {city:"Guadalajara",    country:"México",          code:"MX",flag:"🇲🇽",stadium:"Estadio Akron",          lat:20.6829,lon:-103.4623},
+    {city:"Monterrey",      country:"México",          code:"MX",flag:"🇲🇽",stadium:"Estadio BBVA",           lat:25.6692,lon:-100.2447},
+  ];
+  const COL={MX:0x22c55e,US:0x60a5fa,CA:0xef4444};
+
+  // Build venue cards
+  const vl=document.getElementById("globe-venues-list");
+  if(vl){
+    vl.innerHTML="";
+    VENUES.forEach((v,i)=>{
+      const cls=v.code.toLowerCase();
+      const card=document.createElement("div");
+      card.className="gv-card";card.id=`gvc-${i}`;
+      card.innerHTML=`<div class="gv-flag">${v.flag}</div><div class="gv-city">${v.city}</div><div class="gv-stadium">${v.stadium}</div><div class="gv-badge ${cls}">${v.country}</div>`;
+      card.onclick=()=>flyToVenue(i);
+      vl.appendChild(card);
+    });
+  }
+
   loadThreeJS(THREE=>{
-    const W=Math.min(canvas.offsetWidth||340,400),H=230;
+    const W=Math.min(canvas.offsetWidth||340,420),H=240;
     canvas.width=W;canvas.height=H;
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(42,W/H,0.1,1000);
-    camera.position.set(0,0.15,3.6);
+    camera.position.set(0,0.35,4.95);
     const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:"high-performance"});
-    renderer.setSize(W,H);
-    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-    // Set sRGB encoding (r128 API)
-    if(typeof THREE.sRGBEncoding!=="undefined"){
-      renderer.outputEncoding=THREE.sRGBEncoding;
-    }
-    renderer.setClearColor(0x000000,0);
+    renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    if(typeof THREE.sRGBEncoding!=="undefined") renderer.outputEncoding=THREE.sRGBEncoding;
+    renderer.setClearColor(0,0);
 
-    // ── EARTH GROUP ──
-    const earthGroup=new THREE.Group();
-    scene.add(earthGroup);
-
-    // Load satellite textures from Three.js CDN
-    const loader=new THREE.TextureLoader();
-    const BASE="https://threejs.org/examples/textures/planets/";
-    const earthTex  =loader.load(BASE+"earth_atmos_2048.jpg");
-    const normalTex =loader.load(BASE+"earth_normal_2048.jpg");
-    const specularTex=loader.load(BASE+"earth_specular_2048.jpg");
-    const cloudTex  =loader.load(BASE+"earth_clouds_1024.png");
-    if(typeof THREE.sRGBEncoding!=="undefined"){
-      earthTex.encoding=THREE.sRGBEncoding;
-      cloudTex.encoding=THREE.sRGBEncoding;
-    }
-
-    // ── EARTH ──
-    const earth=new THREE.Mesh(
-      new THREE.SphereGeometry(1,96,96),
-      new THREE.MeshPhongMaterial({
-        map:earthTex,
-        normalMap:normalTex,
-        normalScale:new THREE.Vector2(0.72,0.72),
-        specularMap:specularTex,
-        specular:new THREE.Color(0x224466),
-        shininess:20,
-      })
-    );
-    earth.rotation.y=-0.5;
-    earthGroup.add(earth);
-
-    // ── CLOUDS ──
-    const clouds=new THREE.Mesh(
-      new THREE.SphereGeometry(1.018,64,64),
-      new THREE.MeshPhongMaterial({
-        map:cloudTex,
-        transparent:true,
-        opacity:0.38,
-        depthWrite:false,
-        blending:THREE.AdditiveBlending,
-      })
-    );
-    clouds.rotation.y=-0.5;
-    earthGroup.add(clouds);
-
-    // ── ATMOSPHERE GLOW (Mie scattering shader) ──
-    earthGroup.add(new THREE.Mesh(
-      new THREE.SphereGeometry(1.14,64,64),
-      new THREE.ShaderMaterial({
-        transparent:true,
-        side:THREE.BackSide,
-        blending:THREE.AdditiveBlending,
-        depthWrite:false,
-        vertexShader:`
-          varying vec3 vNormal;
-          varying vec3 vViewPosition;
-          void main(){
-            vNormal=normalize(normalMatrix*normal);
-            vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
-            vViewPosition=-mvPosition.xyz;
-            gl_Position=projectionMatrix*mvPosition;
-          }`,
-        fragmentShader:`
-          varying vec3 vNormal;
-          varying vec3 vViewPosition;
-          void main(){
-            float intensity=pow(0.72-dot(vNormal,normalize(vViewPosition)),3.6);
-            gl_FragColor=vec4(0.12,0.52,1.0,intensity*0.75);
-          }`,
-      })
-    ));
+    const root=new THREE.Group();scene.add(root);
 
     // ── LIGHTS ──
     scene.add(new THREE.AmbientLight(0x1d3557,0.22));
-    const sun=new THREE.DirectionalLight(0xffffff,2.3);
-    sun.position.set(5,2.5,5);
-    scene.add(sun);
-    const softLight=new THREE.DirectionalLight(0x4f8cff,0.26);
-    softLight.position.set(-5,-2,-4);
-    scene.add(softLight);
+    const sun=new THREE.DirectionalLight(0xffffff,2.45);sun.position.set(5,2.5,5);scene.add(sun);
+    const rimLight=new THREE.DirectionalLight(0x4f8cff,0.32);rimLight.position.set(-5,-2,-4);scene.add(rimLight);
 
-    // ── SEDES MARKERS ──
-    const SEDES=[
-      {lat:19.4,lon:-99.1, col:0xff4400},
-      {lat:20.7,lon:-103.4,col:0xff4400},
-      {lat:25.7,lon:-100.3,col:0xff4400},
-      {lat:32.8,lon:-96.8, col:0x0088ff},
-      {lat:34.0,lon:-118.2,col:0x0088ff},
-      {lat:40.7,lon:-74.0, col:0x0088ff},
-      {lat:37.8,lon:-122.4,col:0x0088ff},
-      {lat:47.6,lon:-122.3,col:0x0088ff},
-      {lat:33.7,lon:-84.4, col:0x0088ff},
-      {lat:42.4,lon:-71.1, col:0x0088ff},
-      {lat:39.1,lon:-94.6, col:0x0088ff},
-      {lat:25.8,lon:-80.2, col:0x0088ff},
-      {lat:43.7,lon:-79.4, col:0xff3333},
-      {lat:49.3,lon:-123.1,col:0xff3333},
-    ];
-    const ll2v=(lat,lon,r)=>{
-      const ph=(90-lat)*Math.PI/180,th=(lon+180)*Math.PI/180;
-      return new THREE.Vector3(-r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));
-    };
-    const rings=[];
-    SEDES.forEach(s=>{
-      const pos=ll2v(s.lat,s.lon,1.025);
-      const dot=new THREE.Mesh(
-        new THREE.SphereGeometry(0.016,8,8),
-        new THREE.MeshStandardMaterial({color:s.col,emissive:s.col,emissiveIntensity:1.2})
-      );
-      dot.position.copy(pos);
-      earthGroup.add(dot);
-      const rMat=new THREE.MeshBasicMaterial({color:s.col,transparent:true,opacity:0.75,side:THREE.DoubleSide});
-      const ring=new THREE.Mesh(new THREE.RingGeometry(0.022,0.04,20),rMat);
-      scene.add(ring);
-      rings.push({ring,rMat,lat:s.lat,lon:s.lon,phase:Math.random()*Math.PI*2});
-    });
+    // ── TEXTURES ──
+    const loader=new THREE.TextureLoader();
+    const BASE="https://threejs.org/examples/textures/planets/";
+    const earthTx=loader.load(BASE+"earth_atmos_2048.jpg");
+    const normalTx=loader.load(BASE+"earth_normal_2048.jpg");
+    const specTx=loader.load(BASE+"earth_specular_2048.jpg");
+    const cloudTx=loader.load(BASE+"earth_clouds_1024.png");
+    if(typeof THREE.sRGBEncoding!=="undefined"){earthTx.encoding=THREE.sRGBEncoding;cloudTx.encoding=THREE.sRGBEncoding;}
+
+    // ── EARTH ──
+    const earth=new THREE.Mesh(new THREE.SphereGeometry(1.5,96,96),
+      new THREE.MeshPhongMaterial({map:earthTx,normalMap:normalTx,normalScale:new THREE.Vector2(.75,.75),specularMap:specTx,specular:new THREE.Color(0x335577),shininess:22}));
+    root.add(earth);
+
+    // ── CLOUDS ──
+    const clouds=new THREE.Mesh(new THREE.SphereGeometry(1.525,96,96),
+      new THREE.MeshPhongMaterial({map:cloudTx,transparent:true,opacity:.33,depthWrite:false,blending:THREE.AdditiveBlending}));
+    root.add(clouds);
+
+    // ── ATMOSPHERE ──
+    root.add(new THREE.Mesh(new THREE.SphereGeometry(1.64,64,64),
+      new THREE.ShaderMaterial({transparent:true,side:THREE.BackSide,depthWrite:false,blending:THREE.AdditiveBlending,
+        vertexShader:"varying vec3 n;varying vec3 v;void main(){n=normalize(normalMatrix*normal);vec4 m=modelViewMatrix*vec4(position,1.0);v=-m.xyz;gl_Position=projectionMatrix*m;}",
+        fragmentShader:"varying vec3 n;varying vec3 v;void main(){float i=pow(.72-dot(n,normalize(v)),3.6);gl_FragColor=vec4(vec3(.12,.52,1.0),i*.72);}"})));
 
     // ── STARS ──
-    const sp=new Float32Array(2000*3);
-    for(let i=0;i<2000;i++){
-      const r=35+Math.random()*80;
-      const theta=Math.random()*Math.PI*2;
-      const phi=Math.acos(2*Math.random()-1);
-      sp[i*3]=r*Math.sin(phi)*Math.cos(theta);
-      sp[i*3+1]=r*Math.cos(phi);
-      sp[i*3+2]=r*Math.sin(phi)*Math.sin(theta);
+    const sp=new Float32Array(2300*3);
+    for(let i=0;i<2300;i++){
+      const r=40+Math.random()*120,t=Math.random()*Math.PI*2,f=Math.acos(2*Math.random()-1);
+      sp[i*3]=r*Math.sin(f)*Math.cos(t);sp[i*3+1]=r*Math.cos(f);sp[i*3+2]=r*Math.sin(f)*Math.sin(t);
     }
     const starGeo=new THREE.BufferGeometry();
     starGeo.setAttribute("position",new THREE.BufferAttribute(sp,3));
-    const starField=new THREE.Points(starGeo,
-      new THREE.PointsMaterial({color:0xffffff,size:0.08,transparent:true,opacity:0.85,sizeAttenuation:true}));
-    scene.add(starField);
+    const space=new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:.11,transparent:true,opacity:.84,sizeAttenuation:true}));
+    scene.add(space);
 
-    // ── DRAG CONTROLS ──
+    // ── HELPERS ──
+    const latLon=(lat,lon,r)=>{
+      const phi=(90-lat)*Math.PI/180,theta=(lon+180)*Math.PI/180;
+      return new THREE.Vector3(-(r*Math.sin(phi)*Math.cos(theta)),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
+    };
+    const glowTex=(hex)=>{
+      const cv=document.createElement("canvas");cv.width=cv.height=128;
+      const x=cv.getContext("2d");const col=new THREE.Color(hex);
+      const rgb=`${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)}`;
+      const g=x.createRadialGradient(64,64,4,64,64,64);
+      g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(.16,`rgba(${rgb},.98)`);
+      g.addColorStop(.46,`rgba(${rgb},.32)`);g.addColorStop(1,`rgba(${rgb},0)`);
+      x.fillStyle=g;x.fillRect(0,0,128,128);
+      return new THREE.CanvasTexture(cv);
+    };
+
+    // ── MARKERS ──
+    const markerRoot=new THREE.Group();root.add(markerRoot);
+    const markerGroups=[];
+    VENUES.forEach((v,i)=>{
+      const col=COL[v.code],g=new THREE.Group();
+      const normal=latLon(v.lat,v.lon,1).normalize();
+      g.position.copy(normal.clone().multiplyScalar(1.545));
+      g.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal));
+      // Stem
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,.18,10),
+        new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.9}));
+      stem.position.z=.08;stem.rotation.x=Math.PI/2;g.add(stem);
+      // Pin
+      const pin=new THREE.Mesh(new THREE.SphereGeometry(.03,18,18),new THREE.MeshBasicMaterial({color:col}));
+      pin.position.z=.2;g.add(pin);
+      // Glow sprite
+      const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(col),transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending}));
+      gl.position.z=.2;gl.scale.set(.28,.28,1);g.add(gl);
+      // Ring 1
+      const r1=new THREE.Mesh(new THREE.RingGeometry(.042,.06,44),
+        new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
+      r1.position.z=.2;g.add(r1);
+      // Ring 2
+      const r2=new THREE.Mesh(new THREE.RingGeometry(.055,.075,44),
+        new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.4,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
+      r2.position.z=.2;r2.scale.setScalar(1.42);g.add(r2);
+      g.userData={v,pin,gl,r1,r2};
+      markerRoot.add(g);markerGroups.push(g);
+    });
+
+    // ── ANIMATED ROUTES ──
+    const routeRoot=new THREE.Group();root.add(routeRoot);
+    const routeLines=[];
+    const makeArc=(a,b)=>{
+      const s=latLon(a.lat,a.lon,1.5).normalize(),e=latLon(b.lat,b.lon,1.5).normalize();
+      const angle=s.angleTo(e);const pts=[];
+      for(let i=0;i<=80;i++){
+        const t=i/80,d=s.clone().lerp(e,t).normalize();
+        const elev=1.56+Math.sin(Math.PI*t)*(.2+angle*.18);
+        pts.push(d.multiplyScalar(elev));
+      }
+      return pts;
+    };
+    for(let i=0;i<VENUES.length;i++){
+      const pts=makeArc(VENUES[i],VENUES[(i+1)%VENUES.length]);
+      const geo=new THREE.BufferGeometry().setFromPoints(pts);
+      const mat=new THREE.LineBasicMaterial({color:0xfbbf24,transparent:true,opacity:.45,blending:THREE.AdditiveBlending});
+      const line=new THREE.Line(geo,mat);
+      line.userData={total:pts.length,idx:i};
+      geo.setDrawRange(0,Math.max(2,Math.floor(pts.length*.12)));
+      routeRoot.add(line);routeLines.push(line);
+    }
+
+    // ── FLY-TO FUNCTION (exposed globally) ──
+    let selectedVenue=-1;
+    const activeCity=document.getElementById("globe-active-city");
+    window.flyToVenue=(idx)=>{
+      selectedVenue=idx;
+      document.querySelectorAll(".gv-card").forEach((c,i)=>c.classList.toggle("active",i===idx));
+      if(activeCity){activeCity.textContent=`${VENUES[idx].flag} ${VENUES[idx].city} · ${VENUES[idx].stadium}`;activeCity.style.opacity="1";}
+      setTimeout(()=>{if(selectedVenue===idx&&activeCity)activeCity.style.opacity="0";},3500);
+      // Scroll card into view
+      const card=document.getElementById(`gvc-${idx}`);
+      if(card)card.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    };
+
+    // ── INTERACTION ──
     let drag=false,lx=0,ly=0,velX=0,velY=0;
     const onDown=(x,y)=>{drag=true;lx=x;ly=y;velX=0;velY=0;};
     const onUp=()=>{drag=false;};
@@ -6466,8 +6532,8 @@ function initGlobe3D(){
       if(!drag)return;
       const dx=(x-lx)*0.007,dy=(y-ly)*0.004;
       velX=dx;velY=dy;
-      earthGroup.rotation.y+=dx;
-      earthGroup.rotation.x=Math.max(-1.1,Math.min(1.1,earthGroup.rotation.x+dy));
+      root.rotation.y+=dx;
+      root.rotation.x=Math.max(-1.1,Math.min(1.1,root.rotation.x+dy));
       lx=x;ly=y;
     };
     canvas.addEventListener("mousedown",e=>onDown(e.clientX,e.clientY),{passive:true});
@@ -6477,38 +6543,35 @@ function initGlobe3D(){
     canvas.addEventListener("touchmove",e=>onMove(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
 
     // ── ANIMATE ──
-    const clock=new THREE.Clock();
-    let animId;
-    const ll2pos=(lat,lon,gy)=>{
-      const ph=(90-lat)*Math.PI/180,th=(lon+180+gy*180/Math.PI)*Math.PI/180;
-      return new THREE.Vector3(-1.038*Math.sin(ph)*Math.cos(th),1.038*Math.cos(ph),1.038*Math.sin(ph)*Math.sin(th));
-    };
-    let t=0;
+    const clock=new THREE.Clock();let animId;
     (function tick(){
       animId=requestAnimationFrame(tick);
       _threeScenes.globe={renderer,animId};
-      const delta=clock.getDelta();
-      t+=delta;
-      if(!drag){
-        velX*=0.92;velY*=0.92;
-        earthGroup.rotation.y+=0.0028+velX;
-        earthGroup.rotation.x=Math.max(-1.1,Math.min(1.1,earthGroup.rotation.x+velY));
-        // Clouds rotate slightly faster
-        clouds.rotation.y+=delta*0.02;
-      }
-      starField.rotation.y+=delta*0.001;
-      // Update sede rings
-      rings.forEach(({ring,rMat,lat,lon,phase})=>{
-        ring.position.copy(ll2pos(lat,lon,earthGroup.rotation.y));
-        ring.lookAt(camera.position);
-        const sc=0.8+0.7*Math.abs(Math.sin(t*2.2+phase));
-        ring.scale.setScalar(sc);
-        rMat.opacity=0.75*(1-Math.abs(Math.sin(t*2.2+phase))*0.6);
+      const elapsed=clock.getElapsedTime(),delta=clock.getDelta();
+      if(!drag){velX*=0.93;velY*=0.93;root.rotation.y+=0.003+velX;root.rotation.x=Math.max(-1.1,Math.min(1.1,root.rotation.x+velY));}
+      clouds.rotation.y+=delta*0.018;
+      space.rotation.y+=delta*0.0015;
+      // Animate markers
+      markerGroups.forEach((m,i)=>{
+        const ph=elapsed*2.5+i*0.57;
+        const a=1+Math.sin(ph)*0.3,b=1.45+Math.sin(ph-1.1)*0.45;
+        m.userData.r1.scale.setScalar(a);
+        m.userData.r2.scale.setScalar(Math.max(.75,b));
+        m.userData.r1.material.opacity=0.36+(1-Math.abs(Math.sin(ph)))*0.5;
+        m.userData.r2.material.opacity=0.14+(1-Math.abs(Math.sin(ph-0.6)))*0.27;
+        m.userData.gl.material.opacity=0.66+Math.sin(ph*1.4)*0.2;
+      });
+      // Animate routes
+      routeLines.forEach((l,i)=>{
+        const total=l.userData.total,cycle=(elapsed*0.3+i*0.08)%1,visible=Math.max(3,Math.floor(total*0.32));
+        l.geometry.setDrawRange(Math.floor(cycle*total),visible);
+        l.material.opacity=0.28+Math.sin(elapsed*2+i)*0.12;
       });
       renderer.render(scene,camera);
     })();
   });
 }
+
 
 
 
