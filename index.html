@@ -906,6 +906,7 @@ select,input{font-family:'Barlow',sans-serif;}
   font-size:16px;color:var(--text);letter-spacing:.3px;line-height:1.35;
 }
 .narrator-msg.highlight{color:var(--amber);}
+.narrator-msg.warn{color:#ef4444;font-size:14px;}
 .narrator-sub{
   font-family:"Barlow Condensed",sans-serif;font-weight:600;
   font-size:11px;color:var(--text-m);margin-top:8px;
@@ -4993,104 +4994,134 @@ function renderNarratorBox(lb,completed,jornadaDone,maxH){
   const el=document.getElementById("lb-narrator");
   if(!el||!lb.length){if(el)el.classList.remove("visible");return;}
   const paid=lb.filter(p=>p.paid);
+  const pending=lb.filter(p=>!p.paid);
   const totalPaid=paid.length;
-  // Show narrator even with 0 completed — "awaiting results" mode
-  if(!totalPaid&&!completed){
-    // No confirmed participants and no results yet
-    el.classList.remove("visible");return;
-  }
+  const totalPending=pending.length;
+  const totalAll=lb.length;
+
   const totalM=(lb[0]&&lb[0].details&&lb[0].details.length)||matches.length||24;
-  const activeList=totalPaid>0?paid:lb.slice(0,Math.min(10,lb.length));
-  if(!activeList.length){el.classList.remove("visible");return;}
-  const leader=activeList[0];
-  const L=n=>n.split(" ")[0]; // first name only
+
+  // Lista activa para narración:
+  // jornada terminada → solo pagados (únicos elegibles)
+  // en progreso → TODOS (pendientes incluidos, marcados ⚠️ en los mensajes)
+  const activeList=jornadaDone
+    ?(totalPaid>0?paid:[])
+    :lb.slice(0,Math.min(10,lb.length));
+
+  const L=n=>n.split(" ")[0];
   const msgs=[];
 
   if(jornadaDone){
-    // ── JORNADA FINISHED ──
-    const winners=activeList.filter(p=>p.aciertos===maxH&&maxH>0);
-    if(winners.length===1){
-      msgs.push({t:`🏆 ¡¡CAMPEÓN DE LA JORNADA!!`,h:true});
-      msgs.push({t:`¡¡${L(leader.displayName)} LO LOGRÓ!! ${maxH} aciertos y se lleva TODO. ¡Felicidades crack!`,h:false});
-    } else if(winners.length===2){
-      const names=winners.map(w=>L(w.displayName)).join(" y ");
-      msgs.push({t:`🤝 ¡¡EMPATE ÉPICO EN LA CIMA!!`,h:true});
-      msgs.push({t:`¡${names} comparten el primer lugar con ${maxH} aciertos! ¡Increíble final!`,h:false});
-    } else if(winners.length>2){
-      const names=winners.map(w=>L(w.displayName)).slice(0,3).join(", ")+(winners.length>3?` y ${winners.length-3} más`:"");
-      msgs.push({t:`🤝 ¡¡EMPATE HISTÓRICO!!`,h:true});
-      msgs.push({t:`¡${names} se dividen la corona con ${maxH} aciertos! ¡Esto no se ve nunca!`,h:false});
+    // ── JORNADA TERMINADA ──
+    if(totalPaid===0){
+      // Nadie pagó → no hay ganador válido
+      msgs.push({t:`⚠️ ¡JORNADA FINALIZADA!`,h:true});
+      msgs.push({t:`No hay ganador válido: ningún boleto fue pagado. Solo los boletos pagados tienen derecho al premio.`,warn:true,h:false});
+    } else {
+      // Ganador(es) entre los PAGADOS únicamente
+      const paidMaxH=paid.reduce((mx,p)=>Math.max(mx,p.aciertos),0);
+      const winners=paid.filter(p=>p.aciertos===paidMaxH&&paidMaxH>0);
+      if(winners.length===1){
+        msgs.push({t:`🏆 ¡¡CAMPEÓN DE LA JORNADA!!`,h:true});
+        msgs.push({t:`¡¡${L(winners[0].displayName)} LO LOGRÓ!! ${paidMaxH} aciertos y se lleva TODO. ¡Felicidades crack!`,h:false});
+      } else if(winners.length===2){
+        const names=winners.map(w=>L(w.displayName)).join(" y ");
+        msgs.push({t:`🤝 ¡¡EMPATE ÉPICO EN LA CIMA!!`,h:true});
+        msgs.push({t:`¡${names} comparten el primer lugar con ${paidMaxH} aciertos! ¡Increíble final!`,h:false});
+      } else if(winners.length>2){
+        const names=winners.map(w=>L(w.displayName)).slice(0,3).join(", ")+(winners.length>3?` y ${winners.length-3} más`:"");
+        msgs.push({t:`🤝 ¡¡EMPATE HISTÓRICO!!`,h:true});
+        msgs.push({t:`¡${names} se dividen la corona con ${paidMaxH} aciertos! ¡Esto no se ve nunca!`,h:false});
+      }
+      if(totalPending>0){
+        msgs.push({t:`⚠️ ${totalPending} boleto${totalPending>1?"s":""} sin pagar no son válidos para el premio. El premio se otorga solo a los pagados.`,warn:true,h:false});
+      }
     }
   } else {
-    // ── IN PROGRESS ──
-    // Detect rank changes vs previous snapshot
+    // ── EN PROGRESO ── incluye TODOS (pagados + pendientes)
+    const pendBadge=(p)=>p.paid?"":" ⚠️";
+    const paidLeader=paid[0]; // líder entre los PAGADOS (puede diferir del líder general)
+
+    // Detectar cambios de posición (en todos, no solo pagados)
     const rankChanges=[];
     if(_prevLbSnapshot){
       lb.forEach((p,newIdx)=>{
         const prevIdx=_prevLbSnapshot.findIndex(x=>x.id===p.id);
-        if(prevIdx>=0&&prevIdx!==newIdx&&paid.includes(p)){
-          rankChanges.push({name:L(p.displayName),from:prevIdx+1,to:newIdx+1,hits:p.aciertos});
+        if(prevIdx>=0&&prevIdx!==newIdx){
+          rankChanges.push({name:L(p.displayName),from:prevIdx+1,to:newIdx+1,hits:p.aciertos,isPaid:p.paid});
         }
       });
     }
 
-    // AWAITING RESULTS — no matches played yet
+    // AWAITING RESULTS — no hay partidos jugados
     if(completed===0){
-      const names=activeList.slice(0,3).map(p=>L(p.displayName)).join(", ");
-      msgs.push({t:`⏳ ¡Jornada ${totalPaid>0?"activa":"próxima"}! Esperando resultados...`,h:false});
-      if(activeList.length>0) msgs.push({t:`👥 ${activeList.length} participante${activeList.length>1?"s":""} en competencia. ¡Suerte a todos!`,h:false});
-      // Skip to render
+      msgs.push({t:`⏳ ¡Jornada activa! Esperando el inicio de los partidos...`,h:false});
+      msgs.push({t:`👥 ${totalAll} participante${totalAll>1?"s":""} registrados · ${totalPaid>0?`${totalPaid} pagado${totalPaid>1?"s":""}`:totalPending>0?`0 pagados ⚠️`:""}. ¡Suerte a todos!`,h:false});
     } else {
-    // Rank change messages (most dramatic first)
-    rankChanges.sort((a,b)=>a.to-b.to).slice(0,2).forEach(({name,from,to,hits})=>{
-      if(to===1&&from!==1){
-        msgs.push({t:`🔥 ¡¡${name} SUBE AL LIDERATO!! ¡A ${hits} aciertos y robando el trono!`,h:true});
-      } else if(to<=3&&from>3){
-        msgs.push({t:`📈 ¡${name} SE METE en el TOP ${to}! ¡${hits} aciertos y subiendo!`,h:false});
-      } else if(to>1&&from===1){
-        msgs.push({t:`😱 ¡${name} PIERDE el liderato! ¡Se le escapó!`,h:false});
-      } else if(to<from){
-        msgs.push({t:`⚡ ¡${name} sube del ${from}° al ${to}° con ${hits} aciertos!`,h:false});
-      }
-    });
+      // Cambios de posición (más dramáticos primero)
+      rankChanges.sort((a,b)=>a.to-b.to).slice(0,2).forEach(({name,from,to,hits,isPaid})=>{
+        const pb=isPaid?"":" ⚠️";
+        if(to===1&&from!==1)  msgs.push({t:`🔥 ¡¡${name}${pb} SUBE AL LIDERATO!! ¡${hits} aciertos!`,h:true});
+        else if(to<=3&&from>3) msgs.push({t:`📈 ¡${name}${pb} SE METE en el TOP ${to}! ¡${hits} aciertos!`,h:false});
+        else if(to>1&&from===1) msgs.push({t:`😱 ¡${name} PIERDE el liderato!`,h:false});
+        else if(to<from)       msgs.push({t:`⚡ ¡${name}${pb} sube del ${from}° al ${to}° con ${hits} aciertos!`,h:false});
+      });
 
-    // Current standings narration
-    const pct=totalM>0?Math.round(leader.aciertos/totalM*100):0;
-    const pos2=activeList[1],pos3=activeList[2];
-    const leaderPhrases=[
-      `🎙️ ¡NO TE PASES!! ¡${L(leader.displayName)} LIDERA con ${leader.aciertos} aciertos!`,
-      `🔥 ¡${L(leader.displayName)} está imparable! ${leader.aciertos} de ${totalM} ¡y contando!`,
-      `⚡ ¡Atención al marcador! ¡${L(leader.displayName)} manda y no da brazo a torcer!`,
-      `📢 ¡${L(leader.displayName)} AL FRENTE con ${leader.aciertos} correctas! ¿Quién lo para?`,
-    ];
-    if(leader.aciertos>0) msgs.push({t:leaderPhrases[Math.floor(Date.now()/8000)%leaderPhrases.length],h:msgs.length===0});
+      // Narración del ranking actual (TODOS los participantes)
+      if(activeList.length>0){
+        const leader=activeList[0];
+        const pos2=activeList[1],pos3=activeList[2];
 
-    if(pos2){
-      const diff=leader.aciertos-pos2.aciertos;
-      if(diff===0){
-        msgs.push({t:`😤 ¡${L(pos2.displayName)} EMPATADO en la cima! ¡Va a ser una noche larga!`,h:false});
-      } else if(diff===1){
-        msgs.push({t:`🎯 ¡${L(pos2.displayName)} a solo UN ACIERTO! ¡Esto está AL ROJO VIVO!`,h:false});
-      } else if(diff<=3){
-        msgs.push({t:`📊 ${L(pos2.displayName)} acecha desde el 2° lugar con ${pos2.aciertos} aciertos.`,h:false});
+        // Frase del líder (incluye ⚠️ si es pendiente)
+        if(leader.aciertos>0){
+          const lp=[
+            `🎙️ ¡${L(leader.displayName)}${pendBadge(leader)} LIDERA con ${leader.aciertos} aciertos!`,
+            `🔥 ¡${L(leader.displayName)}${pendBadge(leader)} está imparable! ${leader.aciertos} de ${totalM} ¡y contando!`,
+            `📢 ¡${L(leader.displayName)}${pendBadge(leader)} AL FRENTE con ${leader.aciertos} correctas!`,
+          ];
+          msgs.push({t:lp[Math.floor(Date.now()/8000)%lp.length],h:msgs.length===0});
+        }
+
+        // Si el líder general NO está pagado, mostrar también quién lidera entre los VÁLIDOS
+        if(!leader.paid&&paidLeader&&paidLeader.aciertos>0){
+          msgs.push({t:`💰 Líder válido (pagado): ${L(paidLeader.displayName)} con ${paidLeader.aciertos} aciertos`,h:false});
+        }
+
+        // 2° lugar
+        if(pos2&&pos2.aciertos>0){
+          const diff=leader.aciertos-pos2.aciertos;
+          const p2b=pendBadge(pos2);
+          if(diff===0)       msgs.push({t:`😤 ¡${L(pos2.displayName)}${p2b} EMPATADO en la cima! ¡Va a ser una noche larga!`,h:false});
+          else if(diff===1)  msgs.push({t:`🎯 ¡${L(pos2.displayName)}${p2b} a solo UN ACIERTO del líder! ¡Rojo vivo!`,h:false});
+          else if(diff<=3)   msgs.push({t:`📊 ${L(pos2.displayName)}${p2b} acecha desde el 2° con ${pos2.aciertos} aciertos.`,h:false});
+        }
+
+        // 3° lugar
+        if(pos3&&pos3.aciertos>0){
+          const p3b=pendBadge(pos3);
+          const p3p=[`🥉 ${L(pos3.displayName)}${p3b} firme en el TOP 3.`,`💪 ${L(pos3.displayName)}${p3b} no se rinde — ${pos3.aciertos} aciertos.`];
+          msgs.push({t:p3p[Math.floor(Date.now()/10000)%p3p.length],h:false});
+        }
       }
     }
 
-    if(pos3&&pos3.aciertos>0){
-      const p3phrases=[
-        `🥉 ${L(pos3.displayName)} se mantiene firme en el TOP 3.`,
-        `💪 ${L(pos3.displayName)} no se rinde — ${pos3.aciertos} aciertos desde el 3er puesto.`,
-      ];
-      msgs.push({t:p3phrases[Math.floor(Date.now()/10000)%p3phrases.length],h:false});
+    // ── CONSEJO DE PAGO (siempre que haya pendientes) ──
+    if(totalPending>0){
+      if(totalPaid===0){
+        msgs.push({t:`⚠️ ¡NINGÚN boleto pagado! Sin pago, ningún premio es válido. ¡Paga antes del límite!`,warn:true,h:false});
+      } else if(totalPending>=totalPaid){
+        msgs.push({t:`⚠️ ${totalPending} boleto${totalPending>1?"s":""} sin pagar (marcados ⚠️). ¡Solo los pagados son válidos para el premio!`,warn:true,h:false});
+      } else {
+        msgs.push({t:`💳 ${totalPending} boleto${totalPending>1?"s":""} pendientes. ¡Paga para que tu premio sea válido!`,warn:true,h:false});
+      }
     }
-  }
+  } // end else (in progress)
 
-  } // end else (completed > 0)
   if(!msgs.length){el.classList.remove("visible");return;}
   // Update snapshot
   _prevLbSnapshot=lb.map(p=>({id:p.id,rank:lb.indexOf(p),aciertos:p.aciertos}));
 
-  const isLive=!jornadaDone&&(completed>0||totalPaid>0);
+  const isLive=!jornadaDone&&(completed>0||totalAll>0);
   el.innerHTML=`<div class="narrator-card">
     <div class="narrator-header">
       <span class="narrator-mic">🎙️</span>
@@ -5100,11 +5131,11 @@ function renderNarratorBox(lb,completed,jornadaDone,maxH){
     <div class="narrator-msgs">
       ${msgs.map((m,i)=>`
         ${i>0?'<div class="narrator-separator"></div>':''}
-        <div class="narrator-msg${m.h?' highlight':''}">
+        <div class="narrator-msg${m.h?' highlight':''}${m.warn?' warn':''}">
           ${m.t}
         </div>`).join("")}
     </div>
-    <div class="narrator-sub">${completed}/${totalM} partidos · Máx. aciertos: ${maxH} · ${Math.round(completed/totalM*100)}% completado</div>
+    <div class="narrator-sub">${completed}/${totalM} partidos · ${totalPaid}/${totalAll} pagados · Máx. aciertos: ${maxH} · ${Math.round(completed/totalM*100)}% completado</div>
   </div>`;
   el.classList.add("visible");
 }
@@ -5491,7 +5522,7 @@ function renderBracket(){
 
   const teamSlot=(grp,pos,label)=>{
     const team=grpStandings[grp]?.[pos];
-    const allGroupDone=matches.length>0&&grpStandings[grp]?.every(t=>t.pj>=3);
+    const allGroupDone=bracketSrc.length>0&&grpStandings[grp]?.every(t=>t.pj>=3);
     if(team&&allGroupDone&&team.pj>0){
       const flag=getLocalLogo(team.name)||"";
       return{name:team.name,flag,known:true};
@@ -5499,45 +5530,107 @@ function renderBracket(){
     return{name:label,flag:"",known:false};
   };
 
-  // Bracket R32 seeding — 16 matches (approximate FIFA 2026)
+  const tbd={name:"Por definir",flag:"",known:false};
+
+  const getKOWinner=(slotA,slotB)=>{
+    if(!slotA.known||!slotB.known)return tbd;
+    const na=norm(slotA.name),nb=norm(slotB.name);
+    const m=bracketSrc.find(x=>{
+      if(x.home_goals==null||x.away_goals==null)return false;
+      const nh=norm(x.home_team),naw=norm(x.away_team);
+      return(nh===na&&naw===nb)||(nh===nb&&naw===na);
+    });
+    if(!m)return tbd;
+    const homeWins=m.home_goals>m.away_goals;
+    const homeIsA=norm(m.home_team)===na;
+    return homeWins?(homeIsA?{...slotA}:{...slotB}):(homeIsA?{...slotB}:{...slotA});
+  };
+
+  // ──── Ronda de 32 — bracket oficial FIFA World Cup 2026 (imagen) ────
+  // ORDEN CRÍTICO: par[N] y par[N+1] consecutivos → mismo cruce R16
+  // ── LADO IZQUIERDO ──────────────────────────────────────────────
   const R32=[
-    [teamSlot("A",0,"1° A"),teamSlot("B",1,"2° B")],
-    [teamSlot("B",0,"1° B"),teamSlot("A",1,"2° A")],
-    [teamSlot("C",0,"1° C"),teamSlot("D",1,"2° D")],
-    [teamSlot("D",0,"1° D"),teamSlot("C",1,"2° C")],
-    [teamSlot("E",0,"1° E"),teamSlot("F",1,"2° F")],
-    [teamSlot("F",0,"1° F"),teamSlot("E",1,"2° E")],
-    [teamSlot("G",0,"1° G"),teamSlot("H",1,"2° H")],
-    [teamSlot("H",0,"1° H"),teamSlot("G",1,"2° G")],
-    [teamSlot("I",0,"1° I"),teamSlot("J",1,"2° J")],
-    [teamSlot("J",0,"1° J"),teamSlot("I",1,"2° I")],
-    [teamSlot("K",0,"1° K"),teamSlot("L",1,"2° L")],
-    [teamSlot("L",0,"1° L"),teamSlot("K",1,"2° K")],
-    [{name:"Mejor 3° (A/B/C)",flag:"",known:false},{name:"Mejor 3° (D/E/F)",flag:"",known:false}],
-    [{name:"Mejor 3° (G/H/I)",flag:"",known:false},{name:"Mejor 3° (J/K/L)",flag:"",known:false}],
-    [{name:"Mejor 3° (mix)",flag:"",known:false},{name:"Mejor 3° (mix)",flag:"",known:false}],
-    [{name:"Mejor 3° (mix)",flag:"",known:false},{name:"Mejor 3° (mix)",flag:"",known:false}],
+    // R16-A → Paraguay vs Francia
+    [teamSlot("E",0,"1° E"),teamSlot("D",2,"3° D")],   // Alemania    vs Paraguay   Jun 29
+    [teamSlot("I",0,"1° I"),teamSlot("F",2,"3° F")],   // Francia     vs Suecia     Jun 30
+    // R16-B → Canadá vs Marruecos
+    [teamSlot("A",1,"2° A"),teamSlot("B",1,"2° B")],   // Sudáfrica   vs Canadá     Jun 28
+    [teamSlot("F",0,"1° F"),teamSlot("C",1,"2° C")],   // Países Bajos vs Marruecos Jun 29
+    // R16-C → Croacia/Portugal vs España/Austria
+    [teamSlot("L",1,"2° L"),teamSlot("K",1,"2° K")],   // Croacia     vs Portugal   Jul 2
+    [teamSlot("H",0,"1° H"),teamSlot("J",1,"2° J")],   // España      vs Austria    Jul 2
+    // R16-D → EE.UU./Bosnia vs Bélgica/Senegal
+    [teamSlot("D",0,"1° D"),teamSlot("B",2,"3° B")],   // EE.UU.      vs Bosnia     Jul 1
+    [teamSlot("G",0,"1° G"),teamSlot("I",2,"3° I")],   // Bélgica     vs Senegal    Jul 1
+    // ── LADO DERECHO ─────────────────────────────────────────────
+    // R16-E → Brasil vs Noruega
+    [teamSlot("C",0,"1° C"),teamSlot("F",1,"2° F")],   // Brasil      vs Japón      Jun 29
+    [teamSlot("E",1,"2° E"),teamSlot("I",1,"2° I")],   // C. de Marfil vs Noruega  Jun 30
+    // R16-F → México vs Inglaterra
+    [teamSlot("A",0,"1° A"),teamSlot("E",2,"3° E")],   // México      vs Ecuador    Jun 30
+    [teamSlot("L",0,"1° L"),teamSlot("K",2,"3° K")],   // Inglaterra  vs R.D. Congo Jul 1
+    // R16-G → Argentina/Cabo Verde vs Egipto/Australia
+    [teamSlot("J",0,"1° J"),teamSlot("H",1,"2° H")],   // Argentina   vs Cabo Verde Jul 3
+    [teamSlot("G",1,"2° G"),teamSlot("D",1,"2° D")],   // Egipto      vs Australia  Jul 3
+    // R16-H → Suiza/Argelia vs Colombia/Ghana
+    [teamSlot("B",0,"1° B"),teamSlot("J",2,"3° J")],   // Suiza       vs Argelia    Jul 3
+    [teamSlot("K",0,"1° K"),teamSlot("L",2,"3° L")],   // Colombia    vs Ghana      Jul 3
   ];
 
+  // ──── Ronda de 16 — calculada desde resultados R32 en la DB ────
+  const w32=(i)=>getKOWinner(R32[i][0],R32[i][1]);
+  const R16=[
+    [w32(0), w32(1)],   // A: Paraguay    vs Francia
+    [w32(2), w32(3)],   // B: Canadá      vs Marruecos
+    [w32(4), w32(5)],   // C: Croacia/Por vs España/Aus
+    [w32(6), w32(7)],   // D: EE.UU./Bos  vs Bélgica/Sen
+    [w32(8), w32(9)],   // E: Brasil      vs Noruega
+    [w32(10),w32(11)],  // F: México      vs Inglaterra
+    [w32(12),w32(13)],  // G: Arg/CaboVerde vs Aus/Egipto
+    [w32(14),w32(15)],  // H: Suiza/Arg   vs Colombia/Gha
+  ];
+
+  // ──── Cuartos de Final — desde R16 ────
+  const w16=(i)=>getKOWinner(R16[i][0],R16[i][1]);
+  const QF=[
+    [w16(0),w16(1)],  // Izq-top: Par/Fra  vs Can/Mar
+    [w16(2),w16(3)],  // Izq-bot: Por/Esp  vs USA/Bél
+    [w16(4),w16(5)],  // Der-top: Bra/Nor  vs Méx/Ing
+    [w16(6),w16(7)],  // Der-bot: Arg/...  vs Sui/Col
+  ];
+
+  // ──── Semifinales ────
+  const wQF=(i)=>getKOWinner(QF[i][0],QF[i][1]);
+  const SF=[
+    [wQF(0),wQF(1)],  // Semi izquierda
+    [wQF(2),wQF(3)],  // Semi derecha
+  ];
+
+  // ──── Final ────
+  const wSF=(i)=>getKOWinner(SF[i][0],SF[i][1]);
+  const Final=[[wSF(0),wSF(1)]];
+
+  // ──── Renderizado ────
   const mkSlot=(sl,isWinner=false)=>`<div class="bracket-slot${sl.known?" filled":""}${isWinner?" winner":""}">
     ${sl.flag?`<img src="${sl.flag}" class="bracket-slot-flag" onerror="this.style.display='none'">`:``}
     <span class="bracket-slot-name">${sl.name}</span>
   </div>`;
 
-  const mkMatch=(home,away)=>`<div class="bracket-match">
-    ${mkSlot(home)}
-    ${mkSlot(away)}
-  </div>`;
+  // mkMatchAuto: determina y resalta al ganador automáticamente si hay resultado en DB
+  const mkMatchAuto=(home,away)=>{
+    const w=getKOWinner(home,away);
+    const hw=w.known&&norm(w.name)===norm(home.name||"");
+    const aw=w.known&&norm(w.name)===norm(away.name||"");
+    return `<div class="bracket-match">${mkSlot(home,hw)}${mkSlot(away,aw)}</div>`;
+  };
 
-  const tbd={name:"Por definir",flag:"",known:false};
-
-  // Build bracket HTML
+  // Construir rondas
   const rounds=[
-    {title:"Ronda de 32\nJun 28 – Jul 2",matches:R32,cls:"r-32"},
-    {title:"Ronda de 16\nJul 4 – 7",matches:Array(8).fill([tbd,tbd]),cls:"r-16"},
-    {title:"Cuartos de Final\nJul 10 – 11",matches:Array(4).fill([tbd,tbd]),cls:"r-qf"},
-    {title:"Semifinales\nJul 14 – 15",matches:Array(2).fill([tbd,tbd]),cls:"r-sf"},
-    {title:"Final\nJul 19",matches:[[tbd,tbd]],cls:"r-final"},
+    {title:"Ronda de 32\nJun 28 – Jul 3", matches:R32,  cls:"r-32"},
+    {title:"Ronda de 16\nJul 4 – 7",      matches:R16,  cls:"r-16"},
+    {title:"Cuartos de Final\nJul 10 – 11",matches:QF,  cls:"r-qf"},
+    {title:"Semifinales\nJul 14 – 15",     matches:SF,  cls:"r-sf"},
+    {title:"Final\nJul 19",                matches:Final,cls:"r-final"},
   ];
 
   // Color classes per round for left border
@@ -5546,7 +5639,7 @@ function renderBracket(){
   const roundsHTML=rounds.map((r,ri)=>`
     <div class="bracket-round ${r.cls}">
       <div class="bracket-round-title" style="color:${roundColors[ri]}">${r.title}</div>
-      ${r.matches.map(([h,a])=>mkMatch(h,a)).join("")}
+      ${r.matches.map(([h,a])=>mkMatchAuto(h,a)).join("")}
     </div>`).join("");
 
   el.innerHTML=`
