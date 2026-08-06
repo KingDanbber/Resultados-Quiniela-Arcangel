@@ -1,0 +1,26 @@
+{
+  "name": "Quiniela Arcángel",
+  "short_name": "Arcángel",
+  "description": "Resultados en vivo de la Quiniela Arcángel. Pasión x Ganar ⚽",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06090f",
+  "theme_color": "#1d4ed8",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "img/logo-arcangel.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/logo-arcangel.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Quiniela Arcángel</title>
+  <meta name="theme-color" content="#1d4ed8"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="description" content="Resultados en vivo de la Quiniela Arcángel. Pasión x Ganar ⚽"/>
+
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="img/logo-arcangel.png"/>
+  <link rel="apple-touch-icon" href="img/logo-arcangel.png"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+
+  <!-- Fonts (igual que tu app actual) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700;800&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+
+  <!-- CSS modular -->
+  <link rel="stylesheet" href="css/variables.css"/>
+  <link rel="stylesheet" href="css/base.css"/>
+  <link rel="stylesheet" href="css/layout.css"/>
+  <link rel="stylesheet" href="css/components.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.2/confetti.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- ════════ HEADER ════════ -->
+  <header id="app-header">
+    <div class="h-row1">
+      <div class="h-left">
+        <div class="h-logo-wrap">
+          <div class="h-logo-glow" aria-hidden="true"></div>
+          <div class="h-logo">
+            <img src="img/logo-arcangel.png" alt="Arcángel" onerror="this.parentElement.textContent='⚽'"/>
+          </div>
+        </div>
+        <div class="h-brand">
+          <div class="h-title">QUINIELA ARCÁNGEL</div>
+          <div class="h-sub">
+            <span class="h-slogan">Pasión x Ganar ⚽</span>
+            <span class="live-badge" title="En vivo"><span class="live-dot"></span><span class="live-badge-text">EN VIVO</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="h-right">
+        <button type="button" class="icon-btn" id="notif-btn" title="Notificaciones"><span id="ico-notif"></span></button>
+        <button type="button" class="icon-btn btn-install" id="btn-install" title="Instalar app" style="display:none"><span id="ico-install"></span></button>
+        <button type="button" class="icon-btn" title="Temas" id="btn-theme"><span id="ico-theme"></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════ MAIN ════════ -->
+  <main id="main">
+    <section id="view-inicio" class="view active"></section>
+    <section id="view-jornadas" class="view"></section>
+    <section id="view-historial" class="view"></section>
+    <section id="view-ganadores" class="view"></section>
+    <section id="view-tabla" class="view"></section>
+    <section id="view-jornada-detalle" class="view"></section>
+  </main>
+
+  <!-- ════════ BOTTOM NAV ════════ -->
+  <nav id="bottom-nav" aria-label="Navegación principal">
+    <button type="button" class="nav-item active" data-view="inicio">
+      <span class="nav-icon" data-ico="home"></span>
+      <span class="nav-label">Inicio</span>
+    </button>
+    <button type="button" class="nav-item" data-view="jornadas">
+      <span class="nav-icon" data-ico="calendar"></span>
+      <span class="nav-label">Jornadas</span>
+    </button>
+    <button type="button" class="nav-item" data-view="historial">
+      <span class="nav-icon" data-ico="scroll"></span>
+      <span class="nav-label">Historial</span>
+    </button>
+    <button type="button" class="nav-item" data-view="ganadores">
+      <span class="nav-icon" data-ico="trophy"></span>
+      <span class="nav-label">Ganadores</span>
+    </button>
+    <button type="button" class="nav-item" data-view="tabla">
+      <span class="nav-icon" data-ico="table"></span>
+      <span class="nav-label">Tabla</span>
+    </button>
+  </nav>
+
+  <!-- JS modular (orden importa) -->
+  <script src="js/icons.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/trophy3d.js"></script>
+  <script src="js/render/home.js"></script>
+  <script src="js/render/jornadas.js"></script>
+  <script src="js/render/historial.js"></script>
+  <script src="js/render/ganadores.js"></script>
+  <script src="js/render/tabla.js"></script>
+  <script src="js/render/jornada-detalle.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/push.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/my-boleta.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/pwa.js"></script>
+
+  <!-- Icons + theme -->
+  <script>
+    (function injectIcons() {
+      function run() {
+        if (!window.QA || !QA.icons) return;
+        document.querySelectorAll("[data-ico]").forEach(function (el) {
+          var k = el.getAttribute("data-ico");
+          if (QA.icons[k]) el.innerHTML = QA.icons[k];
+        });
+        var th = document.getElementById("ico-theme");
+        if (th) th.innerHTML = QA.icons.palette;
+        var ins = document.getElementById("ico-install");
+        if (ins && QA.icons.download) ins.innerHTML = QA.icons.download;
+        else if (ins) ins.innerHTML = "⬇";
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", run);
+      } else run();
+    })();
+    document.getElementById('btn-theme')?.addEventListener('click', () => {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+    });
+  </script>
+
+</body>
+</html>
