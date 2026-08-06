@@ -1,3 +1,3 @@
-#Resultados Quiniela Arcángel 
+#RESULTADOS QUINIELA ARCÁNGEL
 
 Ver Resultados en Vivo
