@@ -65,10 +65,40 @@ QA.resumen = {
           }).slice(0, 5);
     }
 
+    // Misma lógica que renderBolsaCard en jornada-detalle
     var bolsaTxt = "—";
+    var bolsaSub = "";
     try {
-      if (data.bolsaNeta != null) bolsaTxt = QA.utils.money(data.bolsaNeta);
-      else if (data.bolsaBruta != null) bolsaTxt = QA.utils.money(data.bolsaBruta);
+      var price = meta.price != null ? Number(meta.price) : 0;
+      var paidN = lb.filter(function (p) { return p.paid; }).length;
+      var pr = data.poolResult;
+      var gross =
+        pr && pr.gross_pot != null ? Number(pr.gross_pot) : paidN * price;
+      var net =
+        pr && pr.net_pot != null
+          ? Number(pr.net_pot)
+          : null;
+      if (net == null) {
+        var pct =
+          meta.commissionPct != null
+            ? Number(meta.commissionPct)
+            : pr && pr.commission_pct != null
+            ? Number(pr.commission_pct)
+            : 0;
+        if (gross != null && !isNaN(gross)) {
+          net = gross * (1 - pct / 100);
+        }
+      }
+      if (net != null && !isNaN(net)) {
+        bolsaTxt = QA.utils.money(net);
+        bolsaSub =
+          "Bruta " +
+          QA.utils.money(gross) +
+          (paidN ? " · " + paidN + " pagadas" : "");
+      } else if (gross != null && !isNaN(gross) && gross > 0) {
+        bolsaTxt = QA.utils.money(gross);
+        bolsaSub = "Bruta (neta no disponible)";
+      }
     } catch (_) {}
 
     var mine = QA.myBoleta && QA.myBoleta.rankOf(meta.id, lb);
@@ -138,7 +168,11 @@ QA.resumen = {
       '<div class="res-bolsa-lbl">Bolsa neta</div>' +
       '<div class="res-bolsa-val">' +
       bolsaTxt +
-      "</div></div>" +
+      "</div>" +
+      (bolsaSub
+        ? '<div class="res-bolsa-sub">' + bolsaSub + "</div>"
+        : "") +
+      "</div>" +
       '<div class="res-section"><div class="res-section-title">Podio</div>' +
       (podiumHtml || '<p class="qa-modal-note">Sin ganadores aún</p>') +
       "</div>" +
