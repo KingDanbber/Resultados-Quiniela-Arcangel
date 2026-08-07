@@ -1,8 +1,43 @@
-/* Hall of Fame · Goleo · Estadísticas globales */
+/* Salón de la Fama · Goleo · Estadísticas globales */
 window.QA = window.QA || {};
 QA.render = QA.render || {};
 
 QA.render._ganTab = QA.render._ganTab || "hof";
+
+QA.render._skelPremium = function (variant) {
+  variant = variant || "list";
+  if (variant === "stats") {
+    return (
+      '<div class="skel-premium">' +
+      '<div class="skel-p-title"></div>' +
+      '<div class="skel-p-grid">' +
+      '<div class="skel-p-card"></div><div class="skel-p-card"></div>' +
+      '<div class="skel-p-card"></div><div class="skel-p-card"></div>' +
+      "</div>" +
+      '<div class="skel-p-line"></div><div class="skel-p-line w70"></div>' +
+      '<div class="skel-p-row"></div><div class="skel-p-row"></div><div class="skel-p-row"></div>' +
+      "</div>"
+    );
+  }
+  if (variant === "goleo") {
+    return (
+      '<div class="skel-premium">' +
+      '<div class="skel-p-title"></div>' +
+      '<div class="skel-p-block"></div><div class="skel-p-block"></div>' +
+      "</div>"
+    );
+  }
+  // hof list
+  return (
+    '<div class="skel-premium">' +
+    '<div class="skel-p-title"></div>' +
+    '<div class="skel-p-sub"></div>' +
+    '<div class="skel-p-block"></div>' +
+    '<div class="skel-p-block"></div>' +
+    '<div class="skel-p-block short"></div>' +
+    "</div>"
+  );
+};
 
 QA.render.ganadores = async function (tab) {
   const el = document.getElementById("view-ganadores");
@@ -12,13 +47,17 @@ QA.render.ganadores = async function (tab) {
   tab = tab || QA.render._ganTab || "hof";
   QA.render._ganTab = tab;
 
-  if (QA.trophy3d) QA.trophy3d.dispose();
+  if (QA.trophy3d && QA.trophy3d.dispose) {
+    try {
+      QA.trophy3d.dispose();
+    } catch (_) {}
+  }
 
   el.innerHTML =
     '<div class="gan-tabs">' +
     '<button type="button" class="gan-tab' +
     (tab === "hof" ? " active" : "") +
-    '" data-gantab="hof">Hall of Fame</button>' +
+    '" data-gantab="hof">Salón de la Fama</button>' +
     '<button type="button" class="gan-tab' +
     (tab === "goleo" ? " active" : "") +
     '" data-gantab="goleo">Campeón de Goleo</button>' +
@@ -26,7 +65,9 @@ QA.render.ganadores = async function (tab) {
     (tab === "stats" ? " active" : "") +
     '" data-gantab="stats">Estadísticas</button>' +
     "</div>" +
-    '<div id="gan-panel" class="lazy-skel"><div class="skel-line w40"></div><p class="skel-msg">Cargando…</p></div>';
+    '<div id="gan-panel">' +
+    QA.render._skelPremium(tab === "stats" ? "stats" : tab === "goleo" ? "goleo" : "hof") +
+    "</div>";
 
   el.querySelectorAll("[data-gantab]").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -44,8 +85,7 @@ QA.render.ganadores = async function (tab) {
   }
 
   async function renderHof(panel) {
-    panel.innerHTML =
-      '<div class="lazy-skel"><div class="skel-trophy"></div><p class="skel-msg">Cargando Hall of Fame…</p></div>';
+    panel.innerHTML = QA.render._skelPremium("hof");
     var cards = [];
     try {
       cards = await QA.data.getHallOfFame();
@@ -60,12 +100,12 @@ QA.render.ganadores = async function (tab) {
     if (!cards.length) {
       listHtml =
         '<div class="empty-state"><div class="empty-icon">' +
-        (ico.trophy || "") +
+        (ico.trophy || "🏆") +
         '</div><p>Aún no hay jornadas finalizadas con ganadores</p></div>';
     } else {
       listHtml = cards
         .map(function (c) {
-          var trophySvg = c.isSplit ? ico.handshake || "" : ico.trophy || "";
+          var trophySvg = c.isSplit ? ico.handshake || "🤝" : ico.trophy || "🏆";
           var wins = c.winners
             .map(function (w) {
               return (
@@ -118,10 +158,8 @@ QA.render.ganadores = async function (tab) {
     }
 
     panel.innerHTML =
-      '<h2 class="pool-name">Hall of Fame</h2>' +
+      '<h2 class="pool-name">Salón de la Fama</h2>' +
       '<p class="pool-meta">Histórico de ganadores · Quiniela Sencilla</p>' +
-      '<div id="trophy-3d-wrap"><canvas id="trophy-3d-canvas"></canvas>' +
-      '<div class="trophy-3d-label">HALL OF FAME · QUINIELA ARCÁNGEL</div></div>' +
       '<p class="hof-count">' +
       cards.length +
       " jornada" +
@@ -137,17 +175,10 @@ QA.render.ganadores = async function (tab) {
         if (id && QA.app) QA.app.openJornada(id);
       });
     });
-
-    try {
-      if (QA.trophy3d && document.getElementById("trophy-3d-canvas")) {
-        QA.trophy3d.init("trophy-3d-canvas");
-      }
-    } catch (_) {}
   }
 
   async function renderGoleo(panel) {
-    panel.innerHTML =
-      '<p class="skel-msg">Cargando Campeón de Goleo…</p>';
+    panel.innerHTML = QA.render._skelPremium("goleo");
     try {
       var list = await QA.data.getJornadas();
       var goleo = (list || [])
@@ -165,7 +196,6 @@ QA.render.ganadores = async function (tab) {
       }
 
       var cards = [];
-      // Detalle de las últimas 8 (activas + finalizadas)
       var slice = goleo.slice(0, 8);
       for (var i = 0; i < slice.length; i++) {
         try {
@@ -196,23 +226,18 @@ QA.render.ganadores = async function (tab) {
         var rows = top
           .map(function (p, idx) {
             var diff =
-              real != null && p.goalPred != null
-                ? p.goalPred - real
-                : null;
+              real != null && p.goalPred != null ? p.goalPred - real : null;
             return (
               '<div class="goleo-row' +
               (p.exactGoals ? " exact" : "") +
               '">' +
               '<span class="goleo-pos">#' +
               (idx + 1) +
-              "</span>" +
-              '<span class="goleo-name">' +
+              '</span><span class="goleo-name">' +
               escape(p.displayName) +
-              "</span>" +
-              '<span class="goleo-pred">' +
+              '</span><span class="goleo-pred">' +
               (p.goalPred != null ? p.goalPred : "—") +
-              "</span>" +
-              '<span class="goleo-diff">' +
+              '</span><span class="goleo-diff">' +
               (p.exactGoals
                 ? "✓ exacto"
                 : diff != null
@@ -229,15 +254,12 @@ QA.render.ganadores = async function (tab) {
           '" data-id="' +
           escape(j.id) +
           '">' +
-          '<div class="goleo-card-top">' +
-          "<div><div class=\"goleo-card-title\">" +
+          '<div class="goleo-card-top"><div><div class="goleo-card-title">' +
           escape(j.nombre) +
           '</div><div class="goleo-card-meta">' +
           escape(j.competencia || "") +
           (j.season ? " · " + escape(j.season) : "") +
-          "</div></div>" +
-          '<div class="goleo-goals">' +
-          '<div class="goleo-goals-val">' +
+          '</div></div><div class="goleo-goals"><div class="goleo-goals-val">' +
           (real != null ? real : "—") +
           '</div><div class="goleo-goals-lbl">' +
           (d && d.totalGoalsReal != null
@@ -257,11 +279,16 @@ QA.render.ganadores = async function (tab) {
       });
 
       panel.innerHTML = html;
-      panel.querySelectorAll(".goleo-open, .goleo-card").forEach(function (node) {
-        node.addEventListener("click", function (e) {
-          if (node.classList.contains("goleo-card") && e.target.closest(".goleo-open") === null && e.target.closest("button")) return;
-          var id = node.getAttribute("data-id") || (e.currentTarget && e.currentTarget.getAttribute("data-id"));
-          if (id) QA.app.openJornada(id);
+      panel.querySelectorAll(".goleo-open").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          QA.app.openJornada(btn.getAttribute("data-id"));
+        });
+      });
+      panel.querySelectorAll(".goleo-card").forEach(function (card) {
+        card.addEventListener("click", function (e) {
+          if (e.target.closest(".goleo-open")) return;
+          QA.app.openJornada(card.getAttribute("data-id"));
         });
       });
     } catch (err) {
@@ -272,7 +299,7 @@ QA.render.ganadores = async function (tab) {
   }
 
   async function renderStats(panel) {
-    panel.innerHTML = '<p class="skel-msg">Calculando estadísticas…</p>';
+    panel.innerHTML = QA.render._skelPremium("stats");
     try {
       var s = await QA.data.getGeneralStats();
       var ranking = s.winnerRanking || [];
@@ -284,13 +311,11 @@ QA.render.ganadores = async function (tab) {
             '<div class="gstat-row">' +
             '<span class="gstat-pos">#' +
             (i + 1) +
-            "</span>" +
-            '<div class="gstat-info"><div class="gstat-name">' +
+            '</span><div class="gstat-info"><div class="gstat-name">' +
             escape(w.name || "—") +
             '</div><div class="gstat-area">' +
             escape(w.area || "") +
-            "</div></div>" +
-            '<div class="gstat-nums"><span title="Victorias">' +
+            '</div></div><div class="gstat-nums"><span title="Victorias">' +
             w.totalWins +
             ' 🏆</span><span title="Ganado">' +
             fmxn(w.totalEarned) +

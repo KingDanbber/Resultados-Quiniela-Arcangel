@@ -666,12 +666,14 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
         var isTop = isGoleo
           ? !!p.exactGoals
           : completed > 0 && maxH > 0 && p.aciertos === maxH;
-        var deltaHtml = rankDeltaHtml(p.id, rank);
+        var deltaInfo = rankDeltaInfo(p.id, rank);
+        var deltaHtml = deltaInfo.html || "";
         return (
           '<div class="lb-row' +
           (expanded ? " expanded" : "") +
           (rank <= 3 && jornadaDone ? " rank-" + rank : "") +
           (isTop ? " is-winner" : "") +
+          (deltaInfo.climbed ? " rank-climbed" : "") +
           (QA.myBoleta &&
           QA.myBoleta.get(meta.id) &&
           QA.myBoleta.get(meta.id).entryId === p.id
@@ -995,33 +997,45 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     } catch (e) {}
   }
 
-  function rankDeltaHtml(entryId, currentRank) {
+  function rankDeltaInfo(entryId, currentRank) {
     var prev = QA.render._jdPrevSnap;
-    if (!prev || !prev.length) return "";
+    if (!prev || !prev.length) return { html: "", climbed: false };
     var found = prev.find(function (x) {
       return x.id === entryId;
     });
-    if (!found) return '<span class="rank-delta rank-new" title="Nuevo">NEW</span>';
+    if (!found)
+      return {
+        html: '<span class="rank-delta rank-new" title="Nuevo">NUEVO</span>',
+        climbed: false,
+      };
     var diff = found.rank - currentRank;
     if (diff === 0) {
-      return '<span class="rank-delta rank-same" title="Sin cambios">≈</span>';
+      return {
+        html: '<span class="rank-delta rank-same" title="Sin cambios">≈</span>',
+        climbed: false,
+      };
     }
     if (diff > 0) {
-      return (
-        '<span class="rank-delta rank-up" title="Subió ' +
-        diff +
-        '">↑' +
-        diff +
-        "</span>"
-      );
+      return {
+        html:
+          '<span class="rank-delta rank-up" title="Subió ' +
+          diff +
+          ' posiciones">↑' +
+          diff +
+          "</span>",
+        climbed: true,
+        positions: diff,
+      };
     }
-    return (
-      '<span class="rank-delta rank-down" title="Bajó ' +
-      Math.abs(diff) +
-      '">↓' +
-      Math.abs(diff) +
-      "</span>"
-    );
+    return {
+      html:
+        '<span class="rank-delta rank-down" title="Bajó ' +
+        Math.abs(diff) +
+        ' posiciones">↓' +
+        Math.abs(diff) +
+        "</span>",
+      climbed: false,
+    };
   }
 
   function firstName(n) {
