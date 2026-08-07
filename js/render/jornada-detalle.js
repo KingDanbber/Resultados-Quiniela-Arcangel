@@ -148,6 +148,34 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     ? "Activa"
     : meta.estado;
 
+  var pctDone = total > 0 ? Math.round((completed / total) * 100) : 0;
+  var progressHtml =
+    '<div class="jd-progress">' +
+    '<div class="jd-progress-head">' +
+    '<span class="jd-progress-label">Progreso de la jornada</span>' +
+    '<span class="jd-progress-pct">' +
+    completed +
+    "/" +
+    total +
+    " · " +
+    pctDone +
+    "%</span></div>" +
+    '<div class="jd-progress-track"><div class="jd-progress-fill' +
+    (pctDone >= 100 ? " done" : pctDone >= 50 ? " mid" : "") +
+    '" style="width:' +
+    pctDone +
+    '%"></div></div>' +
+    (data.jornadaDone
+      ? '<div class="jd-progress-note">Jornada finalizada</div>'
+      : completed === 0
+      ? '<div class="jd-progress-note">Aún no hay partidos finalizados</div>'
+      : '<div class="jd-progress-note">' +
+        (total - completed) +
+        " partido" +
+        (total - completed === 1 ? "" : "s") +
+        " por jugar</div>") +
+    "</div>";
+
   var podioHtml = renderPodio(lb, completed, data.jornadaDone, maxH);
 
   el.innerHTML =
@@ -205,6 +233,7 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     QA.render._jdRefreshSecs +
     "s</span>" +
     "</div>" +
+    progressHtml +
     renderBolsaCard(data, lb) +
     renderTotalGolesCard(data) +
     (maxH > 0
