@@ -224,7 +224,33 @@ QA.render.home = async function () {
     });
   });
 
-  el.querySelectorAll(".home-hero-card").forEach(function (hero) {
+  
+  // Mi boleta destacada en cada hero
+  (async function enrichMyBoleta() {
+    if (!QA.myBoleta || !QA.data || !QA.data.loadPoolDetail) return;
+    for (const j of activas) {
+      try {
+        if (!QA.myBoleta.get(j.id)) continue;
+        const detail = await QA.data.loadPoolDetail(j.id);
+        const lb = detail.leaderboard || [];
+        const info = QA.myBoleta.rankOf(j.id, lb);
+        if (!info) continue;
+        const isGoleo = !!detail.isGoleo;
+        const card = el.querySelector('.home-hero-card[data-jornada-id="' + j.id + '"]');
+        if (!card) continue;
+        if (card.querySelector(".home-my-chip")) continue;
+        const chip = document.createElement("div");
+        chip.innerHTML = QA.myBoleta.homeChipHtml(j.id, info, isGoleo);
+        const cta = card.querySelector(".home-hero-cta");
+        if (cta) card.insertBefore(chip.firstChild, cta);
+        else card.appendChild(chip.firstChild);
+      } catch (e) {
+        console.warn("home my-boleta", e);
+      }
+    }
+  })();
+
+el.querySelectorAll(".home-hero-card").forEach(function (hero) {
     hero.addEventListener("click", function () {
       QA.app.openJornada(hero.getAttribute("data-jornada-id"));
     });

@@ -53,6 +53,11 @@ QA.render.jornadaDetalle = async function (poolId) {
 
   QA.render._paintJornadaDetalle(el, data, false);
   QA.render._startJdRefresh(poolId);
+  if (data.jornadaDone && QA.resumen) {
+    setTimeout(function () {
+      QA.resumen.maybeShow(data, false);
+    }, 600);
+  }
 };
 
 QA.render._stopJdRefresh = function () {
@@ -184,9 +189,11 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     "</div>" +
     '<div class="jd-tools">' +
     '<button type="button" class="jd-tool-btn" id="jd-my-boleta">Mi boleta</button>' +
+    '<button type="button" class="jd-tool-btn" id="jd-compare">Comparar</button>' +
     '<button type="button" class="jd-tool-btn" id="jd-share">Compartir</button>' +
     '<span class="jd-my-label" id="jd-my-label"></span>' +
     "</div>" +
+    (QA.myBoleta ? QA.myBoleta.stickyCardHtml(data) : "") +
     '<div class="jd-refresh" id="jd-refresh">' +
     '<div class="jd-refresh-bar"><div class="jd-refresh-fill" id="jd-refresh-fill" style="width:' +
     (QA.render._jdRefreshSecs / 60) * 100 +
@@ -289,6 +296,24 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     refreshLabel();
     if (myBtn) {
       myBtn.onclick = function () {
+        QA.render.openMyBoletaPicker(el, data);
+      };
+    }
+    var cmpBtn = document.getElementById("jd-compare");
+    if (cmpBtn) {
+      cmpBtn.onclick = function () {
+        if (QA.compare) QA.compare.open(data);
+      };
+    }
+    var stickyPick = document.getElementById("my-sticky-pick");
+    var stickyChange = document.getElementById("my-sticky-change");
+    if (stickyPick) {
+      stickyPick.onclick = function () {
+        QA.render.openMyBoletaPicker(el, data);
+      };
+    }
+    if (stickyChange) {
+      stickyChange.onclick = function () {
         QA.render.openMyBoletaPicker(el, data);
       };
     }
