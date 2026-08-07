@@ -183,6 +183,7 @@ QA.render.home = async function () {
     '<button type="button" class="quick-btn" data-view="historial">' + (QA.icons && QA.icons.scroll ? QA.icons.scroll : '') + ' Historial</button>' +
     '<button type="button" class="quick-btn" data-view="tabla">' + (QA.icons && QA.icons.table ? QA.icons.table : '') + ' Tabla</button>' +
     '<button type="button" class="quick-btn" data-cal="1">' + (QA.icons && QA.icons.calendar ? QA.icons.calendar : '') + ' Calendario MX</button>' +
+    '<button type="button" class="quick-btn" data-open-reglas="1">📜 Reglas / Términos</button>' +
     "</div>" +
     tvSection() +
     '<h3 class="section-title">Tabla Liga MX · Top 6</h3>' +
@@ -224,6 +225,8 @@ QA.render.home = async function () {
       '<p style="margin-top:10px;text-align:right">' +
       '<button type="button" class="quick-btn" data-view="tabla" style="display:inline-block;padding:8px 14px">Ver tabla completa →</button></p>';
   }
+
+    if (QA.reglas) QA.reglas.bindTriggers(el);
 
   el.querySelectorAll(".quick-btn[data-cal]").forEach(function (btn) {
     btn.addEventListener("click", function () {
