@@ -49,7 +49,7 @@
       <div class="h-right">
         <button type="button" class="icon-btn" id="notif-btn" title="Notificaciones"><span id="ico-notif"></span></button>
         <button type="button" class="icon-btn btn-install" id="btn-install" title="Instalar app" style="display:none"><span id="ico-install"></span></button>
-        <button type="button" class="icon-btn" title="Reglas / Términos" id="btn-reglas"><span id="ico-reglas">📜</span></button>
+        <button type="button" class="icon-btn" title="Reglas / Términos" id="btn-reglas"><span id="ico-reglas"></span></button>
         <button type="button" class="icon-btn" title="Temas" id="btn-theme"><span id="ico-theme"></span></button>
       </div>
     </div>
@@ -121,6 +121,8 @@
           var k = el.getAttribute("data-ico");
           if (QA.icons[k]) el.innerHTML = QA.icons[k];
         });
+        var rg = document.getElementById("ico-reglas");
+        if (rg && QA.icons.rules) rg.innerHTML = QA.icons.rules;
         var th = document.getElementById("ico-theme");
         if (th) th.innerHTML = QA.icons.palette;
         var ins = document.getElementById("ico-install");
