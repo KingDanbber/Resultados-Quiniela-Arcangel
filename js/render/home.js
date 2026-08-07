@@ -158,17 +158,25 @@ QA.render.home = async function () {
     );
   }
 
-  const heroes =
-    activas.length > 1
-      ? '<h3 class="section-title">Jornadas activas</h3>' +
-        '<div class="home-heroes">' +
-        activas.map(heroCard).join("") +
-        "</div>"
-      : heroCard(activas[0]);
+  var heroes = "";
+  if (activas && activas.length > 1) {
+    heroes =
+      '<h3 class="section-title">Jornadas activas</h3>' +
+      '<div class="home-heroes">' +
+      activas.map(heroCard).join("") +
+      "</div>";
+  } else if (activas && activas.length === 1) {
+    heroes = heroCard(activas[0]);
+  } else {
+    heroes =
+      '<div class="empty-state" style="padding:20px 12px"><p>No hay jornadas activas</p></div>';
+  }
 
   el.innerHTML =
     greetingBlock() +
     heroes +
+    '<div id="home-last-jornadas">' +
+    '<p class="skel-msg" style="padding:8px 0">Cargando últimas jornadas…</p></div>' +
     '<h3 class="section-title">Accesos rápidos</h3>' +
     '<div class="quick-links">' +
     '<button type="button" class="quick-btn" data-view="jornadas">' + (QA.icons && QA.icons.calendar ? QA.icons.calendar : '') + ' Jornadas</button>' +
@@ -255,6 +263,69 @@ el.querySelectorAll(".home-hero-card").forEach(function (hero) {
       QA.app.openJornada(hero.getAttribute("data-jornada-id"));
     });
   });
+
+  // Últimas jornadas finalizadas + resumen
+  (async function loadLastJornadas() {
+    var box = el.querySelector("#home-last-jornadas");
+    if (!box || !QA.resumen || !QA.resumen.loadRecentFinished) {
+      if (box) box.innerHTML = "";
+      return;
+    }
+    try {
+      var recent = await QA.resumen.loadRecentFinished(2);
+      if (!recent.length) {
+        box.innerHTML = "";
+        return;
+      }
+      box.innerHTML =
+        '<h3 class="section-title">Últimas jornadas</h3>' +
+        '<div class="last-jornadas-list">' +
+        recent.map(function (item) {
+          return QA.resumen.homeCardHtml(item);
+        }).join("") +
+        "</div>";
+
+      box._recentDetails = {};
+      recent.forEach(function (item) {
+        if (item.detail && item.jornada) {
+          box._recentDetails[item.jornada.id] = item.detail;
+        }
+      });
+
+      box.querySelectorAll("[data-action]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var id = btn.getAttribute("data-id");
+          var action = btn.getAttribute("data-action");
+          if (action === "open") {
+            QA.app.openJornada(id);
+            return;
+          }
+          if (action === "resumen") {
+            var detail = box._recentDetails && box._recentDetails[id];
+            if (detail && QA.resumen) {
+              QA.resumen.show(detail);
+            } else if (QA.data && QA.data.loadPoolDetail) {
+              btn.disabled = true;
+              QA.data
+                .loadPoolDetail(id)
+                .then(function (d) {
+                  btn.disabled = false;
+                  if (QA.resumen) QA.resumen.show(d);
+                })
+                .catch(function () {
+                  btn.disabled = false;
+                });
+            }
+          }
+        });
+      });
+    } catch (err) {
+      console.warn("home last jornadas", err);
+      if (box) box.innerHTML = "";
+    }
+  })();
 
   el.querySelectorAll(".tv-copy").forEach(function (btn) {
     btn.addEventListener("click", function (e) {

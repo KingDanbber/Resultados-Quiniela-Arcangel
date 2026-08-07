@@ -191,6 +191,9 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     '<button type="button" class="jd-tool-btn" id="jd-my-boleta">Mi boleta</button>' +
     '<button type="button" class="jd-tool-btn" id="jd-compare">Comparar</button>' +
     '<button type="button" class="jd-tool-btn" id="jd-share">Compartir</button>' +
+    (data.jornadaDone
+      ? '<button type="button" class="jd-tool-btn jd-resumen-btn" id="jd-resumen">Ver resumen</button>'
+      : "") +
     '<span class="jd-my-label" id="jd-my-label"></span>' +
     "</div>" +
     (QA.myBoleta ? QA.myBoleta.stickyCardHtml(data) : "") +
@@ -303,6 +306,12 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     if (cmpBtn) {
       cmpBtn.onclick = function () {
         if (QA.compare) QA.compare.open(data);
+      };
+    }
+    var resBtn = document.getElementById("jd-resumen");
+    if (resBtn) {
+      resBtn.onclick = function () {
+        if (QA.resumen) QA.resumen.show(data);
       };
     }
     var stickyPick = document.getElementById("my-sticky-pick");
