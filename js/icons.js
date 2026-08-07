@@ -56,5 +56,10 @@ QA.icons = (function () {
     refresh: svg(
       '<path d="M21 12a9 9 0 1 1-2.6-6.3"/><path d="M21 3v6h-6"/>'
     ),
+    rules: svg(
+      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>'
+      + '<path d="M14 2v6h6"/>'
+      + '<path d="M8 13h8M8 17h8M8 9h2"/>'
+    ),
   };
 })();
