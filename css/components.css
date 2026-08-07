@@ -3398,3 +3398,211 @@ a.tv-open {
   border-color: #2563eb;
   color: #fff;
 }
+
+/* Progreso de jornada */
+.jd-progress {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.jd-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.jd-progress-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #94a3b8);
+}
+.jd-progress-pct {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #93c5fd;
+}
+.jd-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  overflow: hidden;
+}
+.jd-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transition: width 0.4s ease;
+}
+.jd-progress-fill.mid {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+}
+.jd-progress-fill.done {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+}
+.jd-progress-note {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* Tabs Ganadores */
+.gan-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.gan-tab {
+  flex: 1;
+  min-width: max-content;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: transparent;
+  color: #cbd5e1;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gan-tab.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+/* Goleo cards */
+.goleo-card {
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+.goleo-card.live {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+.goleo-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.goleo-card-title {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.2rem;
+}
+.goleo-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted, #94a3b8);
+}
+.goleo-goals {
+  text-align: center;
+  min-width: 72px;
+}
+.goleo-goals-val {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fbbf24;
+  line-height: 1;
+}
+.goleo-goals-lbl {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 700;
+}
+.goleo-table { margin-bottom: 10px; }
+.goleo-head, .goleo-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 48px 56px;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.82rem;
+  padding: 6px 4px;
+}
+.goleo-head {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+.goleo-row.exact {
+  background: rgba(34, 197, 94, 0.12);
+  border-radius: 8px;
+}
+.goleo-pred, .goleo-diff { text-align: center; font-weight: 800; }
+.goleo-diff { color: #94a3b8; font-size: 0.75rem; }
+.goleo-row.exact .goleo-diff { color: #4ade80; }
+.goleo-open {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: transparent;
+  color: #93c5fd;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Estadísticas globales */
+.gstat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.gstat-card {
+  padding: 14px 12px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  text-align: center;
+}
+.gstat-val {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #60a5fa;
+}
+.gstat-lbl {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 700;
+  margin-top: 4px;
+}
+.gstat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+.gstat-pos { font-weight: 900; color: #fbbf24; width: 28px; }
+.gstat-info { flex: 1; min-width: 0; }
+.gstat-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gstat-area { font-size: 0.72rem; color: var(--text-muted, #94a3b8); }
+.gstat-nums {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.gstat-bolsa-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  font-size: 0.85rem;
+}
+.gstat-bolsa-row strong { color: #4ade80; }
