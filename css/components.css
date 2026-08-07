@@ -3296,3 +3296,10 @@ a.tv-open {
   border-color: #2563eb;
   color: #fff;
 }
+
+.res-bolsa-sub {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #86efac;
+  opacity: 0.85;
+}
