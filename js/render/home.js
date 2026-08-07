@@ -183,7 +183,7 @@ QA.render.home = async function () {
     '<button type="button" class="quick-btn" data-view="historial">' + (QA.icons && QA.icons.scroll ? QA.icons.scroll : '') + ' Historial</button>' +
     '<button type="button" class="quick-btn" data-view="tabla">' + (QA.icons && QA.icons.table ? QA.icons.table : '') + ' Tabla</button>' +
     '<button type="button" class="quick-btn" data-cal="1">' + (QA.icons && QA.icons.calendar ? QA.icons.calendar : '') + ' Calendario MX</button>' +
-    '<button type="button" class="quick-btn" data-open-reglas="1">📜 Reglas / Términos</button>' +
+    '<button type="button" class="quick-btn" data-open-reglas="1">' + (QA.icons && QA.icons.rules ? QA.icons.rules : '') + ' Reglas / Términos</button>' +
     "</div>" +
     tvSection() +
     '<h3 class="section-title">Tabla Liga MX · Top 6</h3>' +
