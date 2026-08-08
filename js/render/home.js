@@ -187,7 +187,12 @@ QA.render.home = async function () {
     "</div>" +
     tvSection() +
     '<h3 class="section-title">Tabla Liga MX · Top 6</h3>' +
-    '<div id="home-mini-tabla"></div>';
+    '<div id="home-mini-tabla"></div>' +
+    '<footer class="app-credit">' +
+    '<div class="app-credit-brand">Resultados Quiniela Arcángel®</div>' +
+    '<div class="app-credit-dev">Desarrollado por <strong>Luis Arturo</strong></div>' +
+    '<div class="app-credit-ai">con ayuda de Inteligencia Artificial<br/>Grok (xAI) · ChatGPT (OpenAI) · Claude (Anthropic)</div>' +
+    "</footer>";
 
   const box = el.querySelector("#home-mini-tabla");
   if (box) box.innerHTML = '<p class="skel-msg">Cargando tabla…</p>';
