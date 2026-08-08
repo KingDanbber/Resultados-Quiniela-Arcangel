@@ -279,6 +279,9 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     '" data-jdtab="stats">' +
     QA.icons.table +
     " Estadísticas</button>" +
+    '<button type="button" class="tab-btn ' +
+    (QA.render._jdTab === "ia" ? "active" : "") +
+    '" data-jdtab="ia">✨ Sugerencias</button>' +
     "</div>" +
     '<div id="jd-panel-matches" style="display:' +
     (QA.render._jdTab === "matches" ? "block" : "none") +
@@ -294,6 +297,11 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     (QA.render._jdTab === "stats" ? "block" : "none") +
     '">' +
     renderStatsPanel(lb, matches, completed, maxH) +
+    "</div>" +
+    '<div id="jd-panel-ia" style="display:' +
+    (QA.render._jdTab === "ia" ? "block" : "none") +
+    '">' +
+    '<div id="jd-ia-body"><p class="skel-msg">Preparando sugerencias…</p></div>' +
     "</div>";
 
   document.getElementById("jd-back").addEventListener("click", function () {
@@ -372,6 +380,22 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           });
       };
     }
+  })();
+
+
+  (function fillIa() {
+    var box = document.getElementById("jd-ia-body");
+    if (!box || !QA.pronosticos) return;
+    var run = async function () {
+      var rows = [];
+      try {
+        var st = await QA.data.getStandingsAsync();
+        rows = (st && st.rows) || [];
+      } catch (_) {}
+      var target = document.getElementById("jd-ia-body");
+      if (target) target.innerHTML = QA.pronosticos.renderPanel(data, rows);
+    };
+    run();
   })();
 
   el.querySelectorAll("[data-jdtab]").forEach(function (btn) {
