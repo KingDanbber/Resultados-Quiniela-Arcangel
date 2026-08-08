@@ -4,7 +4,7 @@ QA.render = QA.render || {};
 
 QA.render._ganTab = QA.render._ganTab || "hof";
 
-QA.render._skelPremium = function (variant) {
+QA.skel.page = function (variant) {
   variant = variant || "list";
   if (variant === "stats") {
     return (
@@ -66,7 +66,7 @@ QA.render.ganadores = async function (tab) {
     '" data-gantab="stats">Estadísticas</button>' +
     "</div>" +
     '<div id="gan-panel">' +
-    QA.render._skelPremium(tab === "stats" ? "stats" : tab === "goleo" ? "goleo" : "hof") +
+    QA.skel.page(tab === "stats" ? "stats" : tab === "goleo" ? "cards" : "list") +
     "</div>";
 
   el.querySelectorAll("[data-gantab]").forEach(function (btn) {
@@ -85,7 +85,7 @@ QA.render.ganadores = async function (tab) {
   }
 
   async function renderHof(panel) {
-    panel.innerHTML = QA.render._skelPremium("hof");
+    panel.innerHTML = QA.skel.page("list");
     var cards = [];
     try {
       cards = await QA.data.getHallOfFame();
@@ -178,7 +178,7 @@ QA.render.ganadores = async function (tab) {
   }
 
   async function renderGoleo(panel) {
-    panel.innerHTML = QA.render._skelPremium("goleo");
+    panel.innerHTML = QA.skel.page("cards");
     try {
       var list = await QA.data.getJornadas();
       var goleo = (list || [])
@@ -299,7 +299,7 @@ QA.render.ganadores = async function (tab) {
   }
 
   async function renderStats(panel) {
-    panel.innerHTML = QA.render._skelPremium("stats");
+    panel.innerHTML = QA.skel.page("stats");
     try {
       var s = await QA.data.getGeneralStats();
       var ranking = s.winnerRanking || [];

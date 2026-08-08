@@ -20,7 +20,7 @@ QA.render.jornadaDetalle = async function (poolId) {
   if (!el) return;
 
   QA.render._stopJdRefresh();
-  el.innerHTML = '<div class="empty-state"><p>Cargando jornada…</p></div>';
+  el.innerHTML = (QA.skel ? QA.skel.page('detalle') : '<div class="empty-state"><p>Cargando jornada…</p></div>');
   QA.render._jdExpanded = {};
   QA.render._jdSearch = "";
   QA.render._jdTab = "matches";

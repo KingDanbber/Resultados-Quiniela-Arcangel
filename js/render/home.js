@@ -9,7 +9,7 @@ QA.render.home = async function () {
   const el = document.getElementById("view-inicio");
   if (!el) return;
 
-  el.innerHTML = '<div class="empty-state"><p>Cargando…</p></div>';
+  el.innerHTML = (QA.skel ? QA.skel.page('home') : '<div class="empty-state"><p>Cargando…</p></div>');
 
   let activas = [];
   try {

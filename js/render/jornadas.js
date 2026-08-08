@@ -11,7 +11,7 @@ QA.render.jornadas = async function (filter) {
   if (!el) return;
 
   const escape = QA.utils.escape;
-  el.innerHTML = '<div class="empty-state"><p>Cargando jornadas…</p></div>';
+  el.innerHTML = (QA.skel ? QA.skel.page('cards') : '<div class="empty-state"><p>Cargando jornadas…</p></div>');
 
   let list = [];
   try {

@@ -20,7 +20,9 @@ QA.render.tabla = async function (sub) {
     (sub === "calendario" ? " active" : "") +
     '" data-sub="calendario">Calendario</button>' +
     "</div>" +
-    '<div id="tabla-panel" class="lazy-skel"><div class="skel-line w40"></div><div class="skel-card" style="height:200px"></div><p class="skel-msg">Cargando…</p></div>';
+    '<div id="tabla-panel">' +
+    (QA.skel ? QA.skel.page("table") : '<p class="skel-msg">Cargando…</p>') +
+    "</div>";
 
   el.querySelectorAll(".tabla-tab").forEach(function (btn) {
     btn.addEventListener("click", function () {
