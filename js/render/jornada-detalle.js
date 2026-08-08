@@ -281,7 +281,9 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     " Estadísticas</button>" +
     '<button type="button" class="tab-btn ' +
     (QA.render._jdTab === "ia" ? "active" : "") +
-    '" data-jdtab="ia">✨ Sugerencias</button>' +
+    '" data-jdtab="ia">' +
+    (QA.icons && QA.icons.sparkles ? QA.icons.sparkles : "") +
+    " Sugerencias</button>" +
     "</div>" +
     '<div id="jd-panel-matches" style="display:' +
     (QA.render._jdTab === "matches" ? "block" : "none") +
