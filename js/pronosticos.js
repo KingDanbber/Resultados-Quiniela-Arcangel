@@ -188,18 +188,46 @@ QA.pronosticos = {
       return '<div class="empty-state"><p>Sin partidos para analizar</p></div>';
     }
 
-    var boleta = rows
-      .map(function (r) {
-        return QA.pronosticos.label(r.suggested).charAt(0);
-      })
-      .join(" · ");
+    var doneN = 0;
+    var hitN = 0;
+    rows.forEach(function (r) {
+      if (r.result != null) {
+        doneN++;
+        if (r.result === r.suggested) hitN++;
+      }
+    });
 
-    // Compact boleta suggestion L/E/V letters
-    var boletaShort = rows
+    var chips = rows
       .map(function (r) {
-        return r.suggested === "1" ? "L" : r.suggested === "X" ? "E" : "V";
+        var lab =
+          r.suggested === "1" ? "L" : r.suggested === "X" ? "E" : "V";
+        var cls = QA.pronosticos.chipClass(r.suggested);
+        var state = "";
+        if (r.result != null) {
+          state = r.result === r.suggested ? " hit" : " miss";
+        }
+        return (
+          '<span class="ia-chip result-chip ' +
+          cls +
+          state +
+          '" title="P' +
+          (r.match.match_no || "") +
+          '">' +
+          lab +
+          "</span>"
+        );
       })
-      .join(" ");
+      .join("");
+
+    var scoreHtml = "";
+    if (doneN > 0) {
+      scoreHtml =
+        '<div class="ia-score">Aciertos de la sugerencia: <strong>' +
+        hitN +
+        "/" +
+        doneN +
+        "</strong></div>";
+    }
 
     var html =
       '<div class="ia-banner">' +
@@ -208,9 +236,11 @@ QA.pronosticos = {
       "<strong>No son predicciones mágicas</strong> ni consejo de apuesta: el fútbol es azar.</p>" +
       '<div class="ia-boleta-sug">' +
       '<span class="ia-boleta-lbl">Boleta sugerida</span>' +
-      '<span class="ia-boleta-vals">' +
-      escape(boletaShort) +
-      "</span></div></div>";
+      '<div class="ia-boleta-chips">' +
+      chips +
+      "</div>" +
+      scoreHtml +
+      "</div></div>";
 
     rows.forEach(function (r) {
       var m = r.match;
