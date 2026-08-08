@@ -3941,3 +3941,121 @@ a.tv-open {
   color: #94a3b8;
 }
 .part-win-right strong { color: #4ade80; }
+
+/* Pronósticos inteligentes */
+.ia-banner {
+  padding: 14px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(124, 58, 237, 0.2), rgba(37, 99, 235, 0.15));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+}
+.ia-banner-title {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #c4b5fd;
+  margin-bottom: 6px;
+}
+.ia-banner-sub {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+.ia-boleta-sug {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+}
+.ia-boleta-lbl {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a78bfa;
+}
+.ia-boleta-vals {
+  font-family: ui-monospace, monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #e2e8f0;
+}
+.ia-card {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.ia-card.ia-ok { border-color: rgba(74, 222, 128, 0.45); }
+.ia-card.ia-miss { border-color: rgba(248, 113, 113, 0.35); }
+.ia-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ia-match-no {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+}
+.ia-match-teams {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.ia-sug-row { margin-bottom: 6px; }
+.ia-sug {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ia-sug-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+.ia-conf {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.ia-conf.conf-alta { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+.ia-conf.conf-media { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+.ia-conf.conf-baja { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+.ia-bars { display: flex; flex-direction: column; gap: 4px; }
+.ia-bar-item { font-size: 0.72rem; color: #94a3b8; }
+.ia-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.5);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.ia-bar-fill { height: 100%; border-radius: 999px; }
+.ia-reasons {
+  margin: 6px 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+.ia-nodata {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+.ia-disclaimer {
+  margin: 14px 0 8px;
+  font-size: 0.7rem;
+  text-align: center;
+  color: #64748b;
+}
