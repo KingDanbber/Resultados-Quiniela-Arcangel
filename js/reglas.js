@@ -77,7 +77,7 @@ QA.reglas = {
       "<h4>8. Aceptación</h4>" +
       "<p>Al participar en Quiniela Arcángel se entienden aceptadas estas reglas y términos. Ante cualquier duda, contacta al organizador.</p>" +
       "</section>" +
-      '<p class="reglas-note">Quiniela Arcángel · Actividad recreativa entre conocidos · Sin fines de lucro comercial</p>'
+      '<p class="reglas-note">Resultados Quiniela Arcángel®<br/>Desarrollado por Luis Arturo<br/>con ayuda de IA: Grok (xAI) · ChatGPT (OpenAI) · Claude (Anthropic)<br/>Actividad recreativa entre conocidos</p>'
     );
   },
 
