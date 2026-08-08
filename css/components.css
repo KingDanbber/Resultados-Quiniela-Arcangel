@@ -441,27 +441,39 @@
 
 .jd-tabs {
   display: flex;
-  gap: 3px;
+  flex-wrap: nowrap;
+  gap: 4px;
   background: var(--card2);
   border-radius: 12px;
   padding: 4px;
   margin-bottom: 18px;
   border: 1px solid var(--border-s);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.jd-tabs::-webkit-scrollbar {
+  display: none;
 }
 .tab-btn {
-  flex: 1;
-  padding: 10px;
+  flex: 0 0 auto;
+  padding: 9px 12px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 1.2px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   background: transparent;
   color: var(--text-d);
   transition: all .2s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .tab-btn.active {
   background: linear-gradient(135deg, var(--acc2), var(--acc));
@@ -1228,9 +1240,9 @@
   margin-top: 4px;
 }
 
-/* Tabs: allow 3 buttons */
+/* Tabs: 4 botones con scroll horizontal en móvil */
 .jd-tabs { gap: 4px; }
-.tab-btn { font-size: 11px; padding: 10px 6px; }
+.tab-btn { font-size: 11px; padding: 9px 11px; }
 
 /* Estadísticas */
 .st-section {
