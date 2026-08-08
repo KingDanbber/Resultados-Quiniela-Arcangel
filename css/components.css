@@ -3771,3 +3771,32 @@ a.tv-open {
 .reglas-footer .res-btn {
   width: 100%;
 }
+
+/* Crédito desarrollador */
+.app-credit {
+  margin: 28px 0 12px;
+  padding: 18px 14px 22px;
+  text-align: center;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+.app-credit-brand {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  color: #93c5fd;
+  margin-bottom: 6px;
+}
+.app-credit-dev {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+.app-credit-dev strong {
+  color: #e2e8f0;
+  font-weight: 800;
+}
+.app-credit-ai {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #64748b;
+}
