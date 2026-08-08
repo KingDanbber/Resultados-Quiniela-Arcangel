@@ -3977,12 +3977,38 @@ a.tv-open {
   letter-spacing: 0.05em;
   color: #a78bfa;
 }
-.ia-boleta-vals {
-  font-family: ui-monospace, monospace;
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: #e2e8f0;
+.ia-boleta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.ia-chip {
+  min-width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.82rem;
+  border-radius: 8px;
+}
+.ia-chip.hit {
+  outline: 2px solid #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+}
+.ia-chip.miss {
+  outline: 2px solid #f87171;
+  opacity: 0.75;
+}
+.ia-score {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+.ia-score strong {
+  color: #4ade80;
+  font-weight: 900;
 }
 .ia-card {
   padding: 12px;
