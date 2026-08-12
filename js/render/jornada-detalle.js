@@ -652,7 +652,7 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           ? "No pagado"
           : "Pendiente";
         var picks = "";
-        if (expanded) {
+        if (expanded && !isGoleo) {
           picks =
             '<div class="picks-panel open"><div class="picks-grid">' +
             p.details
@@ -728,7 +728,10 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
             : "") +
           '</div><div class="lb-area">' +
           escape(p.displayArea || "") +
-          ' <span class="lb-hint-txt">· ver picks</span></div></div>' +
+          (isGoleo
+            ? ""
+            : ' <span class="lb-hint-txt">· ver picks</span>') +
+          "</div></div>" +
           '<div class="lb-hits"><div class="lb-hits-val' +
           (isGoleo && p.exactGoals ? " exact-goal" : "") +
           '">' +
@@ -767,6 +770,13 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
   }
 
   function bindLbRows(root, dataRef) {
+    if (dataRef && dataRef.isGoleo) {
+      // Goleo: solo total de goles, sin panel de picks por partido
+      root.querySelectorAll(".lb-row").forEach(function (row) {
+        row.style.cursor = "default";
+      });
+      return;
+    }
     root.querySelectorAll(".lb-row").forEach(function (row) {
       row.addEventListener("click", function () {
         var id = row.dataset.entry;
