@@ -761,13 +761,30 @@ QA.data.loadPoolDetail = async function (poolId) {
   if (entries.length) {
     const ids = entries.map(function (e) { return e.id; }).join(",");
     try {
-      const pair = await Promise.all([
-        db("predictions_1x2?entry_id=in.(" + ids + ")&select=*"),
-        db("predictions_total_goals?entry_id=in.(" + ids + ")&select=*"),
-      ]);
-      preds = pair[0];
-      predGoals = pair[1];
-    } catch (_) {}
+      preds = await db("predictions_1x2?entry_id=in.(" + ids + ")&select=*");
+    } catch (_) {
+      preds = [];
+    }
+    // Goleo: la tabla real es predictions_goals_total (fallback: predictions_total_goals)
+    try {
+      predGoals = await db(
+        "predictions_goals_total?entry_id=in.(" + ids + ")&select=*"
+      );
+      if (!predGoals || !predGoals.length) {
+        predGoals = await db(
+          "predictions_total_goals?entry_id=in.(" + ids + ")&select=*"
+        );
+      }
+    } catch (e1) {
+      try {
+        predGoals = await db(
+          "predictions_total_goals?entry_id=in.(" + ids + ")&select=*"
+        );
+      } catch (e2) {
+        predGoals = [];
+        console.warn("predictions goals total", e1, e2);
+      }
+    }
   }
 
   const getResult = QA.data.getResult;
@@ -808,10 +825,27 @@ QA.data.loadPoolDetail = async function (poolId) {
         if (correct) aciertos++;
         return { match: match, pick: pick, result: result, correct: correct };
       });
-      const goalPred =
-        myGoalPred && myGoalPred.predicted_total_goals != null
-          ? Number(myGoalPred.predicted_total_goals)
-          : null;
+      const goalPred = (function () {
+        if (!myGoalPred) return null;
+        // Soportar distintos nombres de columna según el esquema
+        var raw =
+          myGoalPred.predicted_total_goals != null
+            ? myGoalPred.predicted_total_goals
+            : myGoalPred.total_goals != null
+            ? myGoalPred.total_goals
+            : myGoalPred.goals_total != null
+            ? myGoalPred.goals_total
+            : myGoalPred.predicted_goals != null
+            ? myGoalPred.predicted_goals
+            : myGoalPred.prediction != null
+            ? myGoalPred.prediction
+            : myGoalPred.goals != null
+            ? myGoalPred.goals
+            : null;
+        if (raw == null || raw === "") return null;
+        var n = Number(raw);
+        return isNaN(n) ? null : n;
+      })();
       // Exacto al total real (solo si jornada completa)
       const exactGoals =
         isGoleo &&
