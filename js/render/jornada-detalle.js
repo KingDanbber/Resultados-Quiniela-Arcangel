@@ -245,12 +245,17 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
         '</span><span class="jd-stat-lbl">Partidos</span></div>' +
         '<div class="jd-stat"><span class="jd-stat-val">' +
         maxH +
-        '</span><span class="jd-stat-lbl">Máx. aciertos</span></div>' +
+        '</span><span class="jd-stat-lbl">' +
+        (isGoleo ? "Máx. pronóstico" : "Máx. aciertos") +
+        "</span></div>" +
         '<div class="jd-stat"><span class="jd-stat-val">' +
         lb.filter(function (p) {
+          if (isGoleo) return p.goalPred != null && p.goalPred === maxH;
           return p.aciertos === maxH && completed > 0;
         }).length +
-        '</span><span class="jd-stat-lbl">En la cima</span></div>' +
+        '</span><span class="jd-stat-lbl">' +
+        (isGoleo ? "Con ese total" : "En la cima") +
+        "</span></div>" +
         "</div>"
       : '<div class="jd-stats-strip">' +
         '<div class="jd-stat"><span class="jd-stat-val">' +
@@ -710,7 +715,9 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           '">' +
           '<div class="lb-rank">' +
           (isTop
-            ? '<span class="lb-crown" title="Máximo de aciertos">' +
+            ? '<span class="lb-crown" title="' +
+              (isGoleo ? "Máximo pronóstico de goles" : "Máximo de aciertos") +
+              '>' +
               (QA.icons.crown || "👑") +
               "</span>"
             : rank) +
