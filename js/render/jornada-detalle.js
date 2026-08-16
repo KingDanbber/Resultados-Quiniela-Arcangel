@@ -697,13 +697,15 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
         var isTop = isGoleo
           ? !!p.exactGoals
           : completed > 0 && maxH > 0 && p.aciertos === maxH;
+        // Ganador/Exacto solo cuando la jornada ya terminó
+        var showWinner = !!jornadaDone && isTop;
         var deltaInfo = rankDeltaInfo(p.id, rank);
         var deltaHtml = deltaInfo.html || "";
         return (
           '<div class="lb-row' +
           (expanded ? " expanded" : "") +
           (rank <= 3 && jornadaDone ? " rank-" + rank : "") +
-          (isTop ? " is-winner" : "") +
+          (showWinner ? " is-winner" : "") +
           (deltaInfo.climbed ? " rank-climbed" : "") +
           (QA.myBoleta &&
           QA.myBoleta.get(meta.id) &&
@@ -714,10 +716,10 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           escape(p.id) +
           '">' +
           '<div class="lb-rank">' +
-          (isTop
+          (showWinner
             ? '<span class="lb-crown" title="' +
               (isGoleo ? "Máximo pronóstico de goles" : "Máximo de aciertos") +
-              '>' +
+              '">' +
               (QA.icons.crown || "👑") +
               "</span>"
             : rank) +
@@ -725,7 +727,7 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           "</div>" +
           '<div class="lb-name-col"><div class="lb-name">' +
           escape(p.displayName) +
-          (isTop
+          (showWinner
             ? ' <span class="winner-tag">' +
               (isGoleo ? "Exacto" : "Ganador") +
               "</span>"
