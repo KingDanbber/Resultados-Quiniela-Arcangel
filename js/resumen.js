@@ -261,13 +261,38 @@ QA.resumen.homeCardHtml = function (item) {
       if ((p.aciertos || 0) > maxH) maxH = p.aciertos || 0;
     });
     var paid = lb.filter(function (p) { return p.paid; });
-    var winners = isGoleo
-      ? paid.filter(function (p) { return p.exactGoals; })
-      : paid.filter(function (p) { return maxH > 0 && p.aciertos === maxH; });
-    if (!winners.length) {
-      winners = isGoleo
-        ? lb.filter(function (p) { return p.exactGoals; }).slice(0, 3)
-        : lb.filter(function (p) { return maxH > 0 && p.aciertos === maxH; }).slice(0, 3);
+    var winners;
+    if (isGoleo) {
+      winners = paid.filter(function (p) { return p.exactGoals; });
+      if (!winners.length) {
+        winners = lb.filter(function (p) { return p.exactGoals; });
+      }
+      // Si nadie pegó exacto: podio por cercanía al total real
+      if (!winners.length) {
+        winners = lb
+          .filter(function (p) {
+            return p.goalPred != null;
+          })
+          .slice()
+          .sort(function (a, b) {
+            var da = a.goalsDiff != null ? a.goalsDiff : 9999;
+            var db = b.goalsDiff != null ? b.goalsDiff : 9999;
+            if (da !== db) return da - db;
+            return (a.displayName || "").localeCompare(b.displayName || "");
+          })
+          .slice(0, 3);
+      }
+    } else {
+      winners = paid.filter(function (p) {
+        return maxH > 0 && p.aciertos === maxH;
+      });
+      if (!winners.length) {
+        winners = lb
+          .filter(function (p) {
+            return maxH > 0 && p.aciertos === maxH;
+          })
+          .slice(0, 3);
+      }
     }
     winnersHtml = winners
       .slice(0, 3)
