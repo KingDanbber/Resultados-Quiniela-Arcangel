@@ -5,7 +5,8 @@
     (function () {
       try {
         var t = localStorage.getItem("qa_theme") || "dark";
-        if (["dark", "light", "oro", "midnight"].indexOf(t) === -1) t = "dark";
+        var ok = ["dark","light","oro","midnight","estadio","carbon","ligamx","neon","contraste"];
+        if (ok.indexOf(t) === -1) t = "dark";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
@@ -120,6 +121,7 @@
   <script src="js/resumen.js"></script>
   <script src="js/reglas.js"></script>
   <script src="js/share.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/app.js"></script>
   <script src="js/pwa.js"></script>
 
@@ -144,34 +146,7 @@
         document.addEventListener("DOMContentLoaded", run);
       } else run();
     })();
-    document.getElementById("btn-theme")?.addEventListener("click", function () {
-      var order = ["dark", "light", "oro", "midnight"];
-      var html = document.documentElement;
-      var cur = html.getAttribute("data-theme") || "dark";
-      var i = order.indexOf(cur);
-      var next = order[(i + 1) % order.length];
-      html.setAttribute("data-theme", next);
-      try {
-        localStorage.setItem("qa_theme", next);
-      } catch (e) {}
-      var labels = {
-        dark: "Tema oscuro",
-        light: "Tema claro",
-        oro: "Tema Oro Arcángel",
-        midnight: "Tema Medianoche",
-      };
-      if (window.QA && QA.notifications && QA.notifications.showMatchToast) {
-        /* silent */
-      }
-      var tip = document.getElementById("notif-toast");
-      if (tip) {
-        tip.textContent = labels[next] || next;
-        tip.classList.add("show");
-        setTimeout(function () {
-          tip.classList.remove("show");
-        }, 1800);
-      }
-    });
+    /* Temas: QA.theme (js/theme.js) */
   </script>
 
 </body>
