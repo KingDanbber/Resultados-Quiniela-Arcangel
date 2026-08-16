@@ -4254,3 +4254,204 @@ a.tv-open {
   color: var(--text-m);
   text-align: center;
 }
+
+/* ═══ Mini reproductor de música ═══ */
+.qm-fab {
+  position: fixed;
+  right: 76px;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  z-index: 1150;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--acc);
+  box-shadow: 0 8px 28px var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.qm-fab.playing {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25), 0 8px 28px var(--shadow);
+  animation: qmPulse 1.8s ease-in-out infinite;
+}
+@keyframes qmPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.qm-fab.open { opacity: 0; pointer-events: none; }
+
+.qm-panel {
+  position: fixed;
+  right: 12px;
+  bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+  z-index: 1160;
+  width: min(320px, calc(100vw - 24px));
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 16px 40px var(--shadow);
+}
+.qm-panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.qm-now { flex: 1; min-width: 0; }
+.qm-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qm-sub {
+  font-size: 0.75rem;
+  color: var(--text-m);
+  margin-top: 2px;
+}
+.qm-icon-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-m);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.qm-icon-btn:hover { color: var(--text); background: var(--card2); }
+
+.qm-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--card2);
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.qm-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  border-radius: 999px;
+}
+.qm-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-d);
+  margin-bottom: 10px;
+}
+.qm-error { color: var(--red); }
+
+.qm-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.qm-play {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--acc);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 4px;
+}
+[data-theme="light"] .qm-play,
+[data-theme="contraste"] .qm-play {
+  color: #0f172a;
+}
+[data-theme="contraste"] .qm-play {
+  background: #ffff00;
+  color: #000;
+}
+.qm-vol {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--acc);
+}
+
+.qm-list-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-m);
+  margin-bottom: 6px;
+}
+.qm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+.qm-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.qm-track:hover { background: var(--card2); }
+.qm-track.active {
+  background: var(--card2);
+  border-color: var(--border);
+}
+.qm-track-num {
+  width: 22px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: var(--text-d);
+}
+.qm-track.active .qm-track-num { color: var(--acc); }
+.qm-track-meta { flex: 1; min-width: 0; }
+.qm-track-title {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qm-track-artist {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-m);
+}
+.qm-track.playing .qm-track-eq {
+  width: 14px;
+  height: 12px;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  border-radius: 2px;
+  opacity: 0.9;
+  animation: qmEq 0.8s ease-in-out infinite alternate;
+}
+@keyframes qmEq {
+  from { transform: scaleY(0.5); }
+  to { transform: scaleY(1); }
+}
+
+/* Evitar solaparse con FAB de búsqueda si existe */
+#qa-music { pointer-events: none; }
+#qa-music .qm-fab,
+#qa-music .qm-panel { pointer-events: auto; }
