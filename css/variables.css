@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════
    QUINIELA ARCÁNGEL — Theme Variables
-   Mantener sincronizado con temas dark / light / estadio
+   Temas: dark · light · oro · midnight · estadio · carbon · ligamx · neon · contraste
    ═══════════════════════════════════════════ */
 
-:root {
+:root,
+[data-theme="dark"] {
   --bg: #06090f;
   --bg2: #0a1122;
   --bg3: #0d1530;
@@ -12,16 +13,14 @@
   --border: rgba(37, 99, 235, 0.28);
   --border-s: rgba(255, 255, 255, 0.05);
   --text: #e2e8f0;
-  --text-m: #475569;
-  --text-d: #334155;
+  --text-m: #94a3b8;
+  --text-d: #64748b;
   --acc: #2563eb;
   --acc2: #1d4ed8;
   --green: #22c55e;
   --amber: #f59e0b;
   --red: #ef4444;
   --shadow: rgba(0, 0, 0, 0.5);
-
-  /* Layout */
   --header-h: auto;
   --bottom-nav-h: 64px;
   --max-w: 1100px;
@@ -35,58 +34,31 @@
   --bg2: #e0e8f8;
   --bg3: #d4dff4;
   --card: rgba(255, 255, 255, 0.97);
-  --card2: rgba(230, 238, 255, 0.85);
-  --border: rgba(37, 99, 235, 0.25);
+  --card2: rgba(230, 238, 255, 0.9);
+  --border: rgba(37, 99, 235, 0.22);
   --border-s: rgba(0, 0, 0, 0.07);
   --text: #1e293b;
   --text-m: #64748b;
   --text-d: #94a3b8;
+  --acc: #2563eb;
+  --acc2: #1d4ed8;
+  --green: #16a34a;
+  --amber: #d97706;
+  --red: #dc2626;
   --shadow: rgba(0, 0, 0, 0.12);
 }
 
-[data-theme="estadio"] {
-  /* Opcional: overrides específicos del tema estadio */
-}
-
-
-[data-theme="light"] .live-badge {
-  background: rgba(22, 163, 74, 0.12);
-  border-color: rgba(22, 163, 74, 0.35);
-  color: #15803d;
-}
-[data-theme="light"] .live-badge .live-dot {
-  background: #16a34a;
-}
-[data-theme="light"] .h-right .icon-btn {
-  background: #fff;
-  border-color: rgba(15, 23, 42, 0.12);
-  color: #334155;
-  box-shadow: 0 1px 2px rgba(0,0,0,.04);
-}
-[data-theme="light"] #app-header {
-  background: linear-gradient(135deg, #f8fafc, #eef2ff);
-  border-bottom-color: rgba(15, 23, 42, 0.08);
-}
-
-[data-theme="light"] .h-sub .live-badge {
-  background: rgba(22, 163, 74, 0.12);
-  border-color: rgba(22, 163, 74, 0.35);
-  color: #15803d;
-}
-
-
-/* ── Tema Oro Arcángel ── */
 [data-theme="oro"] {
   --bg: #0c0a06;
   --bg2: #15110a;
   --bg3: #1c160c;
   --card: rgba(28, 22, 12, 0.97);
-  --card2: rgba(40, 30, 14, 0.88);
+  --card2: rgba(40, 30, 14, 0.9);
   --border: rgba(245, 158, 11, 0.35);
-  --border-s: rgba(251, 191, 36, 0.08);
+  --border-s: rgba(251, 191, 36, 0.1);
   --text: #fef3c7;
-  --text-m: #b45309;
-  --text-d: #92400e;
+  --text-m: #d97706;
+  --text-d: #b45309;
   --acc: #f59e0b;
   --acc2: #d97706;
   --green: #22c55e;
@@ -95,15 +67,14 @@
   --shadow: rgba(0, 0, 0, 0.55);
 }
 
-/* ── Tema Medianoche ── */
 [data-theme="midnight"] {
   --bg: #07060f;
   --bg2: #0e0b1a;
   --bg3: #151025;
   --card: rgba(18, 14, 36, 0.97);
-  --card2: rgba(30, 22, 54, 0.85);
+  --card2: rgba(30, 22, 54, 0.9);
   --border: rgba(139, 92, 246, 0.35);
-  --border-s: rgba(167, 139, 250, 0.1);
+  --border-s: rgba(167, 139, 250, 0.12);
   --text: #ede9fe;
   --text-m: #a78bfa;
   --text-d: #7c3aed;
@@ -115,6 +86,111 @@
   --shadow: rgba(0, 0, 0, 0.55);
 }
 
+/* Premium: Estadio */
+[data-theme="estadio"] {
+  --bg: #0a1f12;
+  --bg2: #0f2a18;
+  --bg3: #143320;
+  --card: rgba(16, 42, 28, 0.96);
+  --card2: rgba(22, 55, 36, 0.9);
+  --border: rgba(74, 222, 128, 0.3);
+  --border-s: rgba(134, 239, 172, 0.1);
+  --text: #ecfdf5;
+  --text-m: #86efac;
+  --text-d: #4ade80;
+  --acc: #22c55e;
+  --acc2: #16a34a;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* Premium: Carbon */
+[data-theme="carbon"] {
+  --bg: #0a0a0b;
+  --bg2: #121214;
+  --bg3: #1a1a1d;
+  --card: rgba(24, 24, 27, 0.97);
+  --card2: rgba(39, 39, 42, 0.9);
+  --border: rgba(161, 161, 170, 0.28);
+  --border-s: rgba(255, 255, 255, 0.06);
+  --text: #f4f4f5;
+  --text-m: #a1a1aa;
+  --text-d: #71717a;
+  --acc: #e4e4e7;
+  --acc2: #a1a1aa;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --shadow: rgba(0, 0, 0, 0.6);
+}
+
+/* Premium: Clásico Liga MX */
+[data-theme="ligamx"] {
+  --bg: #0a1628;
+  --bg2: #0f1f3a;
+  --bg3: #152848;
+  --card: rgba(15, 35, 64, 0.97);
+  --card2: rgba(22, 48, 86, 0.9);
+  --border: rgba(37, 99, 235, 0.4);
+  --border-s: rgba(239, 68, 68, 0.15);
+  --text: #f1f5f9;
+  --text-m: #93c5fd;
+  --text-d: #60a5fa;
+  --acc: #2563eb;
+  --acc2: #dc2626;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* Premium: Neón */
+[data-theme="neon"] {
+  --bg: #050510;
+  --bg2: #0a0a1a;
+  --bg3: #101028;
+  --card: rgba(12, 12, 32, 0.96);
+  --card2: rgba(20, 16, 48, 0.9);
+  --border: rgba(34, 211, 238, 0.4);
+  --border-s: rgba(232, 121, 249, 0.15);
+  --text: #ecfeff;
+  --text-m: #22d3ee;
+  --text-d: #a5f3fc;
+  --acc: #22d3ee;
+  --acc2: #e879f9;
+  --green: #4ade80;
+  --amber: #f0abfc;
+  --red: #fb7185;
+  --shadow: rgba(34, 211, 238, 0.15);
+}
+
+/* Premium: Alto contraste */
+[data-theme="contraste"] {
+  --bg: #000000;
+  --bg2: #0a0a0a;
+  --bg3: #111111;
+  --card: #141414;
+  --card2: #1f1f1f;
+  --border: #ffffff;
+  --border-s: rgba(255, 255, 255, 0.35);
+  --text: #ffffff;
+  --text-m: #e5e5e5;
+  --text-d: #cccccc;
+  --acc: #ffff00;
+  --acc2: #00ffff;
+  --green: #00ff00;
+  --amber: #ffff00;
+  --red: #ff3333;
+  --shadow: rgba(0, 0, 0, 0.8);
+}
+
+/* Header tints por tema */
+[data-theme="light"] #app-header {
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
 [data-theme="oro"] #app-header {
   background: linear-gradient(135deg, #1c160c, #0c0a06);
   border-bottom-color: rgba(245, 158, 11, 0.25);
@@ -122,4 +198,37 @@
 [data-theme="midnight"] #app-header {
   background: linear-gradient(135deg, #151025, #07060f);
   border-bottom-color: rgba(139, 92, 246, 0.25);
+}
+[data-theme="estadio"] #app-header {
+  background: linear-gradient(135deg, #143320, #0a1f12);
+  border-bottom-color: rgba(74, 222, 128, 0.25);
+}
+[data-theme="carbon"] #app-header {
+  background: linear-gradient(135deg, #1a1a1d, #0a0a0b);
+  border-bottom-color: rgba(161, 161, 170, 0.2);
+}
+[data-theme="ligamx"] #app-header {
+  background: linear-gradient(135deg, #152848, #0a1628);
+  border-bottom-color: rgba(37, 99, 235, 0.35);
+}
+[data-theme="neon"] #app-header {
+  background: linear-gradient(135deg, #101028, #050510);
+  border-bottom-color: rgba(34, 211, 238, 0.35);
+}
+[data-theme="contraste"] #app-header {
+  background: #000;
+  border-bottom: 2px solid #fff;
+}
+
+[data-theme="light"] .live-badge {
+  background: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.35);
+  color: #15803d;
+}
+[data-theme="light"] .live-badge .live-dot { background: #16a34a; }
+[data-theme="light"] .h-right .icon-btn {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
