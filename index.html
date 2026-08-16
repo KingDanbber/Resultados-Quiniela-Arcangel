@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("qa_theme") || "dark";
+        if (["dark", "light", "oro", "midnight"].indexOf(t) === -1) t = "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Quiniela Arcángel</title>
@@ -135,10 +144,33 @@
         document.addEventListener("DOMContentLoaded", run);
       } else run();
     })();
-    document.getElementById('btn-theme')?.addEventListener('click', () => {
-      const html = document.documentElement;
-      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', next);
+    document.getElementById("btn-theme")?.addEventListener("click", function () {
+      var order = ["dark", "light", "oro", "midnight"];
+      var html = document.documentElement;
+      var cur = html.getAttribute("data-theme") || "dark";
+      var i = order.indexOf(cur);
+      var next = order[(i + 1) % order.length];
+      html.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("qa_theme", next);
+      } catch (e) {}
+      var labels = {
+        dark: "Tema oscuro",
+        light: "Tema claro",
+        oro: "Tema Oro Arcángel",
+        midnight: "Tema Medianoche",
+      };
+      if (window.QA && QA.notifications && QA.notifications.showMatchToast) {
+        /* silent */
+      }
+      var tip = document.getElementById("notif-toast");
+      if (tip) {
+        tip.textContent = labels[next] || next;
+        tip.classList.add("show");
+        setTimeout(function () {
+          tip.classList.remove("show");
+        }, 1800);
+      }
     });
   </script>
 
