@@ -4097,3 +4097,32 @@ a.tv-open {
   text-align: center;
   color: #64748b;
 }
+
+
+/* Cards oscuras: texto legible en tema claro y demás */
+.goleo-card,
+.last-jornada-card {
+  color: #e2e8f0;
+}
+.goleo-card-title,
+.last-j-title {
+  color: #f1f5f9 !important;
+}
+.goleo-name,
+.last-win-row {
+  color: #e2e8f0;
+}
+.goleo-head {
+  color: #94a3b8 !important;
+}
+.goleo-pred {
+  color: #fbbf24;
+}
+.goleo-open,
+.last-j-btn:not(.primary) {
+  color: #93c5fd !important;
+}
+.goleo-card-meta,
+.last-j-empty {
+  color: #94a3b8 !important;
+}

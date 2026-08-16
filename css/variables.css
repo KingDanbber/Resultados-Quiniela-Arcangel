@@ -73,3 +73,53 @@
   border-color: rgba(22, 163, 74, 0.35);
   color: #15803d;
 }
+
+
+/* ── Tema Oro Arcángel ── */
+[data-theme="oro"] {
+  --bg: #0c0a06;
+  --bg2: #15110a;
+  --bg3: #1c160c;
+  --card: rgba(28, 22, 12, 0.97);
+  --card2: rgba(40, 30, 14, 0.88);
+  --border: rgba(245, 158, 11, 0.35);
+  --border-s: rgba(251, 191, 36, 0.08);
+  --text: #fef3c7;
+  --text-m: #b45309;
+  --text-d: #92400e;
+  --acc: #f59e0b;
+  --acc2: #d97706;
+  --green: #22c55e;
+  --amber: #fbbf24;
+  --red: #ef4444;
+  --shadow: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Tema Medianoche ── */
+[data-theme="midnight"] {
+  --bg: #07060f;
+  --bg2: #0e0b1a;
+  --bg3: #151025;
+  --card: rgba(18, 14, 36, 0.97);
+  --card2: rgba(30, 22, 54, 0.85);
+  --border: rgba(139, 92, 246, 0.35);
+  --border-s: rgba(167, 139, 250, 0.1);
+  --text: #ede9fe;
+  --text-m: #a78bfa;
+  --text-d: #7c3aed;
+  --acc: #8b5cf6;
+  --acc2: #7c3aed;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f472b6;
+  --shadow: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="oro"] #app-header {
+  background: linear-gradient(135deg, #1c160c, #0c0a06);
+  border-bottom-color: rgba(245, 158, 11, 0.25);
+}
+[data-theme="midnight"] #app-header {
+  background: linear-gradient(135deg, #151025, #07060f);
+  border-bottom-color: rgba(139, 92, 246, 0.25);
+}
