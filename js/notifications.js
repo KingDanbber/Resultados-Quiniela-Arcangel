@@ -1,11 +1,12 @@
-/* Notificaciones no invasivas · toasts de resultados + opt-in sistema */
+/* Notificaciones in-app · toasts de resultados + opt-in sistema */
 window.QA = window.QA || {};
 QA.notifications = (function () {
   var STORAGE_SCORES = "qa_match_scores_v1";
   var STORAGE_PREF = "qa_notif_enabled";
+  var STORAGE_BOOT = "qa_notif_bootstrapped_v1";
   var enabled = localStorage.getItem(STORAGE_PREF) === "1";
   var pollTimer = null;
-  var POLL_MS = 45000;
+  var POLL_MS = 30000;
 
   function ensureUI() {
     if (!document.getElementById("match-result-toasts")) {
@@ -20,8 +21,7 @@ QA.notifications = (function () {
     }
     var btn = document.getElementById("notif-btn");
     if (btn) {
-      btn.innerHTML =
-        (QA.icons && QA.icons.bell) || "🔔";
+      btn.innerHTML = (QA.icons && QA.icons.bell) || "🔔";
       btn.classList.toggle("notif-on", enabled);
       btn.title = enabled
         ? "Notificaciones activadas"
@@ -37,22 +37,15 @@ QA.notifications = (function () {
     t.classList.add("show");
     setTimeout(function () {
       t.classList.remove("show");
-    }, 2800);
+    }, 3200);
   }
 
   function showMatchToast(payload) {
     var container = document.getElementById("match-result-toasts");
     if (!container) return;
-    // max 4 visible
     while (container.children.length >= 4) {
       container.removeChild(container.firstChild);
     }
-    var RESULT_COLOR = {
-      "1": "var(--green)",
-      X: "var(--amber)",
-      "2": "#ef4444",
-      fin: "var(--amber)",
-    };
     var RESULT_LBL = {
       "1": "Local gana",
       X: "Empate",
@@ -78,55 +71,39 @@ QA.notifications = (function () {
       QA.utils.escape(payload.headline) +
       "</div>" +
       (payload.result !== "fin"
-        ? '<div class="mr-toast-score" style="color:' +
-          (RESULT_COLOR[payload.result] || "var(--text)") +
-          '">' +
+        ? '<div class="mr-toast-score">' +
           payload.hg +
           " - " +
           payload.ag +
+          '</div><div class="mr-toast-result">' +
+          (RESULT_LBL[payload.result] || "") +
           "</div>"
         : "") +
-      '<div class="mr-toast-result" style="color:' +
-      (RESULT_COLOR[payload.result] || "var(--text-m)") +
-      '">' +
-      (RESULT_LBL[payload.result] || "") +
-      "</div></div>" +
-      '<button type="button" class="mr-toast-x" aria-label="Cerrar">×</button>';
+      '</div><button type="button" class="mr-toast-x" aria-label="Cerrar">×</button>';
 
-    div.querySelector(".mr-toast-x").addEventListener("click", function () {
-      div.remove();
-    });
+    div.querySelector(".mr-toast-x").onclick = function () {
+      div.classList.add("fade-out");
+      setTimeout(function () {
+        if (div.parentNode) div.parentNode.removeChild(div);
+      }, 280);
+    };
     container.appendChild(div);
     setTimeout(function () {
       div.classList.add("fade-out");
       setTimeout(function () {
-        div.remove();
-      }, 400);
-    }, 7000);
-
-    // Sistema (solo si el usuario activó y dio permiso)
-    if (
-      enabled &&
-      "Notification" in window &&
-      Notification.permission === "granted"
-    ) {
-      try {
-        new Notification("Quiniela Arcángel", {
-          body: payload.headline,
-          icon: "img/logo-arcangel.png",
-          silent: true,
-        });
-      } catch (_) {}
-    }
+        if (div.parentNode) div.parentNode.removeChild(div);
+      }, 280);
+    }, 8000);
   }
 
   function loadScores() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_SCORES) || "{}");
+      return JSON.parse(localStorage.getItem(STORAGE_SCORES) || "{}") || {};
     } catch (_) {
       return {};
     }
   }
+
   function saveScores(map) {
     try {
       localStorage.setItem(STORAGE_SCORES, JSON.stringify(map));
@@ -140,7 +117,8 @@ QA.notifications = (function () {
     var ag = m.away_goals;
     if (result === "X") return H + " empata " + hg + "-" + ag + " con " + A;
     if (result === "1") {
-      if (hg - ag >= 3) return H + " aplasta " + hg + "-" + ag + " a " + A;
+      if (Number(hg) - Number(ag) >= 3)
+        return H + " aplasta " + hg + "-" + ag + " a " + A;
       return H + " derrota " + hg + "-" + ag + " a " + A;
     }
     if (result === "2") {
@@ -149,70 +127,117 @@ QA.notifications = (function () {
     return H + " " + hg + "-" + ag + " " + A;
   }
 
-  async function poll() {
+  function matchKey(jornadaId, m) {
+    return String(m.id || jornadaId + "_" + m.match_no);
+  }
+
+  async function getWatchList() {
+    var jornadas = await QA.data.getJornadas(true);
+    var activas = (jornadas || []).filter(function (j) {
+      return j.estado === "activa";
+    });
+    var recentDone = (jornadas || [])
+      .filter(function (j) {
+        return j.estado === "finalizada";
+      })
+      .slice(0, 4);
+    return activas.concat(recentDone);
+  }
+
+  /**
+   * Compara marcadores guardados vs Supabase y muestra toasts.
+   * - Primera vez (sin bootstrap): guarda baseline sin toasts
+   * - Replay (qa_notif_replay=1): toasts de todos los finales actuales
+   * - Normal: toasts si pasó de pendiente→final o cambió el marcador
+   */
+  async function scan() {
     try {
-      var jornadas = await QA.data.getJornadas(true);
-      var activas = jornadas.filter(function (j) {
-        return j.estado === "activa";
-      });
-      if (!activas.length) return;
+      if (!QA.data || !QA.data.getJornadas) return;
+      var watch = await getWatchList();
+      if (!watch.length) return;
 
       var prev = loadScores();
-      var next = Object.assign({}, prev);
+      var next = {};
+      var events = [];
+      var replay = localStorage.getItem("qa_notif_replay") === "1";
+      var booted = localStorage.getItem(STORAGE_BOOT) === "1";
 
-      for (var i = 0; i < activas.length; i++) {
-        var j = activas[i];
-        // Prefer sibling sencilla scores for goleo too via loadPoolDetail
-        var detail = await QA.data.loadPoolDetail(j.id);
+      for (var i = 0; i < watch.length; i++) {
+        var j = watch[i];
+        var detail;
+        try {
+          detail = await QA.data.loadPoolDetail(j.id);
+        } catch (_) {
+          continue;
+        }
         (detail.matches || []).forEach(function (m) {
-          if (m.home_goals == null || m.away_goals == null) return;
-          var key = m.id || j.id + "_" + m.match_no;
-          var val = m.home_goals + "-" + m.away_goals;
-          if (prev[key] === val) {
-            next[key] = val;
+          var key = matchKey(j.id, m);
+          var hasScore = m.home_goals != null && m.away_goals != null;
+          if (!hasScore) {
+            next[key] = "pending";
             return;
           }
-          // First time seeing score: if prev empty for this key, only notify if we had a snapshot already for the pool
-          var isNew = prev[key] && prev[key] !== val;
-          var isFirstAfterInit = !prev[key] && Object.keys(prev).length > 0;
+          var val = String(m.home_goals) + "-" + String(m.away_goals);
           next[key] = val;
-          if (isNew || isFirstAfterInit) {
+          var before = prev[key];
+          var becameFinal = before === "pending" || before == null;
+          var changed =
+            before != null && before !== "pending" && before !== val;
+          if (replay || becameFinal || changed) {
             var result = QA.data.getResult(m.home_goals, m.away_goals);
-            var hl = headlineFor(m, result);
-            showMatchToast({
-              headline: hl,
+            events.push({
+              headline: headlineFor(m, result),
               hg: m.home_goals,
               ag: m.away_goals,
               result: result,
+              key: key,
+              val: val,
             });
-            pushSystem(
-              "Resultado final",
-              hl + " · " + m.home_goals + "-" + m.away_goals
-            );
           }
         });
       }
-      saveScores(next);
 
-      // Cierre de jornada / ganadores (activas + recién finalizadas)
-      var allJ = await QA.data.getJornadas();
-      var watch = (allJ || []).filter(function (j) {
-        return j.estado === "activa" || j.estado === "finalizada";
+      // Primera vez en este dispositivo: no spamear historial
+      if (!booted && !replay) {
+        saveScores(next);
+        localStorage.setItem(STORAGE_BOOT, "1");
+        return;
+      }
+
+      if (replay) localStorage.removeItem("qa_notif_replay");
+
+      // Deduplicar por key
+      var seen = {};
+      events.forEach(function (ev) {
+        if (seen[ev.key]) return;
+        seen[ev.key] = true;
+        // En modo normal, si ya teníamos el mismo marcador no avisar
+        if (!replay && prev[ev.key] === ev.val) return;
+        showMatchToast(ev);
+        pushSystem(
+          "Resultado final",
+          ev.headline + " · " + ev.hg + "-" + ev.ag
+        );
       });
-      for (var j = 0; j < watch.length; j++) {
+
+      saveScores(next);
+      localStorage.setItem(STORAGE_BOOT, "1");
+
+      // Cierre de jornada
+      for (var k = 0; k < watch.length; k++) {
         try {
-          var doneKey = "qa_pool_done_" + watch[j].id;
+          var doneKey = "qa_pool_done_" + watch[k].id;
           var wasDone = localStorage.getItem(doneKey) === "1";
-          if (wasDone && watch[j].estado === "finalizada") continue;
-          var det = await QA.data.loadPoolDetail(watch[j].id);
+          if (wasDone && watch[k].estado === "finalizada") continue;
+          var det = await QA.data.loadPoolDetail(watch[k].id);
           if (det.jornadaDone && !wasDone) {
             localStorage.setItem(doneKey, "1");
+            var maxH = 0;
+            (det.leaderboard || []).forEach(function (x) {
+              if ((x.aciertos || 0) > maxH) maxH = x.aciertos || 0;
+            });
             var winners = (det.leaderboard || []).filter(function (p) {
               if (det.isGoleo) return !!p.exactGoals;
-              var maxH = 0;
-              (det.leaderboard || []).forEach(function (x) {
-                if ((x.aciertos || 0) > maxH) maxH = x.aciertos || 0;
-              });
               return maxH > 0 && p.aciertos === maxH;
             });
             var names = winners
@@ -236,7 +261,7 @@ QA.notifications = (function () {
         } catch (_) {}
       }
     } catch (err) {
-      console.warn("notif poll", err);
+      console.warn("notif scan", err);
     }
   }
 
@@ -267,91 +292,60 @@ QA.notifications = (function () {
       localStorage.setItem(STORAGE_PREF, "0");
       ensureUI();
       showAppToast("Notificaciones desactivadas");
-      if (QA.push && QA.push.unsubscribe) {
-        QA.push.unsubscribe().catch(function () {});
-      }
       return;
     }
-    // Preferir Web Push real (segundo plano) si está disponible
-    var doLocal = function () {
-      Notification.requestPermission().then(function (perm) {
-        if (perm === "granted") {
-          enabled = true;
-          localStorage.setItem(STORAGE_PREF, "1");
-          ensureUI();
-          showAppToast("Alertas en app activadas");
-          try {
-            new Notification("Quiniela Arcángel", {
-              body: "Avisos listos. Pasión x Ganar ⚽",
-              icon: "img/logo-arcangel.png",
-              silent: true,
-            });
-          } catch (_) {}
-        } else {
-          showAppToast("Permiso denegado · igual verás avisos en la app");
-        }
-      });
-    };
-
-    if (QA.push && QA.push.isSupported()) {
-      QA.push
-        .subscribe()
-        .then(function () {
-          enabled = true;
-          localStorage.setItem(STORAGE_PREF, "1");
-          ensureUI();
-          showAppToast("Push activado · avisos con la app cerrada");
-          try {
-            new Notification("Quiniela Arcángel", {
-              body: "Push en segundo plano listo ⚽",
-              icon: "img/logo-arcangel.png",
-            });
-          } catch (_) {}
-        })
-        .catch(function (err) {
-          console.warn("Web Push", err);
-          showAppToast(
-            (err && err.message) || "Push no disponible · usando avisos locales"
-          );
-          doLocal();
-        });
-    } else {
-      doLocal();
-    }
+    Notification.requestPermission().then(function (perm) {
+      if (perm === "granted") {
+        enabled = true;
+        localStorage.setItem(STORAGE_PREF, "1");
+        ensureUI();
+        showAppToast("Alertas en app activadas");
+        try {
+          new Notification("Quiniela Arcángel", {
+            body: "Avisos listos. Pasión x Ganar ⚽",
+            icon: "img/logo-arcangel.png",
+            silent: true,
+          });
+        } catch (_) {}
+      } else {
+        showAppToast("Permiso denegado · igual verás avisos en la app");
+      }
+    });
   }
 
   function start() {
     ensureUI();
-    // Build baseline scores without toasting everything
-    (async function () {
-      try {
-        var prev = loadScores();
-        if (Object.keys(prev).length) return;
-        var jornadas = await QA.data.getJornadas();
-        var activas = jornadas.filter(function (j) {
-          return j.estado === "activa";
-        });
-        var map = {};
-        for (var i = 0; i < activas.length; i++) {
-          var detail = await QA.data.loadPoolDetail(activas[i].id);
-          (detail.matches || []).forEach(function (m) {
-            if (m.home_goals == null || m.away_goals == null) return;
-            var key = m.id || activas[i].id + "_" + m.match_no;
-            map[key] = m.home_goals + "-" + m.away_goals;
-          });
-        }
-        saveScores(map);
-      } catch (_) {}
-    })();
-
+    // Escaneo inmediato al abrir
+    scan();
+    // Y de nuevo a los 3s (por si Supabase tarda)
+    setTimeout(function () {
+      scan();
+    }, 3000);
     if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(poll, POLL_MS);
+    pollTimer = setInterval(scan, POLL_MS);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") scan();
+    });
   }
 
   return {
     init: start,
     toggle: toggle,
     showMatchToast: showMatchToast,
-    poll: poll,
+    poll: scan,
+    /** Reinicia y vuelve a mostrar toasts de resultados actuales (prueba) */
+    resetAndReplay: function () {
+      localStorage.removeItem(STORAGE_SCORES);
+      localStorage.setItem(STORAGE_BOOT, "1");
+      localStorage.setItem("qa_notif_replay", "1");
+      showAppToast("Reproduciendo avisos de resultados…");
+      return scan();
+    },
+    resetScores: function () {
+      localStorage.removeItem(STORAGE_SCORES);
+      localStorage.removeItem(STORAGE_BOOT);
+      localStorage.removeItem("qa_notif_replay");
+      showAppToast("Historial de marcadores borrado");
+    },
   };
 })();
