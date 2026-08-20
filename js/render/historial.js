@@ -261,6 +261,9 @@ QA.render.historial = async function (tab) {
   }
 
   function renderParticipantes(panel, cache) {
+    if (QA.logros) {
+      QA.logros.compute().catch(function () {});
+    }
     var list = buildParticipantProfiles(cache);
     if (!list.length) {
       panel.innerHTML =
@@ -398,6 +401,38 @@ QA.render.historial = async function (tab) {
       '<div class="part-m-area">' +
       escape(p.area || "Sin zona") +
       "</div>" +
+      (function () {
+        if (!QA.logros) return "";
+        try {
+          var badges = QA.logros.badgesForPerson(p.name, p.area);
+          if (!badges.length) {
+            // trigger compute async first time
+            QA.logros.compute().then(function () {
+              /* next open will show */
+            });
+            return "";
+          }
+          return (
+            '<div class="part-m-badges">' +
+            badges
+              .map(function (b) {
+                return (
+                  '<span class="part-badge" title="' +
+                  escape(b.desc) +
+                  '">' +
+                  b.icon +
+                  " " +
+                  escape(b.name) +
+                  "</span>"
+                );
+              })
+              .join("") +
+            "</div>"
+          );
+        } catch (_) {
+          return "";
+        }
+      })() +
       '<div class="part-m-kpis">' +
       '<div class="part-m-kpi"><div class="part-m-kpi-val">' +
       p.totalHits +

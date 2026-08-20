@@ -62,11 +62,19 @@ QA.render.ganadores = async function (tab) {
     (tab === "goleo" ? " active" : "") +
     '" data-gantab="goleo">Campeón de Goleo</button>' +
     '<button type="button" class="gan-tab' +
+    (tab === "logros" ? " active" : "") +
+    '" data-gantab="logros">Logros</button>' +
+    '<button type="button" class="gan-tab' +
+    (tab === "once" ? " active" : "") +
+    '" data-gantab="once">Nuestro 11</button>' +
+    '<button type="button" class="gan-tab' +
     (tab === "stats" ? " active" : "") +
     '" data-gantab="stats">Estadísticas</button>' +
     "</div>" +
     '<div id="gan-panel">' +
-    QA.skel.page(tab === "stats" ? "stats" : tab === "goleo" ? "cards" : "list") +
+    QA.skel.page(
+      tab === "stats" ? "stats" : tab === "once" ? "cards" : tab === "logros" ? "list" : tab === "goleo" ? "cards" : "list"
+    ) +
     "</div>";
 
   el.querySelectorAll("[data-gantab]").forEach(function (btn) {
@@ -78,6 +86,8 @@ QA.render.ganadores = async function (tab) {
   const panel = document.getElementById("gan-panel");
   if (tab === "goleo") await renderGoleo(panel);
   else if (tab === "stats") await renderStats(panel);
+  else if (tab === "logros") await renderLogros(panel);
+  else if (tab === "once") await renderOnce(panel);
   else await renderHof(panel);
 
   function fmxn(n) {
@@ -376,4 +386,182 @@ QA.render.ganadores = async function (tab) {
         '<div class="empty-state"><p>No se pudieron cargar las estadísticas</p></div>';
     }
   }
+
+  async function renderLogros(panel) {
+    panel.innerHTML = QA.skel.page("list");
+    if (!QA.logros) {
+      panel.innerHTML = '<div class="empty-state"><p>Módulo de logros no cargado</p></div>';
+      return;
+    }
+    var data;
+    try {
+      data = await QA.logros.compute();
+    } catch (err) {
+      console.error(err);
+      panel.innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Error al calcular logros</p></div>';
+      return;
+    }
+    var escape = QA.utils.escape;
+    var st = data.stats || {};
+    var html =
+      '<h2 class="pool-name">Logros</h2>' +
+      '<p class="pool-meta">' +
+      (st.unlocked || 0) +
+      " de " +
+      (st.total || 0) +
+      " desbloqueados · " +
+      (st.people || 0) +
+      " participantes en el historial</p>" +
+      '<div class="logros-list">';
+    data.achievements.forEach(function (a) {
+      html +=
+        '<button type="button" class="logro-card' +
+        (a.count ? "" : " locked") +
+        '" data-logro="' +
+        escape(a.id) +
+        '">' +
+        '<div class="logro-icon">' +
+        a.icon +
+        "</div>" +
+        '<div class="logro-body">' +
+        '<div class="logro-name">' +
+        escape(a.name) +
+        "</div>" +
+        '<div class="logro-desc">' +
+        escape(a.desc) +
+        "</div>" +
+        '<div class="logro-count">' +
+        (a.count
+          ? a.count + " participante" + (a.count === 1 ? "" : "s")
+          : "Por conquistar") +
+        "</div></div>" +
+        '<span class="logro-chevron">›</span></button>';
+    });
+    html += "</div>";
+    panel.innerHTML = html;
+    panel.querySelectorAll(".logro-card").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-logro");
+        var ach = data.achievements.find(function (x) {
+          return x.id === id;
+        });
+        if (ach) openLogroModal(ach);
+      });
+    });
+  }
+
+  function openLogroModal(a) {
+    var existing = document.getElementById("logro-modal");
+    if (existing) existing.remove();
+    var escape = QA.utils.escape;
+    var holders = a.holders || [];
+    var list =
+      holders.length === 0
+        ? '<p class="qa-modal-note">Aún nadie ha desbloqueado este logro.</p>'
+        : holders
+            .map(function (h) {
+              return (
+                '<div class="logro-holder">' +
+                '<div class="logro-holder-name">' +
+                escape(h.name) +
+                "</div>" +
+                '<div class="logro-holder-area">' +
+                escape(h.area || "Sin zona") +
+                "</div>" +
+                (h.meta
+                  ? '<div class="logro-holder-meta">' + escape(h.meta) + "</div>"
+                  : "") +
+                "</div>"
+              );
+            })
+            .join("");
+    var modal = document.createElement("div");
+    modal.id = "logro-modal";
+    modal.className = "qa-modal-overlay";
+    modal.innerHTML =
+      '<div class="qa-modal logro-modal">' +
+      '<div class="qa-modal-head"><h3>' +
+      a.icon +
+      " " +
+      escape(a.name) +
+      '</h3><button type="button" class="qa-modal-close" id="logro-m-close">✕</button></div>' +
+      '<p class="logro-modal-desc">' +
+      escape(a.desc) +
+      "</p>" +
+      '<div class="logro-holders">' +
+      list +
+      "</div></div>";
+    document.body.appendChild(modal);
+    document.getElementById("logro-m-close").onclick = function () {
+      modal.remove();
+    };
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal) modal.remove();
+    });
+  }
+
+  async function renderOnce(panel) {
+    panel.innerHTML = QA.skel.page("cards");
+    if (!QA.logros) {
+      panel.innerHTML = '<div class="empty-state"><p>Módulo de logros no cargado</p></div>';
+      return;
+    }
+    var data;
+    try {
+      data = await QA.logros.compute();
+    } catch (err) {
+      console.error(err);
+      panel.innerHTML = '<div class="empty-state"><p>Error al armar el 11</p></div>';
+      return;
+    }
+    var escape = QA.utils.escape;
+    var html =
+      '<h2 class="pool-name">Nuestro 11</h2>' +
+      '<p class="pool-meta">Titulares elegidos por logros del grupo · formación 4-3-3</p>' +
+      '<div class="once-pitch"><div class="once-grass">';
+    (data.once || []).forEach(function (s) {
+      var p = s.player;
+      html +=
+        '<div class="once-slot" style="left:' +
+        s.x +
+        "%;top:" +
+        s.y +
+        '%">' +
+        (p
+          ? '<div class="once-player" title="' +
+            escape(p.badge || "") +
+            '">' +
+            '<div class="once-badge">' +
+            (p.icon || "⭐") +
+            "</div>" +
+            '<div class="once-initials">' +
+            escape(
+              String(p.name || "?")
+                .split(/\s+/)
+                .map(function (w) {
+                  return w.charAt(0);
+                })
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()
+            ) +
+            "</div>" +
+            '<div class="once-name">' +
+            escape((p.name || "").split(" ")[0]) +
+            "</div>" +
+            '<div class="once-role">' +
+            escape(s.label) +
+            "</div></div>"
+          : '<div class="once-empty"><span>' +
+            escape(s.label) +
+            "</span><small>Por conquistar</small></div>") +
+        "</div>";
+    });
+    html +=
+      "</div></div>" +
+      '<p class="once-note">Cada posición prioriza un logro distinto. Sin jugadores repetidos.</p>';
+    panel.innerHTML = html;
+  }
+
 };
