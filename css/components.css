@@ -4455,3 +4455,225 @@ a.tv-open {
 #qa-music { pointer-events: none; }
 #qa-music .qm-fab,
 #qa-music .qm-panel { pointer-events: auto; }
+
+
+/* Logros */
+.gan-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: 14px;
+}
+.gan-tabs::-webkit-scrollbar { display: none; }
+.gan-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.logros-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.logro-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+.logro-card.locked {
+  opacity: 0.55;
+}
+.logro-icon {
+  font-size: 1.6rem;
+  width: 42px;
+  text-align: center;
+}
+.logro-body { flex: 1; min-width: 0; }
+.logro-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.logro-desc {
+  font-size: 0.78rem;
+  color: var(--text-m);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.logro-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--acc);
+  margin-top: 4px;
+}
+.logro-chevron {
+  color: var(--text-d);
+  font-size: 1.2rem;
+}
+.logro-modal-desc {
+  font-size: 0.88rem;
+  color: var(--text-m);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+.logro-holders {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.logro-holder {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card2);
+  border: 1px solid var(--border-s);
+}
+.logro-holder-name { font-weight: 800; }
+.logro-holder-area {
+  font-size: 0.78rem;
+  color: var(--text-m);
+}
+.logro-holder-meta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--acc);
+  margin-top: 2px;
+}
+
+.part-m-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.part-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* Nuestro 11 */
+.once-pitch {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0b3d1e;
+  margin-bottom: 12px;
+}
+.once-grass {
+  position: relative;
+  width: 100%;
+  padding-bottom: 145%;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 40%),
+    repeating-linear-gradient(
+      90deg,
+      #0d4a24 0px,
+      #0d4a24 28px,
+      #0c4220 28px,
+      #0c4220 56px
+    );
+}
+.once-grass::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.once-grass::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.once-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.once-player {
+  width: 64px;
+  text-align: center;
+}
+.once-badge {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+.once-initials {
+  width: 40px;
+  height: 40px;
+  margin: 2px auto;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #fbbf24;
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.once-name {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 72px;
+  margin: 0 auto;
+}
+.once-role {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+}
+.once-empty {
+  width: 56px;
+  padding: 6px 4px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.35);
+  background: rgba(0,0,0,0.2);
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.once-empty small {
+  display: block;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+.once-note {
+  font-size: 0.78rem;
+  color: var(--text-m);
+  text-align: center;
+  line-height: 1.4;
+}
