@@ -901,6 +901,9 @@ QA.data.loadPoolDetail = async function (poolId) {
     totalGoalsPartial: totalGoalsPartial,
     goalsMatchesDone: goalsMatchesDone,
     siblingSencillaId: siblingSencillaId,
+    carryoverAmount:
+      pool.carryover_amount != null ? Number(pool.carryover_amount) : 0,
+    carryoverEnabled: pool.carryover_enabled !== false,
     exactWinners: isGoleo
       ? leaderboard.filter(function (p) {
           return p.exactGoals && p.paid;
@@ -924,6 +927,9 @@ QA.data.loadPoolDetail = async function (poolId) {
         return m;
       })(pool.mode_code),
       price: pool.price,
+      carryoverAmount:
+        pool.carryover_amount != null ? Number(pool.carryover_amount) : 0,
+      carryoverEnabled: pool.carryover_enabled !== false,
       estado: (function () {
         const s = String(pool.status || "").toLowerCase();
         if (["active", "activa", "open", "abierta", "published"].indexOf(s) !== -1)
