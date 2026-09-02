@@ -4677,3 +4677,15 @@ a.tv-open {
   text-align: center;
   line-height: 1.4;
 }
+
+.bolsa-carry-note {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--amber, #fbbf24);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+.bolsa-carry-note strong { color: var(--amber, #f59e0b); }
