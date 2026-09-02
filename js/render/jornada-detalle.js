@@ -1411,9 +1411,30 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     var paidN = list.filter(function (p) { return p.paid; }).length;
     var totalN = list.length;
     var pr = dataRef.poolResult;
-    var gross = pr && pr.gross_pot != null ? Number(pr.gross_pot) : paidN * price;
+    var carry =
+      dataRef.carryoverAmount != null
+        ? Number(dataRef.carryoverAmount)
+        : dataRef.meta && dataRef.meta.carryoverAmount != null
+        ? Number(dataRef.meta.carryoverAmount)
+        : 0;
+    if (isNaN(carry) || carry < 0) carry = 0;
+    var baseGross =
+      pr && pr.gross_pot != null ? Number(pr.gross_pot) : paidN * price;
+    // Bruta = boletas de esta jornada + arrastre de Goleo anterior
+    var gross = baseGross + carry;
     var net = pr && pr.net_pot != null ? Number(pr.net_pot) : null;
-    var commission = pr && pr.commission_amount != null ? Number(pr.commission_amount) : null;
+    if (net != null && carry > 0) {
+      // Si net_pot no incluye arrastre, sumarlo
+      net = net + carry;
+    } else if (net == null) {
+      var pct =
+        dataRef.meta && dataRef.meta.commissionPct != null
+          ? Number(dataRef.meta.commissionPct)
+          : 0;
+      net = gross * (1 - (isNaN(pct) ? 0 : pct) / 100);
+    }
+    var commission =
+      pr && pr.commission_amount != null ? Number(pr.commission_amount) : null;
     var fmt = function (n) {
       return QA.utils.money(n);
     };
@@ -1421,18 +1442,47 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     return (
       '<div class="bolsa-card">' +
       '<div class="bolsa-head">' +
-      '<div class="bolsa-icon">' + (QA.icons.trophy || "") + '</div>' +
+      '<div class="bolsa-icon">' +
+      (QA.icons.trophy || "") +
+      "</div>" +
       '<div><div class="bolsa-title">Bolsa acumulada</div>' +
-      '<div class="bolsa-sub">' + paidN + ' pagadas' +
-      (pending > 0 ? ' · ' + pending + ' pendientes' : '') +
-      (price ? ' · ' + QA.utils.money(price) + ' c/u' : '') +
-      '</div></div></div>' +
+      '<div class="bolsa-sub">' +
+      paidN +
+      " pagadas" +
+      (pending > 0 ? " · " + pending + " pendientes" : "") +
+      (price ? " · " + QA.utils.money(price) + " c/u" : "") +
+      (carry > 0
+        ? " · arrastre " + fmt(carry)
+        : "") +
+      "</div></div></div>" +
+      (carry > 0
+        ? '<div class="bolsa-carry-note">Incluye <strong>' +
+          fmt(carry) +
+          "</strong> arrastrados de la jornada Goleo anterior (sin acertante exacto)</div>"
+        : "") +
       '<div class="bolsa-grid">' +
-      '<div class="bolsa-item"><div class="bolsa-val">' + fmt(gross) + '</div><div class="bolsa-lbl">Bruta</div></div>' +
-      (commission != null ? '<div class="bolsa-item"><div class="bolsa-val">' + fmt(commission) + '</div><div class="bolsa-lbl">Comisión</div></div>' : '') +
-      (net != null ? '<div class="bolsa-item bolsa-net"><div class="bolsa-val">' + fmt(net) + '</div><div class="bolsa-lbl">Neta</div></div>' : '') +
-      '<div class="bolsa-item"><div class="bolsa-val">' + totalN + '</div><div class="bolsa-lbl">Boletas</div></div>' +
-      '</div></div>'
+      '<div class="bolsa-item"><div class="bolsa-val">' +
+      fmt(gross) +
+      '</div><div class="bolsa-lbl">Bruta</div></div>' +
+      (commission != null
+        ? '<div class="bolsa-item"><div class="bolsa-val">' +
+          fmt(commission) +
+          '</div><div class="bolsa-lbl">Comisión</div></div>'
+        : "") +
+      (net != null
+        ? '<div class="bolsa-item bolsa-net"><div class="bolsa-val">' +
+          fmt(net) +
+          '</div><div class="bolsa-lbl">Neta</div></div>'
+        : "") +
+      (carry > 0
+        ? '<div class="bolsa-item"><div class="bolsa-val">' +
+          fmt(carry) +
+          '</div><div class="bolsa-lbl">Arrastre</div></div>'
+        : "") +
+      '<div class="bolsa-item"><div class="bolsa-val">' +
+      totalN +
+      '</div><div class="bolsa-lbl">Boletas</div></div>' +
+      "</div></div>"
     );
   }
 
