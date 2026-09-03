@@ -389,6 +389,19 @@ QA.data = (function () {
       puebla: "img/puebla.png",
       mazatlan: "img/mazatlan.png",
       "san luis": "img/san-luis.png",
+      "athletic club": "img/athletic-club.png",
+      athletic: "img/athletic-club.png",
+      bilbao: "img/athletic-club.png",
+      "atletico de madrid": "img/atletico-madrid.png",
+      "atletico madrid": "img/atletico-madrid.png",
+      "inter de milan": "img/inter-milan.png",
+      "inter milan": "img/inter-milan.png",
+      inter: "img/inter-milan.png",
+      napoli: "img/napoli.png",
+      alaves: "img/alaves.png",
+      osasuna: "img/osasuna.png",
+      juventus: "img/juventus.png",
+      milan: "img/milan.png",
     };
     for (var k in map) {
       if (n.indexOf(k) !== -1) return map[k];
@@ -599,6 +612,17 @@ QA.data.TEAM_LOGO_MAP = {
   tigres: "img/tigres.png", "tigres uanl": "img/tigres.png",
   tijuana: "img/tijuana.png", xolos: "img/tijuana.png",
   toluca: "img/toluca.png",
+  // Europeos · relleno Jornada 7 (Leagues Cup)
+  "athletic club": "img/athletic-club.png", athletic: "img/athletic-club.png", bilbao: "img/athletic-club.png",
+  "atletico de madrid": "img/atletico-madrid.png", "atlético de madrid": "img/atletico-madrid.png",
+  "atletico madrid": "img/atletico-madrid.png", "atlético madrid": "img/atletico-madrid.png", atleti: "img/atletico-madrid.png",
+  "inter de milan": "img/inter-milan.png", "inter de milán": "img/inter-milan.png",
+  "inter milan": "img/inter-milan.png", inter: "img/inter-milan.png",
+  napoli: "img/napoli.png", "ssc napoli": "img/napoli.png",
+  alaves: "img/alaves.png", "alavés": "img/alaves.png", "deportivo alaves": "img/alaves.png", "deportivo alavés": "img/alaves.png",
+  osasuna: "img/osasuna.png",
+  juventus: "img/juventus.png", juve: "img/juventus.png",
+  milan: "img/milan.png", "ac milan": "img/milan.png", "a.c. milan": "img/milan.png",
 };
 
 QA.data.teamLogo = function (name) {
