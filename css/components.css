@@ -4689,3 +4689,25 @@ a.tv-open {
   border: 1px solid rgba(245, 158, 11, 0.28);
 }
 .bolsa-carry-note strong { color: var(--amber, #f59e0b); }
+
+.bolsa-item.bolsa-comm .bolsa-val {
+  color: var(--amber, #f59e0b);
+}
+.bolsa-comm-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-m, #94a3b8);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+.bolsa-comm-note strong {
+  color: var(--amber, #f59e0b);
+}
+.bolsa-comm-note em {
+  font-style: normal;
+  color: var(--text, #e2e8f0);
+  font-weight: 700;
+}
