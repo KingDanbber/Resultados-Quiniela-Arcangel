@@ -1408,7 +1408,9 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
 
   function renderBolsaCard(dataRef, list) {
     var price = dataRef.meta.price != null ? Number(dataRef.meta.price) : 0;
-    var paidN = list.filter(function (p) { return p.paid; }).length;
+    var paidN = list.filter(function (p) {
+      return p.paid;
+    }).length;
     var totalN = list.length;
     var pr = dataRef.poolResult;
     var carry =
@@ -1418,27 +1420,46 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
         ? Number(dataRef.meta.carryoverAmount)
         : 0;
     if (isNaN(carry) || carry < 0) carry = 0;
+
+    var pct =
+      dataRef.meta && dataRef.meta.commissionPct != null
+        ? Number(dataRef.meta.commissionPct)
+        : 0;
+    if (isNaN(pct) || pct < 0) pct = 0;
+
     var baseGross =
       pr && pr.gross_pot != null ? Number(pr.gross_pot) : paidN * price;
-    // Bruta = boletas de esta jornada + arrastre de Goleo anterior
+    if (isNaN(baseGross)) baseGross = 0;
+    // Bruta = boletas de esta jornada + arrastre Goleo
     var gross = baseGross + carry;
-    var net = pr && pr.net_pot != null ? Number(pr.net_pot) : null;
-    if (net != null && carry > 0) {
-      // Si net_pot no incluye arrastre, sumarlo
-      net = net + carry;
-    } else if (net == null) {
-      var pct =
-        dataRef.meta && dataRef.meta.commissionPct != null
-          ? Number(dataRef.meta.commissionPct)
-          : 0;
-      net = gross * (1 - (isNaN(pct) ? 0 : pct) / 100);
+
+    // Comisión: preferir monto de pool_results; si no, % sobre bruta (boletas+arrastre)
+    var commissionAmt = null;
+    if (pr && pr.commission_amount != null && !isNaN(Number(pr.commission_amount))) {
+      commissionAmt = Number(pr.commission_amount);
+    } else if (pct > 0 && gross > 0) {
+      commissionAmt = Math.round(gross * (pct / 100) * 100) / 100;
+    } else {
+      commissionAmt = 0;
     }
-    var commission =
-      pr && pr.commission_amount != null ? Number(pr.commission_amount) : null;
+
+    var net = null;
+    if (pr && pr.net_pot != null && !isNaN(Number(pr.net_pot))) {
+      net = Number(pr.net_pot);
+      // Si net_pot no trae arrastre, sumarlo
+      if (carry > 0 && net < gross - commissionAmt - 0.01) {
+        net = net + carry;
+      }
+    } else {
+      net = Math.round((gross - commissionAmt) * 100) / 100;
+    }
+
     var fmt = function (n) {
       return QA.utils.money(n);
     };
     var pending = totalN - paidN;
+    var hasCommission = pct > 0 || commissionAmt > 0;
+
     return (
       '<div class="bolsa-card">' +
       '<div class="bolsa-head">' +
@@ -1451,9 +1472,8 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
       " pagadas" +
       (pending > 0 ? " · " + pending + " pendientes" : "") +
       (price ? " · " + QA.utils.money(price) + " c/u" : "") +
-      (carry > 0
-        ? " · arrastre " + fmt(carry)
-        : "") +
+      (pct > 0 ? " · comisión " + pct + "%" : "") +
+      (carry > 0 ? " · arrastre " + fmt(carry) : "") +
       "</div></div></div>" +
       (carry > 0
         ? '<div class="bolsa-carry-note">Incluye <strong>' +
@@ -1464,16 +1484,16 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
       '<div class="bolsa-item"><div class="bolsa-val">' +
       fmt(gross) +
       '</div><div class="bolsa-lbl">Bruta</div></div>' +
-      (commission != null
-        ? '<div class="bolsa-item"><div class="bolsa-val">' +
-          fmt(commission) +
-          '</div><div class="bolsa-lbl">Comisión</div></div>'
+      (hasCommission
+        ? '<div class="bolsa-item bolsa-comm"><div class="bolsa-val">' +
+          fmt(commissionAmt) +
+          '</div><div class="bolsa-lbl">Comisión' +
+          (pct > 0 ? " (" + pct + "%)" : "") +
+          "</div></div>"
         : "") +
-      (net != null
-        ? '<div class="bolsa-item bolsa-net"><div class="bolsa-val">' +
-          fmt(net) +
-          '</div><div class="bolsa-lbl">Neta</div></div>'
-        : "") +
+      '<div class="bolsa-item bolsa-net"><div class="bolsa-val">' +
+      fmt(net) +
+      '</div><div class="bolsa-lbl">Neta</div></div>' +
       (carry > 0
         ? '<div class="bolsa-item"><div class="bolsa-val">' +
           fmt(carry) +
@@ -1482,7 +1502,20 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
       '<div class="bolsa-item"><div class="bolsa-val">' +
       totalN +
       '</div><div class="bolsa-lbl">Boletas</div></div>' +
-      "</div></div>"
+      "</div>" +
+      (hasCommission
+        ? '<div class="bolsa-comm-note">' +
+          "<strong>Comisión " +
+          (pct > 0 ? pct + "%" : "") +
+          (commissionAmt > 0 ? " · " + fmt(commissionAmt) : "") +
+          ":</strong> " +
+          "destinada a la <em>administración y mantenimiento</em> de la aplicación web de Resultados Quiniela Arcángel. " +
+          "La <strong>bolsa neta</strong> (" +
+          fmt(net) +
+          ") es lo que se reparte entre el o los ganadores." +
+          "</div>"
+        : "") +
+      "</div>"
     );
   }
 
