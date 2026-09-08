@@ -951,6 +951,8 @@ QA.data.loadPoolDetail = async function (poolId) {
         return m;
       })(pool.mode_code),
       price: pool.price,
+      commissionPct:
+        pool.commission_pct != null ? Number(pool.commission_pct) : 0,
       carryoverAmount:
         pool.carryover_amount != null ? Number(pool.carryover_amount) : 0,
       carryoverEnabled: pool.carryover_enabled !== false,
