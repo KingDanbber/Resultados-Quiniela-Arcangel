@@ -1427,38 +1427,39 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
         : 0;
     if (isNaN(pct) || pct < 0) pct = 0;
 
+    // Solo boletas de ESTA jornada (sin arrastre)
     var baseGross =
       pr && pr.gross_pot != null ? Number(pr.gross_pot) : paidN * price;
     if (isNaN(baseGross)) baseGross = 0;
-    // Bruta = boletas de esta jornada + arrastre Goleo
+
+    // Bruta total a mostrar = boletas actuales + arrastre
     var gross = baseGross + carry;
 
-    // Comisión: preferir monto de pool_results; si no, % sobre bruta (boletas+arrastre)
-    var commissionAmt = null;
-    if (pr && pr.commission_amount != null && !isNaN(Number(pr.commission_amount))) {
+    // Comisión SOLO sobre la bolsa de participantes de esta jornada.
+    // El arrastre ya pagó comisión en la jornada anterior (premio neto transferido).
+    var commissionAmt = 0;
+    if (pct > 0 && baseGross > 0) {
+      commissionAmt = Math.round(baseGross * (pct / 100) * 100) / 100;
+    }
+    // Si pool_results trae commission_amount y no hay arrastre, respetarlo
+    if (
+      carry <= 0 &&
+      pr &&
+      pr.commission_amount != null &&
+      !isNaN(Number(pr.commission_amount))
+    ) {
       commissionAmt = Number(pr.commission_amount);
-    } else if (pct > 0 && gross > 0) {
-      commissionAmt = Math.round(gross * (pct / 100) * 100) / 100;
-    } else {
-      commissionAmt = 0;
     }
 
-    var net = null;
-    if (pr && pr.net_pot != null && !isNaN(Number(pr.net_pot))) {
-      net = Number(pr.net_pot);
-      // Si net_pot no trae arrastre, sumarlo
-      if (carry > 0 && net < gross - commissionAmt - 0.01) {
-        net = net + carry;
-      }
-    } else {
-      net = Math.round((gross - commissionAmt) * 100) / 100;
-    }
+    // Neta = arrastre (ya neto) + (boletas actuales − comisión de esta jornada)
+    var net = Math.round((carry + baseGross - commissionAmt) * 100) / 100;
+    if (net < 0) net = 0;
 
     var fmt = function (n) {
       return QA.utils.money(n);
     };
     var pending = totalN - paidN;
-    var hasCommission = pct > 0 || commissionAmt > 0;
+    var hasCommission = pct > 0;
 
     return (
       '<div class="bolsa-card">' +
@@ -1478,7 +1479,7 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
       (carry > 0
         ? '<div class="bolsa-carry-note">Incluye <strong>' +
           fmt(carry) +
-          "</strong> arrastrados de la jornada Goleo anterior (sin acertante exacto)</div>"
+          "</strong> arrastrados de la jornada Goleo anterior (premio neto, sin nueva comisión)</div>"
         : "") +
       '<div class="bolsa-grid">' +
       '<div class="bolsa-item"><div class="bolsa-val">' +
@@ -1509,7 +1510,10 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           (pct > 0 ? pct + "%" : "") +
           (commissionAmt > 0 ? " · " + fmt(commissionAmt) : "") +
           ":</strong> " +
-          "destinada a la <em>administración y mantenimiento</em> de la aplicación web de Resultados Quiniela Arcángel. " +
+          "se aplica solo sobre la bolsa de <em>boletas de esta jornada</em>" +
+          (baseGross > 0 ? " (" + fmt(baseGross) + ")" : "") +
+          ", no sobre el arrastre. " +
+          "Destinada a la <em>administración y mantenimiento</em> de la app de Resultados. " +
           "La <strong>bolsa neta</strong> (" +
           fmt(net) +
           ") es lo que se reparte entre el o los ganadores." +
