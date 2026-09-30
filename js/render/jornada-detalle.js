@@ -531,7 +531,9 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
       logoHtml =
         '<img class="team-logo" src="' +
         logo +
-        '" alt="" onerror="this.style.display=\'none\'">';
+        '" alt="" data-ini="' +
+        ini.replace(/"/g, "") +
+        '" onerror="var d=document.createElement(\'div\');d.className=\'team-logo-ph\';d.textContent=this.getAttribute(\'data-ini\')||\'?\';this.replaceWith(d);">';
     } else {
       logoHtml = '<div class="team-logo-ph">' + ini + "</div>";
     }
