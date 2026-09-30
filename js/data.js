@@ -623,20 +623,99 @@ QA.data.TEAM_LOGO_MAP = {
   osasuna: "img/osasuna.png",
   juventus: "img/juventus.png", juve: "img/juventus.png",
   milan: "img/milan.png", "ac milan": "img/milan.png", "a.c. milan": "img/milan.png",
+
+  // Selecciones · Fecha FIFA / Mundial (carpeta img/mundial2026)
+  espana: "img/mundial2026/espana.png", spain: "img/mundial2026/espana.png",
+  chequia: "img/mundial2026/republica-checa.png",
+  "republica checa": "img/mundial2026/republica-checa.png",
+  czechia: "img/mundial2026/republica-checa.png",
+  croacia: "img/mundial2026/croacia.png", croatia: "img/mundial2026/croacia.png",
+  inglaterra: "img/mundial2026/inglaterra.png", england: "img/mundial2026/inglaterra.png",
+  mexico: "img/mundial2026/mexico.png",
+  argentina: "img/mundial2026/argentina.png",
+  brasil: "img/mundial2026/brasil.png", brazil: "img/mundial2026/brasil.png",
+  francia: "img/mundial2026/francia.png", france: "img/mundial2026/francia.png",
+  alemania: "img/mundial2026/alemania.png", germany: "img/mundial2026/alemania.png",
+  portugal: "img/mundial2026/portugal.png",
+  uruguay: "img/mundial2026/uruguay.png",
+  colombia: "img/mundial2026/colombia.png",
+  ecuador: "img/mundial2026/ecuador.png",
+  paraguay: "img/mundial2026/paraguay.png",
+  canada: "img/mundial2026/canada.png",
+  usa: "img/mundial2026/usa.png", "estados unidos": "img/mundial2026/usa.png",
+  panama: "img/mundial2026/panama.png",
+  "costa rica": "img/mundial2026/costa-rica.png",
+  haiti: "img/mundial2026/haiti.png",
+  curazao: "img/mundial2026/curazao.png",
+  holanda: "img/mundial2026/holanda.png", netherlands: "img/mundial2026/holanda.png",
+  "paises bajos": "img/mundial2026/holanda.png",
+  belgica: "img/mundial2026/belgica.png",
+  suiza: "img/mundial2026/suiza.png",
+  austria: "img/mundial2026/austria.png",
+  suecia: "img/mundial2026/suecia.png",
+  noruega: "img/mundial2026/noruega.png",
+  escocia: "img/mundial2026/escocia.jpg", scotland: "img/mundial2026/escocia.jpg",
+  japon: "img/mundial2026/japon.png",
+  "corea del sur": "img/mundial2026/corea-del-sur.png",
+  australia: "img/mundial2026/australia.png",
+  "nueva zelanda": "img/mundial2026/nueva-zelanda.png",
+  marruecos: "img/mundial2026/marruecos.png",
+  senegal: "img/mundial2026/senegal.png",
+  ghana: "img/mundial2026/ghana.png",
+  egipto: "img/mundial2026/egipto.png",
+  "el salvador": "img/mundial2026/el-salvador.png",
+  jamaica: "img/mundial2026/jamaica.png",
+  honduras: "img/mundial2026/honduras.png",
+  guatemala: "img/mundial2026/guatemala.png",
+  nicaragua: "img/mundial2026/nicaragua.png",
+  "republica dominicana": "img/mundial2026/republica-dominicana.png",
+  surinam: "img/mundial2026/surinam.png",
+  martinica: "img/mundial2026/martinica.png",
+  bermudas: "img/mundial2026/bermudas.png", bermuda: "img/mundial2026/bermudas.png",
+  barbaros: "img/mundial2026/barbaros.png",
+  "trinidad y tobago": "img/mundial2026/trinidad-y-tobago.png",
+  "arabia saudita": "img/mundial2026/arabia-saudita.png",
+  iran: "img/mundial2026/iran.png",
+  irak: "img/mundial2026/irak.png",
+  qatar: "img/mundial2026/qatar.png",
+  turquia: "img/mundial2026/turquia.png",
+  tunez: "img/mundial2026/tunez.png",
+  uzbekistan: "img/mundial2026/uzbekistan.png",
+  jordania: "img/mundial2026/jordania.png",
+  "cabo verde": "img/mundial2026/cabo-verde.png",
+  "costa de marfil": "img/mundial2026/costa-de-marfil.png",
+  sudafrica: "img/mundial2026/sudafrica.png",
+  argelia: "img/mundial2026/argelia.png",
+  congo: "img/mundial2026/congo.png",
+  "bosnia y herzegovina": "img/mundial2026/bosniayherzegovina.png",
+};
+
+/** Slug de archivo a partir del nombre del equipo */
+QA.data.teamSlug = function (name) {
+  return String(name || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 };
 
 QA.data.teamLogo = function (name) {
   if (!name) return null;
-  const key = String(name)
+  var key = String(name)
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
-  const map = QA.data.TEAM_LOGO_MAP;
+  var map = QA.data.TEAM_LOGO_MAP;
   if (map[key]) return map[key];
-  for (const k in map) {
+  for (var k in map) {
     if (key.indexOf(k) !== -1 || k.indexOf(key) !== -1) return map[k];
   }
+  // Fallback automatico: img/mundial2026/{slug}.png
+  // (si el PNG no existe, el <img onerror> muestra iniciales)
+  var slug = QA.data.teamSlug(name);
+  if (slug) return "img/mundial2026/" + slug + ".png";
   return null;
 };
 
