@@ -4904,3 +4904,252 @@ a.tv-open {
   font-family: "Creepster", "Bebas Neue", cursive !important;
   letter-spacing: 0.04em;
 }
+
+
+/* ── Equipos Liga MX ── */
+.eq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 22px;
+}
+@media (min-width: 520px) {
+  .eq-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.eq-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: var(--card);
+  border: 1px solid var(--border-s);
+  border-radius: 14px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.eq-card:hover, .eq-card:active {
+  border-color: var(--acc);
+  transform: translateY(-2px);
+}
+.eq-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.eq-logo-ph {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--card2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--acc);
+}
+.eq-card-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.eq-card-city {
+  font-size: 11px;
+  color: var(--text-m);
+  line-height: 1.2;
+}
+
+.eqd { padding-bottom: 24px; }
+.eqd-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin: 12px 0 16px;
+  background: linear-gradient(135deg, var(--card2), var(--card));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.eqd-logo {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.eqd-logo-ph {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--card2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 28px;
+  color: var(--acc);
+  flex-shrink: 0;
+}
+.eqd-name {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 28px;
+  letter-spacing: 1px;
+  line-height: 1.05;
+  margin: 0 0 4px;
+}
+.eqd-nicks {
+  margin: 0;
+  color: var(--text-m);
+  font-size: 13px;
+}
+.eqd-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.eqd-stat {
+  background: var(--card);
+  border: 1px solid var(--border-s);
+  border-radius: 12px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.eqd-stat-val {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.2;
+  word-break: break-word;
+}
+.eqd-stat-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-m);
+  margin-top: 3px;
+}
+.eqd-history {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-m);
+  margin: 0 0 18px;
+}
+.eqd-note {
+  font-size: 0.75rem;
+  color: var(--text-d);
+  margin: -6px 0 10px;
+}
+.eqd-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border-s);
+}
+.eqd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.eqd-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--card2);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-m);
+}
+.eqd-table td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-s);
+}
+.eqd-table tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.eqd-legends {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.eqd-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border-s);
+  border-radius: 12px;
+}
+.eqd-legend strong {
+  font-size: 0.92rem;
+}
+.eqd-legend span {
+  font-size: 0.78rem;
+  color: var(--text-m);
+}
+
+.eqd-season-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(37,99,235,.16), rgba(245,158,11,.1));
+  border: 1px solid var(--border);
+}
+.eqd-season-lbl {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-m);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+}
+.eqd-season-val {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.eqd-season-pos {
+  text-align: right;
+}
+.eqd-pos-num {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--acc);
+}
+.eqd-pos-lbl {
+  font-size: 0.75rem;
+  color: var(--text-m);
+}
+
+.eqd-table td.eqd-goals {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.15rem;
+  color: var(--acc);
+  text-align: center;
+}
+
+.home-scorers-wrap {
+  margin-bottom: 6px;
+}
+.home-scorers-wrap .eqd-table th:last-child,
+.home-scorers-wrap .eqd-table td.eqd-goals {
+  text-align: center;
+}
