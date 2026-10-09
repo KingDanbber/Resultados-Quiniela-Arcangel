@@ -68,3 +68,38 @@ QA.icons = (function () {
     ),
   };
 })();
+
+
+/** Iconos nav estilo Halloween (stroke, mismo viewBox) */
+QA.icons.halloweenNav = {
+  home: (function () {
+    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 6v2H4V9l8-6z"/><path d="M6 11v8h12v-8"/><path d="M10 19v-5h4v5"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg>';
+  })(),
+  calendar: (function () {
+    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 14c.8-1.5 2.5-1.5 2.5 0S12 16.5 12 16.5 9.5 15.5 9.5 14 11.2 12.5 12 14z"/></svg>';
+  })(),
+  scroll: (function () {
+    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h9a2 2 0 0 1 2 2v13a1 1 0 0 1-1.5.85L15 18l-2.5 1.85A1 1 0 0 1 11 19V6a2 2 0 0 0-2-2H5"/><path d="M5 4v14"/><path d="M13 9h3M13 12h3"/></svg>';
+  })(),
+  trophy: (function () {
+    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c2.5 0 4 2 4 4.5S14 14 12 16c-2-2-4-5-4-8.5S9.5 3 12 3z"/><path d="M9 8c1 1 2 1 3 0s2-1 3 0"/><path d="M10 20h4M12 16v4"/><path d="M8 20h8"/></svg>';
+  })(),
+  table: (function () {
+    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 10.5c.8.8 1.7 1 2.5.5M14 10c.7.6 1.4.8 2 .4"/><path d="M9 15c1.2 1 2.5 1.2 3.5 0"/><path d="M12 7v1"/></svg>';
+  })(),
+};
+
+QA.icons.applyNavTheme = function (themeId) {
+  var hw = themeId === "halloween";
+  var map = {
+    home: hw ? QA.icons.halloweenNav.home : QA.icons.home,
+    calendar: hw ? QA.icons.halloweenNav.calendar : QA.icons.calendar,
+    scroll: hw ? QA.icons.halloweenNav.scroll : QA.icons.scroll,
+    trophy: hw ? QA.icons.halloweenNav.trophy : QA.icons.trophy,
+    table: hw ? QA.icons.halloweenNav.table : QA.icons.table,
+  };
+  document.querySelectorAll("#bottom-nav .nav-icon[data-ico]").forEach(function (el) {
+    var k = el.getAttribute("data-ico");
+    if (map[k]) el.innerHTML = map[k];
+  });
+};
