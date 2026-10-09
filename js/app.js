@@ -46,7 +46,31 @@ QA.app = {
     } catch (e) {}
   },
 
-  openJornada: async function (poolId) {
+  
+  openEquipo: function (equipoId) {
+    if (!equipoId) return;
+    this._prevView = this.currentView === "equipo" ? "inicio" : this.currentView;
+    this.currentView = "equipo";
+    document.querySelectorAll(".view").forEach(function (v) {
+      v.classList.remove("active");
+    });
+    var target = document.getElementById("view-equipo");
+    if (!target) {
+      target = document.createElement("section");
+      target.id = "view-equipo";
+      target.className = "view";
+      var main = document.getElementById("main") || document.getElementById("app-main");
+      if (main) main.appendChild(target);
+    }
+    target.classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(function (btn) {
+      btn.classList.remove("active");
+    });
+    if (QA.render.equipoDetalle) QA.render.equipoDetalle(equipoId);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+
+openJornada: async function (poolId) {
     if (!poolId) return;
     this._prevView = this.currentView === "jornada-detalle" ? "jornadas" : this.currentView;
     this.currentView = "jornada-detalle";

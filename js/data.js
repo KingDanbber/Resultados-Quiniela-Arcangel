@@ -356,9 +356,28 @@ QA.data = (function () {
       r.zone = r.pos <= 6 ? "directo" : r.pos <= 10 ? "playin" : "";
     });
 
+    var childName =
+      children.length && children[0].name ? children[0].name : "";
+    var year =
+      data.season && data.season.year != null ? data.season.year : null;
+    var seasonLabel = childName
+      ? childName + (year ? " · " + year : "")
+      : year
+      ? "Liga MX " + year
+      : "Liga MX · Apertura";
+    // Prefer Spanish friendly
+    if (/apertura/i.test(childName) || /apertura/i.test(seasonLabel)) {
+      seasonLabel = "Apertura " + (year || "").toString();
+      if (year) seasonLabel = "Apertura " + year;
+    } else if (/clausura/i.test(childName)) {
+      seasonLabel = "Clausura " + (year || "");
+    }
+
     return {
       updatedAt: new Date().toISOString(),
-      tournament: "Liga MX · Apertura 2026-27",
+      tournament: seasonLabel,
+      season: seasonLabel,
+      seasonYear: year,
       source: "ESPN",
       rows: rows,
     };
