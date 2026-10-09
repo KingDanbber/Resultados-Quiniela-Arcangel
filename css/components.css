@@ -4711,3 +4711,196 @@ a.tv-open {
   color: var(--text, #e2e8f0);
   font-weight: 700;
 }
+
+
+/* Aviso tema de temporada */
+.season-notice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.season-notice {
+  width: min(360px, 100%);
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px 18px 16px;
+  text-align: center;
+  box-shadow: 0 16px 48px var(--shadow);
+}
+.season-notice-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.season-notice h3 {
+  margin: 0 0 8px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+}
+.season-notice-msg {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-m);
+}
+.season-notice-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.season-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.season-btn.primary {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #0f172a;
+}
+.season-notice-hint {
+  margin: 12px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-d);
+}
+.theme-season-banner {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  color: var(--amber, #fb923c);
+}
+.theme-chip-season {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  background: rgba(249, 115, 22, 0.25);
+  color: #fb923c;
+}
+
+
+/* ═══════════════════════════════════════════
+   Halloween visual pack (solo data-theme=halloween)
+   ═══════════════════════════════════════════ */
+
+#hw-bg {
+  display: none;
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+[data-theme="halloween"] #hw-bg {
+  display: block;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2' opacity='0.07'%3E%3Cpath d='M40 50c8-14 24-14 32 0 6-10 18-10 24 0v28H40V50z'/%3E%3Cpath d='M56 78v10M72 78v10'/%3E%3Cpath d='M150 30c6-4 14-2 16 6 8-6 18 0 16 10 10 0 14 10 8 16h-48c-4-8 0-18 8-20z'/%3E%3Cpath d='M30 160c20-18 40-10 50 6 12-20 36-16 44 4'/%3E%3Cpath d='M170 140c-8 0-12 8-8 14s10 6 14 2 2-12-6-16z'/%3E%3Cpath d='M100 180l4-12 4 12 4-12'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  background-repeat: repeat;
+  opacity: 1;
+}
+/* No tocar position del header/nav: deben seguir fijos como en tema clásico */
+[data-theme="halloween"] #app,
+[data-theme="halloween"] #app-main {
+  position: relative;
+  z-index: 1;
+}
+[data-theme="halloween"] #app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+[data-theme="halloween"] #bottom-nav {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  width: 100%;
+}
+
+/* Tipografía Halloween en marca y títulos */
+[data-theme="halloween"] .h-title,
+[data-theme="halloween"] .h-brand .h-title,
+[data-theme="halloween"] .brand-title,
+[data-theme="halloween"] .brand-name,
+[data-theme="halloween"] .h-brand-text,
+[data-theme="halloween"] .logo-text,
+[data-theme="halloween"] #app-header .brand h1,
+[data-theme="halloween"] #app-header .brand-title {
+  font-family: "Creepster", "Bebas Neue", cursive !important;
+  letter-spacing: 0.06em;
+  color: #fb923c;
+}
+[data-theme="halloween"] .section-title,
+[data-theme="halloween"] .jd-title,
+[data-theme="halloween"] .view-title,
+[data-theme="halloween"] .greeting-title,
+[data-theme="halloween"] .home-greeting h2,
+[data-theme="halloween"] .jornada-card-title,
+[data-theme="halloween"] .card-title-lg {
+  font-family: "Creepster", "Bebas Neue", cursive !important;
+  letter-spacing: 0.04em;
+}
+
+/* Nav inferior acento Halloween (fijo abajo, igual que tema clásico) */
+[data-theme="halloween"] #bottom-nav {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  width: 100%;
+  border-top: 1px solid rgba(249, 115, 22, 0.35);
+  background: rgba(12, 6, 16, 0.96);
+  backdrop-filter: blur(10px);
+}
+[data-theme="halloween"] #bottom-nav .nav-item {
+  color: #c4b5fd;
+}
+[data-theme="halloween"] #bottom-nav .nav-item.active {
+  color: #fb923c;
+}
+[data-theme="halloween"] #bottom-nav .nav-item.active .nav-icon {
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.55));
+}
+[data-theme="halloween"] #bottom-nav .nav-label {
+  font-weight: 700;
+}
+
+/* Header botones */
+[data-theme="halloween"] #app-header .icon-btn {
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.25);
+}
+
+[data-theme="halloween"] .jd-heading,
+[data-theme="halloween"] .jd-name,
+[data-theme="halloween"] .jornada-card h2,
+[data-theme="halloween"] .jornada-card .jc-title {
+  font-family: "Creepster", "Bebas Neue", cursive !important;
+  letter-spacing: 0.04em;
+}

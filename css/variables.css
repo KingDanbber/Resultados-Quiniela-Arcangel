@@ -232,3 +232,28 @@
   color: #334155;
   box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
+
+
+/* ── Tema Halloween (temporada octubre) ── */
+[data-theme="halloween"] {
+  --bg: #0c0610;
+  --bg2: #140a1a;
+  --bg3: #1c1024;
+  --card: rgba(28, 14, 36, 0.97);
+  --card2: rgba(40, 20, 52, 0.9);
+  --border: rgba(249, 115, 22, 0.35);
+  --border-s: rgba(168, 85, 247, 0.15);
+  --text: #fef3c7;
+  --text-m: #fdba74;
+  --text-d: #c2410c;
+  --acc: #f97316;
+  --acc2: #a855f7;
+  --green: #4ade80;
+  --amber: #fb923c;
+  --red: #f43f5e;
+  --shadow: rgba(0, 0, 0, 0.6);
+}
+[data-theme="halloween"] #app-header {
+  background: linear-gradient(135deg, #1c1024, #0c0610);
+  border-bottom-color: rgba(249, 115, 22, 0.35);
+}
