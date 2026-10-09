@@ -4,9 +4,23 @@
   <script>
     (function () {
       try {
+        var ok = ["dark","light","oro","midnight","estadio","carbon","ligamx","neon","contraste","halloween"];
         var t = localStorage.getItem("qa_theme") || "dark";
-        var ok = ["dark","light","oro","midnight","estadio","carbon","ligamx","neon","contraste"];
         if (ok.indexOf(t) === -1) t = "dark";
+        // Auto Halloween en octubre si no hay override manual de temporada
+        try {
+          var now = new Date();
+          var isOct = now.getMonth() === 9;
+          var manual = localStorage.getItem("qa_season_manual_halloween-oct") === "1";
+          if (isOct && !manual && t !== "contraste") {
+            if (t !== "halloween") {
+              localStorage.setItem("qa_theme_before_season", t === "halloween" ? "dark" : t);
+              localStorage.setItem("qa_theme_season_tag", "halloween-oct");
+            }
+            t = "halloween";
+            localStorage.setItem("qa_theme", "halloween");
+          }
+        } catch (e) {}
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
@@ -27,7 +41,7 @@
   <!-- Fonts (igual que tu app actual) -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700;800&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700;800&family=Bebas+Neue&family=Creepster&display=swap" rel="stylesheet"/>
 
   <!-- CSS modular -->
   <link rel="stylesheet" href="css/variables.css"/>
@@ -37,6 +51,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.2/confetti.browser.min.js"></script>
 </head>
 <body>
+<div id="hw-bg" aria-hidden="true"></div>
 
   <!-- ════════ HEADER ════════ -->
   <header id="app-header">
@@ -140,6 +155,10 @@
         if (rg && QA.icons.rules) rg.innerHTML = QA.icons.rules;
         var th = document.getElementById("ico-theme");
         if (th) th.innerHTML = QA.icons.palette;
+        try {
+          var themeNow = document.documentElement.getAttribute("data-theme") || "dark";
+          if (QA.icons.applyNavTheme) QA.icons.applyNavTheme(themeNow);
+        } catch (e) {}
         var ins = document.getElementById("ico-install");
         if (ins && QA.icons.download) ins.innerHTML = QA.icons.download;
         else if (ins) ins.innerHTML = "⬇";
