@@ -186,6 +186,9 @@ QA.render.home = async function () {
     '<button type="button" class="quick-btn" data-open-reglas="1">' + (QA.icons && QA.icons.rules ? QA.icons.rules : '') + ' Reglas / Términos</button>' +
     "</div>" +
     tvSection() +
+    (QA.render.equiposHomeSection ? QA.render.equiposHomeSection() : '') +
+    '<h3 class="section-title" id="home-scorers-title">Goleadores Liga MX</h3>' +
+    '<div id="home-scorers"><p class="skel-msg">Cargando goleadores…</p></div>' +
     '<h3 class="section-title">Tabla Liga MX · Top 6</h3>' +
     '<div id="home-mini-tabla"></div>' +
     '<footer class="app-credit">' +
@@ -266,7 +269,65 @@ QA.render.home = async function () {
     }
   })();
 
-el.querySelectorAll(".home-hero-card").forEach(function (hero) {
+if (QA.render.bindEquiposHome) QA.render.bindEquiposHome(el);
+
+  // Goleadores Liga MX
+  (async function () {
+    var box = el.querySelector("#home-scorers");
+    var title = el.querySelector("#home-scorers-title");
+    if (!box) return;
+    try {
+      var data =
+        QA.data && QA.data.getLigaMxScorersAsync
+          ? await QA.data.getLigaMxScorersAsync(10)
+          : null;
+      if (!data || !data.rows || !data.rows.length) {
+        box.innerHTML =
+          '<p class="skel-msg">No hay goleadores disponibles</p>';
+        return;
+      }
+      if (title && data.season) {
+        title.textContent = "Goleadores Liga MX · " + data.season;
+      }
+      var rows = data.rows
+        .map(function (r) {
+          return (
+            "<tr>" +
+            "<td>" +
+            r.rank +
+            "</td><td>" +
+            (window.QA && QA.utils && QA.utils.escape ? QA.utils.escape : function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');})(r.name) +
+            "</td><td>" +
+            (window.QA && QA.utils && QA.utils.escape ? QA.utils.escape : function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');})(r.pos) +
+            "</td><td>" +
+            (window.QA && QA.utils && QA.utils.escape ? QA.utils.escape : function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');})(r.nat) +
+            "</td><td>" +
+            (window.QA && QA.utils && QA.utils.escape ? QA.utils.escape : function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');})(r.team) +
+            '</td><td class="eqd-goals">' +
+            r.goals +
+            "</td></tr>"
+          );
+        })
+        .join("");
+      box.innerHTML =
+        '<div class="eqd-table-wrap home-scorers-wrap"><table class="eqd-table"><thead><tr>' +
+        "<th>#</th><th>Jugador</th><th>Pos</th><th>Nac.</th><th>Equipo</th><th>Goles</th>" +
+        "</tr></thead><tbody>" +
+        rows +
+        "</tbody></table></div>" +
+        (data.source
+          ? '<p class="eqd-note">Fuente: ' + (window.QA && QA.utils && QA.utils.escape ? QA.utils.escape : function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');})(data.source) + "</p>"
+          : "");
+    } catch (err) {
+      console.warn("home scorers", err);
+      box.innerHTML =
+        '<p class="skel-msg">No se pudieron cargar los goleadores</p>';
+    }
+  })();
+
+
+
+  el.querySelectorAll(".home-hero-card").forEach(function (hero) {
     hero.addEventListener("click", function () {
       QA.app.openJornada(hero.getAttribute("data-jornada-id"));
     });
