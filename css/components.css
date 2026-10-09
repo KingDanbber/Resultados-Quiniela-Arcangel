@@ -5153,3 +5153,91 @@ a.tv-open {
 .home-scorers-wrap .eqd-table td.eqd-goals {
   text-align: center;
 }
+
+/* Modal de picks (clasificación) */
+.picks-modal {
+  max-height: min(85vh, 680px);
+}
+.picks-modal .jd-modal-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+.picks-modal .jd-modal-sub {
+  font-size: 0.8rem;
+  color: var(--text-m);
+  margin-top: 2px;
+}
+.picks-grid-modal {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+@media (min-width: 480px) {
+  .picks-grid-modal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.picks-modal .pick-card {
+  background: var(--card2);
+}
+body.modal-open {
+  overflow: hidden;
+}
+.lb-row {
+  cursor: pointer;
+}
+
+
+
+/* ═══ Modal picks: encima de FABs + meta chips ═══ */
+#picks-modal-root,
+#picks-modal-root .picks-modal-backdrop,
+#picks-modal-root .jd-modal-backdrop {
+  z-index: 12000 !important;
+}
+body.modal-open #global-search-fab,
+body.modal-open .qm-fab,
+body.modal-open #qa-music .qm-fab,
+body.modal-open #qa-music .qm-panel {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.picks-modal-meta {
+  display: flex !important;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.picks-meta-chip {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-s, rgba(255,255,255,0.12));
+  min-width: 88px;
+}
+.picks-meta-lbl {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-m, #94a3b8);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.picks-meta-val {
+  display: block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--text, #f1f5f9);
+  line-height: 1.2;
+}
