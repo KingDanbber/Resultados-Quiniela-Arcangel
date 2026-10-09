@@ -658,44 +658,7 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
           : jornadaDone
           ? "No pagado"
           : "Pendiente";
-        var picks = "";
-        if (expanded && !isGoleo) {
-          picks =
-            '<div class="picks-panel open"><div class="picks-grid">' +
-            p.details
-              .map(function (d) {
-                var cls =
-                  d.result == null ? "" : d.correct ? "correct" : "wrong";
-                return (
-                  '<div class="pick-card ' +
-                  cls +
-                  '"><div class="pick-match-no">P' +
-                  (d.match.match_no || "") +
-                  "</div>" +
-                  '<div class="pick-teams">' +
-                  escape((d.match.home_team || "").slice(0, 10)) +
-                  " vs " +
-                  escape((d.match.away_team || "").slice(0, 10)) +
-                  "</div>" +
-                  '<div class="pick-row"><span>Pick: <strong>' +
-                  pickLabel(d.pick) +
-                  "</strong></span>" +
-                  (d.result != null
-                    ? ' <span>Real: <strong>' +
-                      pickLabel(d.result) +
-                      "</strong></span>"
-                    : "") +
-                  (d.result != null
-                    ? d.correct
-                      ? ' <span class="pick-ok">✓</span>'
-                      : ' <span class="pick-no">✗</span>'
-                    : "") +
-                  "</div></div>"
-                );
-              })
-              .join("") +
-            "</div></div>";
-        }
+        var picks = ""; // picks se muestran en modal al tocar la fila
         var isTop = isGoleo
           ? !!p.exactGoals
           : completed > 0 && maxH > 0 && p.aciertos === maxH;
@@ -780,19 +743,155 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
       .join("");
   }
 
+  function buildPicksModalHtml(p, opts) {
+    opts = opts || {};
+    var rank = opts.rank;
+    var jornadaDone = !!opts.jornadaDone;
+    var medals = { 1: "🥇", 2: "🥈", 3: "🥉" };
+    var posLabel = "—";
+    if (rank != null) {
+      if (jornadaDone && medals[rank]) {
+        posLabel = medals[rank] + " " + rank + "°";
+      } else {
+        posLabel = rank + "°";
+      }
+    }
+    var hits =
+      p.aciertos != null
+        ? String(p.aciertos)
+        : "—";
+    var cards = (p.details || [])
+      .map(function (d) {
+        var cls = d.result == null ? "" : d.correct ? "correct" : "wrong";
+        return (
+          '<div class="pick-card ' +
+          cls +
+          '"><div class="pick-match-no">P' +
+          (d.match.match_no || "") +
+          "</div>" +
+          '<div class="pick-teams">' +
+          escape(d.match.home_team || "") +
+          " vs " +
+          escape(d.match.away_team || "") +
+          "</div>" +
+          '<div class="pick-row"><span>Pick: <strong>' +
+          pickLabel(d.pick) +
+          "</strong></span>" +
+          (d.result != null
+            ? ' <span>Real: <strong>' +
+              pickLabel(d.result) +
+              "</strong></span>"
+            : "") +
+          (d.result != null
+            ? d.correct
+              ? ' <span class="pick-ok">✓</span>'
+              : ' <span class="pick-no">✗</span>'
+            : "") +
+          "</div></div>"
+        );
+      })
+      .join("");
+    return (
+      '<div class="jd-modal-backdrop picks-modal-backdrop" id="picks-modal-backdrop" role="dialog" aria-modal="true">' +
+      '<div class="jd-modal picks-modal">' +
+      '<div class="jd-modal-head">' +
+      "<div><div class=\"jd-modal-kicker\">Pronósticos</div>" +
+      '<div class="jd-modal-title">' +
+      escape(p.displayName || "Participante") +
+      "</div>" +
+      (p.displayArea
+        ? '<div class="jd-modal-sub">' + escape(p.displayArea) + "</div>"
+        : "") +
+      '<div class="picks-modal-meta">' +
+      '<div class="picks-meta-chip"><span class="picks-meta-lbl">Posición</span><span class="picks-meta-val">' +
+      escape(posLabel) +
+      "</span></div>" +
+      '<div class="picks-meta-chip"><span class="picks-meta-lbl">Aciertos</span><span class="picks-meta-val">' +
+      escape(hits) +
+      "</span></div>" +
+      (p.boletaNo
+        ? '<div class="picks-meta-chip"><span class="picks-meta-lbl">No. Boleta</span><span class="picks-meta-val">' +
+          escape(String(p.boletaNo)) +
+          "</span></div>"
+        : "") +
+      "</div>" +
+      "</div>" +
+      '<button type="button" class="jd-modal-close" id="picks-modal-close" aria-label="Cerrar">×</button>' +
+      "</div>" +
+      '<div class="jd-modal-body">' +
+      '<div class="picks-grid picks-grid-modal">' +
+      (cards || '<p class="skel-msg">Sin picks</p>') +
+      "</div></div></div></div>"
+    );
+  }
+
+  function openPicksModal(p, opts) {
+    closePicksModal();
+    var wrap = document.createElement("div");
+    wrap.id = "picks-modal-root";
+    wrap.innerHTML = buildPicksModalHtml(p, opts || {});
+    document.body.appendChild(wrap);
+    document.body.classList.add("modal-open");
+    function close() {
+      closePicksModal();
+    }
+    var bd = document.getElementById("picks-modal-backdrop");
+    var btn = document.getElementById("picks-modal-close");
+    if (btn) btn.addEventListener("click", close);
+    if (bd) {
+      bd.addEventListener("click", function (e) {
+        if (e.target === bd) close();
+      });
+    }
+    document.addEventListener("keydown", picksModalEsc);
+  }
+
+  function picksModalEsc(e) {
+    if (e.key === "Escape") closePicksModal();
+  }
+
+  function closePicksModal() {
+    var root = document.getElementById("picks-modal-root");
+    if (root) root.remove();
+    document.body.classList.remove("modal-open");
+    document.removeEventListener("keydown", picksModalEsc);
+  }
+
   function bindLbRows(root, dataRef) {
     if (dataRef && dataRef.isGoleo) {
-      // Goleo: solo total de goles, sin panel de picks por partido
+      // Goleo: solo total de goles, sin picks por partido
       root.querySelectorAll(".lb-row").forEach(function (row) {
         row.style.cursor = "default";
       });
       return;
     }
+    var list = (dataRef && (dataRef.leaderboard || dataRef.list)) || [];
     root.querySelectorAll(".lb-row").forEach(function (row) {
+      row.style.cursor = "pointer";
       row.addEventListener("click", function () {
         var id = row.dataset.entry;
-        QA.render._jdExpanded[id] = !QA.render._jdExpanded[id];
-        QA.render._paintJornadaDetalle(root, dataRef, true);
+        var p = null;
+        for (var i = 0; i < list.length; i++) {
+          if (String(list[i].id) === String(id)) {
+            p = list[i];
+            break;
+          }
+        }
+        if (p) {
+          // Posición real en clasificación completa (no la lista filtrada)
+          var full = (dataRef && dataRef.leaderboard) || list;
+          var rank = null;
+          for (var j = 0; j < full.length; j++) {
+            if (String(full[j].id) === String(id)) {
+              rank = j + 1;
+              break;
+            }
+          }
+          openPicksModal(p, {
+            rank: rank,
+            jornadaDone: !!(dataRef && dataRef.jornadaDone),
+          });
+        }
       });
     });
   }
