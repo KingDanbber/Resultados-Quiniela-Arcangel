@@ -5241,3 +5241,41 @@ body.modal-open #qa-music .qm-panel {
   color: var(--text, #f1f5f9);
   line-height: 1.2;
 }
+
+
+/* División visual Ida / Vuelta en Cuartos de Final y similares */
+.match-phase-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 18px 0 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  position: relative;
+}
+.match-phase-title.ida-title {
+  background: linear-gradient(90deg, rgba(59,130,246,0.12), rgba(59,130,246,0.05));
+  color: #60a5fa;
+  border: 1px solid rgba(59,130,246,0.25);
+}
+.match-phase-title.vuelta-title {
+  background: linear-gradient(90deg, rgba(245,158,11,0.12), rgba(245,158,11,0.05));
+  color: #fbbf24;
+  border: 1px solid rgba(245,158,11,0.25);
+  margin-top: 22px;
+}
+.match-phase-title::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.5;
+}
