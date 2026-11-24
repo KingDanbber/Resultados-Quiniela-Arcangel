@@ -765,13 +765,18 @@
 .podio-name {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text);
   max-width: 100%;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  margin-bottom: 4px;
+  min-height: 1.2em;
 }
 .podio-hits {
   font-family: 'Barlow Condensed', sans-serif;
