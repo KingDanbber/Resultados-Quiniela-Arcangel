@@ -952,13 +952,15 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
             '<div class="podio-name" title="' +
             escape(p.displayName) +
             '">' +
-            escape((p.displayName || "").split(" ")[0]) +
+            escape(p.displayName || "") +
             "</div>" +
             '<div class="podio-hits"' +
             (isWin ? ' style="color:var(--amber)"' : "") +
             ">" +
-            p.aciertos +
-            " aciertos</div>" +
+            (isGoleo && p.goalPred != null
+              ? p.goalPred + " goles"
+              : p.aciertos + " aciertos") +
+            "</div>" +
             '<div class="podio-block ' +
             classes[i] +
             '">' +
