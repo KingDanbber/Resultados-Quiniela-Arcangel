@@ -293,7 +293,7 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     '<div id="jd-panel-matches" style="display:' +
     (QA.render._jdTab === "matches" ? "block" : "none") +
     '">' +
-    renderMatches(matches) +
+    renderMatches(matches, meta) +
     "</div>" +
     '<div id="jd-panel-lb" style="display:' +
     (QA.render._jdTab === "leaderboard" ? "block" : "none") +
@@ -478,51 +478,76 @@ QA.render._paintJornadaDetalle = function (el, data, silent) {
     );
   }
 
-  function renderMatches(list) {
+  function isKnockoutPhase(meta) {
+    if (!meta) return false;
+    var text = ((meta.competencia || "") + " " + (meta.season || "") + " " + (meta.nombre || "")).toLowerCase();
+    return /cuartos?\s*(de\s*)?final|semifinal|final(?!izada)|octavos?|dieciseisavos?|ida\s*(y|\/)\s*vuelta/.test(text);
+  }
+
+  function renderMatches(list, meta) {
     if (!list.length) {
       return '<div class="empty-state"><p>Sin partidos</p></div>';
     }
+
+    var isKnockout = isKnockoutPhase(meta) && list.length === 8;
+    var half = Math.floor(list.length / 2);
+
+    function renderMatchCard(m) {
+      var result = QA.data.getResult(m.home_goals, m.away_goals);
+      var hasScore = result !== null;
+      var hLogo = QA.data.teamLogo(m.home_team);
+      var aLogo = QA.data.teamLogo(m.away_team);
+      return (
+        '<div class="match-card' +
+        (hasScore ? " has-score" : "") +
+        '" data-match-id="' +
+        escape(m.id) +
+        '" role="button" tabindex="0">' +
+        '<div class="match-head"><span class="match-no">Partido ' +
+        (m.match_no || "") +
+        "</span>" +
+        (hasScore
+          ? resultChip(result)
+          : '<span class="match-time">Pendiente</span>') +
+        "</div>" +
+        '<div class="match-body">' +
+        teamCol(hLogo, m.home_team) +
+        '<div class="score-col">' +
+        (hasScore
+          ? '<div class="score-nums"><span class="score-num">' +
+            m.home_goals +
+            '</span><span class="score-sep">-</span><span class="score-num">' +
+            m.away_goals +
+            "</span></div>"
+          : '<div class="score-vs">VS</div>') +
+        "</div>" +
+        teamCol(aLogo, m.away_team) +
+        '</div><div class="match-hint">Ver pronósticos</div></div>'
+      );
+    }
+
+    if (isKnockout) {
+      var ida = list.slice(0, half);
+      var vuelta = list.slice(half);
+      return (
+        '<div class="match-phase-title ida-title">Partidos de Ida</div>' +
+        '<div class="match-grid">' +
+        ida.map(renderMatchCard).join("") +
+        '</div>' +
+        '<div class="match-phase-title vuelta-title">Partidos de Vuelta</div>' +
+        '<div class="match-grid">' +
+        vuelta.map(renderMatchCard).join("") +
+        '</div>'
+      );
+    }
+
     return (
       '<div class="match-grid">' +
-      list
-        .map(function (m) {
-          var result = QA.data.getResult(m.home_goals, m.away_goals);
-          var hasScore = result !== null;
-          var hLogo = QA.data.teamLogo(m.home_team);
-          var aLogo = QA.data.teamLogo(m.away_team);
-          return (
-            '<div class="match-card' +
-            (hasScore ? " has-score" : "") +
-            '" data-match-id="' +
-            escape(m.id) +
-            '" role="button" tabindex="0">' +
-            '<div class="match-head"><span class="match-no">Partido ' +
-            (m.match_no || "") +
-            "</span>" +
-            (hasScore
-              ? resultChip(result)
-              : '<span class="match-time">Pendiente</span>') +
-            "</div>" +
-            '<div class="match-body">' +
-            teamCol(hLogo, m.home_team) +
-            '<div class="score-col">' +
-            (hasScore
-              ? '<div class="score-nums"><span class="score-num">' +
-                m.home_goals +
-                '</span><span class="score-sep">-</span><span class="score-num">' +
-                m.away_goals +
-                "</span></div>"
-              : '<div class="score-vs">VS</div>') +
-            "</div>" +
-            teamCol(aLogo, m.away_team) +
-            '</div><div class="match-hint">Ver pronósticos</div></div>'
-          );
-
-        })
-        .join("") +
+      list.map(renderMatchCard).join("") +
       "</div>"
     );
   }
+
 
   function teamCol(logo, name) {
     var ini = initials(name);
