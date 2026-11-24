@@ -1,5 +1,5 @@
 /* Quiniela Arcángel · Service Worker + Web Push */
-const CACHE = "qa-arcangel-v19";
+const CACHE = "qa-arcangel-v20";
 const PRECACHE = [
   "./",
   "./index.html",
